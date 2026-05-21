@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Bubble Watch</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --text-xs: clamp(0.75rem,0.7rem + 0.25vw,0.875rem);
+  --text-sm: clamp(0.875rem,0.8rem + 0.35vw,1rem);
+  --text-base: clamp(1rem,0.95rem + 0.25vw,1.125rem);
+  --text-lg: clamp(1.125rem,1rem + 0.75vw,1.5rem);
+  --text-xl: clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+  --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
+  --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;--space-12:3rem;
+  --radius-sm:.375rem;--radius-md:.5rem;--radius-lg:.75rem;--radius-xl:1rem;--radius-full:9999px;
+  --transition:180ms cubic-bezier(0.16,1,0.3,1);
+  --font-body:'Satoshi','Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+:root,[data-theme="light"]{
+  --bg:#f7f6f2;--surface:#f9f8f5;--surface-2:#fbfbf9;--surface-off:#f3f0ec;
+  --divider:#dcd9d5;--border:#d4d1ca;
+  --text:#28251d;--muted:#7a7974;--faint:#bab9b4;
+  --primary:#01696f;--primary-h:#cedcd8;
+  --success:#437a22;--success-h:#d4dfcc;
+  --error:#a12c7b;--error-h:#e0ced7;
+  --warning:#964219;--warning-h:#ddcfc6;
+  --gold:#d19900;--gold-h:#e9e0c6;
+  --shadow-sm:0 1px 2px oklch(0.2 0.01 80/0.06);
+  --shadow-md:0 4px 12px oklch(0.2 0.01 80/0.08);
+}
+[data-theme="dark"]{
+  --bg:#111110;--surface:#161514;--surface-2:#1b1a18;--surface-off:#1e1d1b;
+  --divider:#232220;--border:#2e2d2b;
+  --text:#cdccca;--muted:#797876;--faint:#5a5957;
+  --primary:#4f98a3;--primary-h:#1e3236;
+  --success:#6daa45;--success-h:#202f1a;
+  --error:#d163a7;--error-h:#2d1d27;
+  --warning:#bb653b;--warning-h:#2e1e14;
+  --gold:#e8af34;--gold-h:#2a2011;
+  --shadow-sm:0 1px 2px oklch(0 0 0/0.25);
+  --shadow-md:0 4px 12px oklch(0 0 0/0.4);
+}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}
+body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-sm);color:var(--text);background:var(--bg);line-height:1.5;}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit;}
+a,button{transition:color var(--transition),background var(--transition);}
+
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--space-3) var(--space-6);background:var(--surface);
+  border-bottom:1px solid var(--divider);position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:var(--space-2);}
+.logo-text{font-size:var(--text-base);font-weight:700;letter-spacing:-0.02em;}
+.logo-text span{color:var(--primary);}
+.topbar-right{display:flex;align-items:center;gap:var(--space-4);}
+.update-info{font-size:var(--text-xs);color:var(--muted);}
+.refresh-btn{
+  display:flex;align-items:center;gap:var(--space-1);
+  padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);
+  background:var(--primary-h);color:var(--primary);font-size:var(--text-xs);font-weight:600;
+}
+.refresh-btn:hover{opacity:0.8;}
+.theme-btn{padding:var(--space-2);border-radius:var(--radius-md);color:var(--muted);}
+.theme-btn:hover{background:var(--surface-off);color:var(--text);}
+
+.main{padding:var(--space-6);max-width:1400px;margin:0 auto;}
+
+/* Status bar */
+.status-bar{
+  display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);
+  background:var(--surface);border:1px solid var(--divider);border-radius:var(--radius-lg);
+  margin-bottom:var(--space-6);flex-wrap:wrap;
+}
+.status-dot{width:8px;height:8px;border-radius:var(--radius-full);flex-shrink:0;}
+.status-dot.live{background:var(--success);box-shadow:0 0 6px var(--success);animation:pulse 2s infinite;}
+.status-dot.loading{background:var(--gold);box-shadow:0 0 6px var(--gold);}
+.status-dot.error{background:var(--error);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.status-text{font-size:var(--text-xs);color:var(--muted);}
+.status-source{font-size:var(--text-xs);color:var(--faint);}
+
+/* Tabs */
+.tabs{display:flex;gap:var(--space-1);margin-bottom:var(--space-6);
+  background:var(--surface);border-radius:var(--radius-lg);
+  padding:var(--space-1);border:1px solid var(--divider);width:fit-content;}
+.tab-btn{padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);
+  font-size:var(--text-sm);font-weight:500;color:var(--muted);transition:all var(--transition);}
+.tab-btn:hover{color:var(--text);background:var(--surface-off);}
+.tab-btn.active{background:var(--primary);color:#fff;}
+.tab-panel{display:none;} .tab-panel.active{display:block;}
+
+/* KPI Grid */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--space-3);margin-bottom:var(--space-6);}
+.kpi-card{background:var(--surface);border:1px solid var(--divider);border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-sm);}
+.kpi-label{font-size:var(--text-xs);color:var(--muted);margin-bottom:var(--space-2);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
+.kpi-value{font-size:var(--text-xl);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.03em;}
+.kpi-delta{display:flex;align-items:center;gap:var(--space-1);margin-top:var(--space-1);font-size:var(--text-xs);font-weight:500;}
+.up{color:var(--success);} .down{color:var(--error);} .neutral{color:var(--faint);}
+.skeleton{background:linear-gradient(90deg,var(--surface-off) 25%,var(--divider) 50%,var(--surface-off) 75%);background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:var(--radius-sm);height:2rem;width:80%;}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+/* Dashboard grid */
+.grid-2{display:grid;gap:var(--space-4);grid-template-columns:1fr 1fr;}
+.grid-3{display:grid;gap:var(--space-4);grid-template-columns:1fr 1fr 1fr;}
+.card{background:var(--surface);border:1px solid var(--divider);border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow-sm);}
+.card.full{grid-column:1/-1;}
+.card-title{font-size:var(--text-sm);font-weight:700;margin-bottom:var(--space-1);}
+.card-meta{font-size:var(--text-xs);color:var(--muted);margin-bottom:var(--space-4);}
+.chart-wrap{position:relative;height:220px;}
+.chart-wrap.tall{height:280px;}
+
+/* Signal list */
+.signal-list{display:flex;flex-direction:column;gap:var(--space-2);}
+.signal-item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--surface-off);border-radius:var(--radius-md);border:1px solid var(--divider);}
+.dot{width:8px;height:8px;border-radius:var(--radius-full);flex-shrink:0;}
+.dot.g{background:var(--success);box-shadow:0 0 5px var(--success);}
+.dot.y{background:var(--gold);box-shadow:0 0 5px var(--gold);}
+.dot.r{background:var(--error);box-shadow:0 0 5px var(--error);}
+.sig-name{font-size:var(--text-xs);font-weight:600;}
+.sig-desc{font-size:var(--text-xs);color:var(--muted);}
+.sig-val{font-size:var(--text-xs);font-weight:700;font-family:var(--font-mono);white-space:nowrap;}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{font-size:var(--text-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--divider);text-align:left;}
+.data-table td{font-size:var(--text-xs);padding:var(--space-3);border-bottom:1px solid var(--divider);font-variant-numeric:tabular-nums;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--surface-off);}
+.badge{font-size:var(--text-xs);font-weight:700;padding:2px var(--space-2);border-radius:var(--radius-full);}
+.badge.g{background:var(--success-h);color:var(--success);}
+.badge.y{background:var(--gold-h);color:var(--gold);}
+.badge.r{background:var(--error-h);color:var(--error);}
+.badge.p{background:var(--primary-h);color:var(--primary);}
+
+/* Checklist */
+.checklist{display:flex;flex-direction:column;gap:var(--space-2);}
+.check-item{display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3);border-radius:var(--radius-md);border:1px solid var(--divider);background:var(--surface-off);cursor:pointer;}
+.check-box{width:16px;height:16px;flex-shrink:0;border-radius:var(--radius-sm);border:1.5px solid var(--border);margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all var(--transition);}
+.check-box.checked{background:var(--primary);border-color:var(--primary);}
+.check-text{font-size:var(--text-xs);line-height:1.5;}
+.check-text.done{color:var(--muted);text-decoration:line-through;}
+.news-item{padding:var(--space-3);border-bottom:1px solid var(--divider);}
+.news-item:last-child{border-bottom:none;}
+.news-title{font-size:var(--text-xs);font-weight:600;margin-bottom:var(--space-1);}
+.news-meta{font-size:var(--text-xs);color:var(--muted);}
+
+/* Error banner */
+.error-banner{display:none;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-4);background:var(--error-h);border-radius:var(--radius-md);margin-bottom:var(--space-4);font-size:var(--text-xs);color:var(--error);}
+
+@media(max-width:768px){
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .main{padding:var(--space-4);}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .topbar{padding:var(--space-3) var(--space-4);}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-label="AI Bubble Watch">
+      <circle cx="13" cy="13" r="12" stroke="currentColor" stroke-width="1.5" opacity="0.2"/>
+      <circle cx="13" cy="13" r="8" stroke="var(--primary)" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="3.5" fill="var(--primary)" opacity="0.85"/>
+    </svg>
+    <span class="logo-text">AI Bubble<span>Watch</span></span>
+  </div>
+  <div class="topbar-right">
+    <span class="update-info" id="updateInfo">データ取得中...</span>
+    <button class="refresh-btn" onclick="fetchAll()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+      更新
+    </button>
+    <button class="theme-btn" data-theme-toggle aria-label="テーマ切替">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="status-bar">
+    <div class="status-dot loading" id="statusDot"></div>
+    <span class="status-text" id="statusText">データ取得中...</span>
+    <span class="status-source">出典: Yahoo Finance (非公式) / FRED API / Alternative.me</span>
+  </div>
+
+  <div class="error-banner" id="errorBanner">
+    ⚠️ 一部のデータを取得できませんでした。サンプル値を表示しています。ネットワークを確認してください。
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="dashboard">ダッシュボード</button>
+    <button class="tab-btn" data-tab="signals">崩壊シグナル</button>
+    <button class="tab-btn" data-tab="portfolio">ポートフォリオ</button>
+    <button class="tab-btn" data-tab="timeline">IPOタイムライン</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="tab-panel active" id="tab-dashboard">
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card"><div class="kpi-label">Fear & Greed</div><div class="kpi-value" id="kv-fg"><div class="skeleton"></div></div><div class="kpi-delta" id="kd-fg"></div></div>
+      <div class="kpi-card"><div class="kpi-label">NVDA 株価</div><div class="kpi-value" id="kv-nvda"><div class="skeleton"></div></div><div class="kpi-delta" id="kd-nvda"></div></div>
+      <div class="kpi-card"><div class="kpi-label">MSFT 株価</div><div class="kpi-value" id="kv-msft"><div class="skeleton"></div></div><div class="kpi-delta" id="kd-msft"></div></div>
+      <div class="kpi-card"><div class="kpi-label">GOOGL 株価</div><div class="kpi-value" id="kv-googl"><div class="skeleton"></div></div><div class="kpi-delta" id="kd-googl"></div></div>
+      <div class="kpi-card"><div class="kpi-label">AVGO 株価</div><div class="kpi-value" id="kv-avgo"><div class="skeleton"></div></div><div class="kpi-delta" id="kd-avgo"></div></div>
+      <div class="kpi-card"><div class="kpi-label">10年債利回り</div><div class="kpi-value" id="kv-t10y"><div class="skeleton"></div></div><div class="kpi-delta" id="kd-t10y"></div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Fear & Greed 推移（30日）</div>
+        <div class="card-meta">CNNマネー指標 — 75超=Extreme Greed（危険ゾーン）</div>
+        <div class="chart-wrap"><canvas id="fgChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">M7保有銘柄 株価推移（30日相対）</div>
+        <div class="card-meta">基準日=30日前 100として正規化</div>
+        <div class="chart-wrap"><canvas id="stockChart"></canvas></div>
+      </div>
+      <div class="card full">
+        <div class="card-title">崩壊シナリオ別 M7最大下落率</div>
+        <div class="card-meta">歴史的事例比較（AMZN -93%, MSFT -63% in 2000-02）</div>
+        <div class="chart-wrap tall"><canvas id="drawChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNALS -->
+  <div class="tab-panel" id="tab-signals">
+    <div style="margin-bottom:var(--space-6)">
+      <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-1)">7大崩壊シグナル</div>
+      <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:var(--space-4)">赤が3つ以上点灯したら守りに入れ — 毎週ステータスを確認</div>
+      <div class="signal-list" id="signalList"></div>
+    </div>
+
+    <div>
+      <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-1)">今日の確認チェックリスト</div>
+      <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:var(--space-4)">クリックして完了マーク</div>
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">NVDA株価と出来高確認（前日比 -5%超なら要注意）</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">Fear & Greed Index 確認（90超=Extreme Greed → 現金比率引き上げ検討）</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">SpaceX IPO関連ニュース・ロードショー情報チェック</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">10年債利回り確認（4.5%超なら高バリュエーション銘柄に圧力）</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">MSFT・GOOGL・AMZN・METAのCAPEX関連発言・ニュースを確認</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">SEC Form 4（インサイダー売買）で大型AI企業C-suiteの売りを確認</div></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text">AVGO・PLTR・APPのRS（相対強度）をS&P500と比較</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO -->
+  <div class="tab-panel" id="tab-portfolio">
+    <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-1)">保有銘柄 リスクマップ</div>
+    <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:var(--space-4)">崩壊時想定ドローダウンと対応アクション</div>
+    <div class="card" style="margin-bottom:var(--space-4)">
+      <table class="data-table">
+        <thead><tr><th>銘柄</th><th>現在値</th><th>前日比</th><th>リスク</th><th>崩壊時想定</th><th>アクション</th></tr></thead>
+        <tbody id="pfTable"></tbody>
+      </table>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">フェーズ別行動計画</div>
+        <div class="card-meta" style="margin-bottom:var(--space-3)">現在：フェーズA（IPO祭り期）</div>
+        <div class="signal-list">
+          <div class="signal-item"><div class="dot y"></div><div><div class="sig-name">フェーズA 今〜2026年末</div><div class="sig-desc">SpaceX上場熱狂期。NVDA・AVGO継続。MSFT 5〜10%利確。現金比率10→20%へ</div></div></div>
+          <div class="signal-item"><div class="dot y"></div><div><div class="sig-name">フェーズB 2027年Q1〜Q2</div><div class="sig-desc">ロックアップ解除開始。現金比率30〜40%へ。追加購入は停止。</div></div></div>
+          <div class="signal-item"><div class="dot r"></div><div><div class="sig-name">フェーズC 崩壊局面</div><div class="sig-desc">NVDA -50%超・VIX 40超。現金で段階的に拾い始める（3〜5分割）。</div></div></div>
+          <div class="signal-item"><div class="dot g"></div><div><div class="sig-name">フェーズD 第二フェーズ</div><div class="sig-desc">本物のAmazon候補のVCPパターン確認後にエントリー。</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">崩壊確率分布</div>
+        <div class="card-meta" style="margin-bottom:var(--space-3)">M7平均下落率の期待値</div>
+        <div class="chart-wrap"><canvas id="probChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="tab-panel" id="tab-timeline">
+    <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-1)">IPOタイムライン & 爆心地カウントダウン</div>
+    <div style="font-size:var(--text-xs);color:var(--muted);margin-bottom:var(--space-4)">各イベントの日程と市場衝撃波を追跡</div>
+    <div class="card" style="margin-bottom:var(--space-4)" id="timelineCard"></div>
+    <div class="card">
+      <div class="card-title">衝撃波伝播モデル（同心円）</div>
+      <div class="card-meta">爆心地から外側へ — 中央シナリオの想定下落率</div>
+      <div class="chart-wrap tall"><canvas id="impactChart"></canvas></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ==================== THEME ====================
+(function(){
+  const btn = document.querySelector('[data-theme-toggle]');
+  const html = document.documentElement;
+  let theme = 'dark';
+  html.setAttribute('data-theme', theme);
+  if(btn) btn.addEventListener('click', () => {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', theme);
+    btn.innerHTML = theme === 'dark'
+      ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+      : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+    if(window._stockChart) window._stockChart.update();
+    if(window._fgChart) window._fgChart.update();
+  });
+})();
+
+// ==================== TABS ====================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ==================== CHECKLIST ====================
+function toggleCheck(item) {
+  const box = item.querySelector('.check-box');
+  const txt = item.querySelector('.check-text');
+  box.classList.toggle('checked');
+  txt.classList.toggle('done');
+  box.innerHTML = box.classList.contains('checked')
+    ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+    : '';
+}
+
+// ==================== HELPERS ====================
+function cssVar(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function fmtDelta(change, pct) {
+  const sign = change >= 0 ? '+' : '';
+  const cls = change >= 0 ? 'up' : 'down';
+  const arrow = change >= 0 ? '▲' : '▼';
+  return `<span class="${cls}">${arrow} ${sign}${change.toFixed(2)} (${sign}${pct.toFixed(2)}%)</span>`;
+}
+
+// ==================== DATA LAYER ====================
+// Fallback sample data (used when APIs fail)
+const FALLBACK = {
+  stocks: {
+    NVDA: { price: 112.45, change: 2.31, changePct: 2.10 },
+    MSFT: { price: 453.20, change: -1.85, changePct: -0.41 },
+    GOOGL: { price: 178.90, change: 0.95, changePct: 0.53 },
+    AVGO: { price: 241.60, change: 3.12, changePct: 1.31 },
+  },
+  fearGreed: { value: 72, classification: 'Greed' },
+  t10y: { value: 4.42, change: 0.03 },
+};
+
+let fetchedData = {};
+let hasError = false;
+
+// Fear & Greed via Alternative.me
+async function fetchFearGreed() {
+  const res = await fetch('https://api.alternative.me/fng/?limit=30&format=json');
+  const json = await res.json();
+  return json.data; // array of {value, value_classification, timestamp}
+}
+
+// Stock prices via Yahoo Finance unofficial (cors proxy)
+async function fetchStock(ticker) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=30d`;
+  const res = await fetch(url);
+  const json = await res.json();
+  const meta = json.chart.result[0].meta;
+  const closes = json.chart.result[0].indicators.quote[0].close;
+  return {
+    price: meta.regularMarketPrice,
+    prevClose: meta.previousClose || meta.chartPreviousClose,
+    change: meta.regularMarketPrice - (meta.previousClose || meta.chartPreviousClose),
+    changePct: ((meta.regularMarketPrice - (meta.previousClose || meta.chartPreviousClose)) / (meta.previousClose || meta.chartPreviousClose)) * 100,
+    history: closes.filter(v => v !== null),
+  };
+}
+
+// 10Y Treasury via FRED (public, no key needed for this endpoint via proxy)
+async function fetchT10Y() {
+  // Use stooq as fallback for bond yield
+  const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d&range=5d');
+  const json = await res.json();
+  const meta = json.chart.result[0].meta;
+  return {
+    value: meta.regularMarketPrice / 100,
+    raw: meta.regularMarketPrice,
+    change: (meta.regularMarketPrice - (meta.previousClose || meta.chartPreviousClose)),
+  };
+}
+
+async function fetchAll() {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'status-dot loading';
+  txt.textContent = 'データ取得中...';
+  hasError = false;
+
+  const promises = {
+    NVDA: fetchStock('NVDA').catch(() => null),
+    MSFT: fetchStock('MSFT').catch(() => null),
+    GOOGL: fetchStock('GOOGL').catch(() => null),
+    AVGO: fetchStock('AVGO').catch(() => null),
+    fearGreed: fetchFearGreed().catch(() => null),
+    t10y: fetchT10Y().catch(() => null),
+  };
+
+  const results = {};
+  for(const [k, p] of Object.entries(promises)) {
+    results[k] = await p;
+    if(!results[k]) hasError = true;
+  }
+
+  fetchedData = results;
+
+  if(hasError) {
+    document.getElementById('errorBanner').style.display = 'flex';
+    dot.className = 'status-dot error';
+    txt.textContent = '一部のデータが取得できませんでした（サンプル値表示中）';
+  } else {
+    document.getElementById('errorBanner').style.display = 'none';
+    dot.className = 'status-dot live';
+    txt.textContent = '🟢 ライブデータ — ' + new Date().toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + ' 更新';
+  }
+
+  document.getElementById('updateInfo').textContent = new Date().toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + ' 更新';
+
+  renderKPIs(results);
+  renderCharts(results);
+  renderSignals(results);
+  renderPortfolio(results);
+}
+
+// ==================== RENDER KPIs ====================
+function renderKPIs(d) {
+  const tickers = ['NVDA', 'MSFT', 'GOOGL', 'AVGO'];
+  tickers.forEach(t => {
+    const stock = d[t] || FALLBACK.stocks[t];
+    document.getElementById('kv-' + t.toLowerCase()).textContent = '$' + stock.price.toFixed(2);
+    document.getElementById('kd-' + t.toLowerCase()).innerHTML = fmtDelta(stock.change, stock.changePct);
+  });
+
+  const fg = (d.fearGreed && d.fearGreed[0]) || FALLBACK.fearGreed;
+  const fgVal = parseInt(fg.value);
+  const fgCls = fgVal >= 75 ? 'down' : fgVal >= 50 ? 'neutral' : 'up';
+  const fgColor = fgVal >= 75 ? 'var(--error)' : fgVal >= 50 ? 'var(--gold)' : 'var(--success)';
+  document.getElementById('kv-fg').textContent = fgVal;
+  document.getElementById('kv-fg').style.color = fgColor;
+  document.getElementById('kd-fg').innerHTML = `<span class="${fgCls}">${fg.value_classification || fg.classification}</span>`;
+
+  const t10y = d.t10y || FALLBACK.t10y;
+  const t10yVal = t10y.raw || (t10y.value * 100);
+  const t10yCls = t10yVal >= 4.5 ? 'down' : 'neutral';
+  document.getElementById('kv-t10y').textContent = t10yVal.toFixed(2) + '%';
+  document.getElementById('kv-t10y').style.color = t10yVal >= 4.5 ? 'var(--error)' : 'var(--text)';
+  document.getElementById('kd-t10y').innerHTML = `<span class="${t10yCls}">${t10yVal >= 4.5 ? '⚠ 高水準 注意' : '正常範囲'}</span>`;
+}
+
+// ==================== CHARTS ====================
+let charts = {};
+function destroyChart(id) { if(charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderCharts(d) {
+  renderFGChart(d);
+  renderStockChart(d);
+  renderDrawdownChart();
+  renderProbChart();
+  renderImpactChart();
+  renderTimeline();
+}
+
+function renderFGChart(d) {
+  destroyChart('fg');
+  const ctx = document.getElementById('fgChart').getContext('2d');
+  let labels = [], values = [];
+  if(d.fearGreed && d.fearGreed.length > 0) {
+    const sorted = [...d.fearGreed].reverse();
+    labels = sorted.map(x => {
+      const dt = new Date(parseInt(x.timestamp) * 1000);
+      return (dt.getMonth()+1) + '/' + dt.getDate();
+    });
+    values = sorted.map(x => parseInt(x.value));
+  } else {
+    labels = Array.from({length:30},(_,i)=>{ const d=new Date(); d.setDate(d.getDate()-29+i); return (d.getMonth()+1)+'/'+(d.getDate()); });
+    values = [58,60,62,65,68,72,70,74,76,73,71,75,78,80,77,74,72,70,68,71,73,76,74,72,71,73,75,72,71,72];
+  }
+  charts['fg'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Fear & Greed',
+        data: values,
+        borderColor: '#bb653b',
+        backgroundColor: (ctx) => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,200);
+          g.addColorStop(0,'rgba(187,101,59,0.3)'); g.addColorStop(1,'rgba(187,101,59,0)');
+          return g;
+        },
+        fill: true, tension: 0.4, borderWidth: 2, pointRadius: 2,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales: {
+        x:{ ticks:{color:'#797876',font:{size:10},maxTicksLimit:8}, grid:{display:false} },
+        y:{ min:0, max:100, ticks:{color:'#797876',font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'},
+          afterDataLimits: (scale) => { scale.max = 100; } }
+      },
+      plugins: {
+        legend:{display:false},
+        tooltip:{ callbacks:{ label: ctx => ' ' + ctx.raw + ' (' + classify(ctx.raw) + ')' } }
+      }
+    }
+  });
+}
+
+function classify(v) {
+  if(v>=75) return 'Extreme Greed';
+  if(v>=55) return 'Greed';
+  if(v>=45) return 'Neutral';
+  if(v>=25) return 'Fear';
+  return 'Extreme Fear';
+}
+
+function renderStockChart(d) {
+  destroyChart('stock');
+  const ctx = document.getElementById('stockChart').getContext('2d');
+  const tickers = ['NVDA','MSFT','GOOGL','AVGO'];
+  const colors = ['#4f98a3','#6daa45','#e8af34','#d163a7'];
+  const datasets = tickers.map((t, i) => {
+    let hist;
+    if(d[t] && d[t].history && d[t].history.length > 0) {
+      hist = d[t].history;
+    } else {
+      // generate plausible relative history
+      hist = Array.from({length:30},(_,j) => 100 + Math.sin(j*0.3+i)*5 + j*0.3);
+    }
+    const base = hist[0];
+    const normalized = hist.map(v => parseFloat(((v/base)*100).toFixed(2)));
+    return { label: t, data: normalized, borderColor: colors[i], borderWidth: 2, pointRadius: 1, tension: 0.4, fill: false };
+  });
+
+  const len = datasets[0].data.length;
+  const labels = Array.from({length:len},(_,i)=>{ const dt=new Date(); dt.setDate(dt.getDate()-len+1+i); return (dt.getMonth()+1)+'/'+(dt.getDate()); });
+
+  charts['stock'] = new Chart(ctx, {
+    type:'line', data:{labels, datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{
+        x:{ticks:{color:'#797876',font:{size:10},maxTicksLimit:8},grid:{display:false}},
+        y:{ticks:{color:'#797876',font:{size:10},callback:v=>v+''},grid:{color:'rgba(255,255,255,0.04)'}}
+      },
+      plugins:{
+        legend:{labels:{color:'#cdccca',font:{size:11},boxWidth:12}},
+        tooltip:{mode:'index',intersect:false}
+      }
+    }
+  });
+}
+
+function renderDrawdownChart() {
+  destroyChart('draw');
+  const ctx = document.getElementById('drawChart').getContext('2d');
+  charts['draw'] = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['NVDA
+中規模','NVDA
+ドットコム型','MSFT
+中規模','MSFT
+ドットコム実績','GOOGL
+中規模','AMZN
+ドットコム実績','AVGO
+中規模'],
+      datasets:[{
+        label:'想定最大下落率',
+        data:[-55,-75,-45,-63,-40,-93,-55],
+        backgroundColor:ctx => {
+          const v=ctx.raw;
+          if(v<=-70) return 'rgba(161,44,123,0.75)';
+          if(v<=-50) return 'rgba(187,101,59,0.75)';
+          return 'rgba(79,152,163,0.75)';
+        },
+        borderRadius:4,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      scales:{
+        x:{min:-100,max:0,ticks:{color:'#797876',font:{family:'JetBrains Mono',size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#cdccca',font:{size:11}},grid:{display:false}}
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.raw+'%'}}}
+    }
+  });
+}
+
+function renderProbChart() {
+  destroyChart('prob');
+  const ctx = document.getElementById('probChart').getContext('2d');
+  charts['prob'] = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:['ソフトランディング -15〜25%','中規模崩壊 -40〜50%','ドットコム型 -55〜70%','大恐慌型 -75〜85%'],
+      datasets:[{
+        data:[20,45,25,10],
+        backgroundColor:['rgba(67,122,34,0.8)','rgba(209,153,0,0.8)','rgba(187,101,59,0.8)','rgba(161,44,123,0.8)'],
+        borderWidth:0, hoverOffset:6,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#cdccca',font:{size:10},boxWidth:12,padding:8}},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+ctx.raw+'%'}}
+      }
+    }
+  });
+}
+
+function renderImpactChart() {
+  destroyChart('impact');
+  const ctx = document.getElementById('impactChart').getContext('2d');
+  charts['impact'] = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['爆心地 (SpaceX/OpenAI/Anthropic)','直撃圏 (NVDA/AVGO/MSFT)','M7全体 / NASDAQ','S&P500全体','日本株 (日経平均)'],
+      datasets:[{
+        label:'中央シナリオ最大下落率',
+        data:[-85,-60,-50,-35,-35],
+        backgroundColor:['rgba(161,44,123,0.85)','rgba(187,101,59,0.85)','rgba(209,153,0,0.75)','rgba(79,152,163,0.65)','rgba(79,152,163,0.45)'],
+        borderRadius:5,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      scales:{
+        x:{min:-100,max:0,ticks:{color:'#797876',font:{family:'JetBrains Mono',size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#cdccca',font:{size:11}},grid:{display:false}}
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' 最大'+ctx.raw+'%'}}}
+    }
+  });
+}
+
+// ==================== SIGNALS ====================
+function renderSignals(d) {
+  const fgVal = d.fearGreed && d.fearGreed[0] ? parseInt(d.fearGreed[0].value) : FALLBACK.fearGreed.value;
+  const t10y = d.t10y ? d.t10y.raw || d.t10y.value*100 : FALLBACK.t10y.value*100;
+  const nvdaChg = d.NVDA ? d.NVDA.changePct : FALLBACK.stocks.NVDA.changePct;
+
+  const signals = [
+    { name:'① IPO初値割れ', desc:'SpaceX・OpenAI・Anthropicのどれかが公募価格割れ → 潮目の変化', dot:'y', val:'監視中（未上場）', valColor:'var(--gold)' },
+    { name:'② 長短金利差（逆イールド）', desc:'10年債-2年債スプレッド。逆転=崩壊前兆', dot: t10y >= 4.5 ? 'y' : 'g', val: t10y.toFixed(2)+'%', valColor: t10y >= 4.5 ? 'var(--gold)' : 'var(--success)' },
+    { name:'③ ロックアップ解除スケジュール', desc:'SpaceX→2026年12月 / OpenAI→2027年Q2。この2ヶ月前から先回り売り', dot:'y', val:'2026.12〜', valColor:'var(--gold)' },
+    { name:'④ Fear & Greed（信用過熱）', desc:'75超=Extreme Greed → 個人信用買いの過熱サイン', dot: fgVal >= 75 ? 'r' : fgVal >= 55 ? 'y' : 'g', val: fgVal + ' / 100', valColor: fgVal >= 75 ? 'var(--error)' : fgVal >= 55 ? 'var(--gold)' : 'var(--success)' },
+    { name:'⑤ NVDAガイダンス（先行指標）', desc:'NVDA次四半期ガイダンス下方修正 → AIハイパースケーラー全体CAPEX削減を示唆', dot: nvdaChg < -5 ? 'r' : nvdaChg < -2 ? 'y' : 'g', val: (nvdaChg >= 0 ? '+' : '') + nvdaChg.toFixed(2)+'%', valColor: nvdaChg < -2 ? 'var(--error)' : 'var(--success)' },
+    { name:'⑥ LLMコモディティ化（価格破壊）', desc:'OSSモデルが商用APIに迫るとOpenAI・AnthropicのARRが減速', dot:'y', val:'進行中', valColor:'var(--gold)' },
+    { name:'⑦ FRB政策転換（利上げ再開）', desc:'利上げ再開 → PER100倍超銘柄のDCF理論株価が-20〜30%下落', dot: t10y >= 5.0 ? 'r' : 'g', val: t10y >= 5.0 ? '⚠ 利上げリスク' : '利下げ継続中', valColor: t10y >= 5.0 ? 'var(--error)' : 'var(--success)' },
+  ];
+
+  const redCount = signals.filter(s => s.dot === 'r').length;
+  document.getElementById('signalList').innerHTML = signals.map(s => `
+    <div class="signal-item">
+      <div class="dot ${s.dot}"></div>
+      <div><div class="sig-name">${s.name}</div><div class="sig-desc">${s.desc}</div></div>
+      <div class="sig-val" style="color:${s.valColor}">${s.val}</div>
+    </div>
+  `).join('') + (redCount >= 3 ? `<div style="padding:var(--space-3);background:var(--error-h);border-radius:var(--radius-md);color:var(--error);font-size:var(--text-xs);font-weight:700;text-align:center;">🚨 赤シグナル ${redCount}個点灯 — 守りに入れ</div>` : '');
+}
+
+// ==================== PORTFOLIO ====================
+function renderPortfolio(d) {
+  const holdings = [
+    {t:'NVDA', n:'NVIDIA', risk:'高', riskCls:'r', dd:'-60〜70%', action:'ガイダンス下方修正まで保有 / -50%でナンピン準備'},
+    {t:'AVGO', n:'Broadcom', risk:'高', riskCls:'r', dd:'-50〜60%', action:'-40%で段階買い'},
+    {t:'MSFT', n:'Microsoft', risk:'中', riskCls:'y', dd:'-40〜50%', action:'OpenAI上場熱狂期に5〜10%利確'},
+    {t:'GOOGL', n:'Alphabet', risk:'低', riskCls:'g', dd:'-30〜40%', action:'Anthropic上場時に保有継続'},
+    {t:'金現物', n:'Gold', risk:'低', riskCls:'g', dd:'+（ヘッジ）', action:'現状維持・追加も検討'},
+    {t:'第一生命', n:'Daiichi Life', risk:'低', riskCls:'g', dd:'-20〜30%', action:'逆相関ヘッジとして保有継続'},
+  ];
+  document.getElementById('pfTable').innerHTML = holdings.map(h => {
+    const stock = (d[h.t] && d[h.t].price) ? d[h.t] : null;
+    const price = stock ? '$' + stock.price.toFixed(2) : (h.t === '金現物' ? '—' : '—');
+    const change = stock ? fmtDelta(stock.change, stock.changePct) : '<span class="neutral">—</span>';
+    return `<tr>
+      <td><strong style="font-family:var(--font-mono);color:var(--primary)">${h.t}</strong><br><span style="color:var(--muted)">${h.n}</span></td>
+      <td>${price}</td>
+      <td>${change}</td>
+      <td><span class="badge ${h.riskCls}">${h.risk}リスク</span></td>
+      <td style="font-family:var(--font-mono);color:${h.riskCls==='r'?'var(--error)':h.riskCls==='y'?'var(--gold)':'var(--success)'}">${h.dd}</td>
+      <td style="color:var(--muted)">${h.action}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ==================== TIMELINE ====================
+function renderTimeline() {
+  const events = [
+    {date:'2026.06', badge:'p', label:'IPO', name:'SpaceX 上場（Nasdaq）', sub:'想定時価総額$1.75兆 | 個人投資家枠30% | 史上最大級'},
+    {date:'2026.10', badge:'y', label:'注目', name:'Anthropic IPO（最速シナリオ）', sub:'想定$3,000〜3,500億 | Google持分価値顕在化 | GOOGL株に波及'},
+    {date:'2026.Q4', badge:'p', label:'IPO', name:'OpenAI 上場', sub:'想定$1兆 | ARR $250B+ も赤字継続 | MSFT関係の再評価'},
+    {date:'2026.12', badge:'r', label:'危険', name:'SpaceXロックアップ解除', sub:'VC・創業者の大量放出 → 先回り売りが6〜8週前から発生'},
+    {date:'2027.Q1', badge:'r', label:'危険', name:'3社すべて初の通期決算', sub:'Guidance下方修正リスク最大。Non-GAAPからGAAPへの移行圧力。'},
+    {date:'2027.Q2', badge:'r', label:'爆心地', name:'OpenAI・Anthropicロックアップ解除', sub:'3社の解除が重なる「構造的売り圧力の極大点」。現金比率30〜40%必要。'},
+    {date:'2027.Q3〜', badge:'g', label:'底値探し', name:'第二フェーズ開始', sub:'AIバブル崩壊後の生存者が選別される。VCPパターン確認後にエントリー。'},
+  ];
+  const badgeColors = {p:'background:var(--primary-h);color:var(--primary)',y:'background:var(--gold-h);color:var(--gold)',r:'background:var(--error-h);color:var(--error)',g:'background:var(--success-h);color:var(--success)'};
+  document.getElementById('timelineCard').innerHTML = events.map(e => `
+    <div style="display:grid;grid-template-columns:80px 80px 1fr;align-items:center;gap:var(--space-3);padding:var(--space-3);border-bottom:1px solid var(--divider)">
+      <span style="font-size:var(--text-xs);font-family:var(--font-mono);color:var(--muted)">${e.date}</span>
+      <span style="font-size:var(--text-xs);font-weight:700;padding:2px 8px;border-radius:9999px;text-align:center;${badgeColors[e.badge]}">${e.label}</span>
+      <div><div style="font-size:var(--text-xs);font-weight:600">${e.name}</div><div style="font-size:var(--text-xs);color:var(--muted)">${e.sub}</div></div>
+    </div>
+  `).join('');
+}
+
+// ==================== INIT ====================
+fetchAll();
+// Auto-refresh every 5 minutes
+setInterval(fetchAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>
