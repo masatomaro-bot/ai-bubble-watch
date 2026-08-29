@@ -31,7 +31,8 @@ def fetch_history_bulk(tickers: list[str], period: str = HISTORY_PERIOD) -> dict
         except KeyError:
             logger.warning("no data returned for %s", ticker)
             continue
-        df = df.dropna(how="all")
+        # Close/Volumeが欠損した行が混じっていると、rolling/オフセット参照計算がずれるため除去する
+        df = df.dropna(subset=["Close", "Volume"])
         if df.empty:
             logger.warning("empty history for %s", ticker)
             continue

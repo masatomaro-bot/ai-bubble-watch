@@ -33,10 +33,12 @@ def weighted_return(close: pd.Series) -> float | None:
     if len(close) < max(RS_WEIGHTED_PERIODS) + 1:
         return None
     latest = close.iloc[-1]
+    if pd.isna(latest):
+        return None
     score = 0.0
     for period, weight in RS_WEIGHTED_PERIODS.items():
         past = close.iloc[-1 - period]
-        if past <= 0:
+        if pd.isna(past) or past <= 0:
             return None
         score += weight * (latest / past - 1)
     return score
@@ -44,7 +46,7 @@ def weighted_return(close: pd.Series) -> float | None:
 
 def percentile_ratings(scores: dict[str, float | None]) -> dict[str, int | None]:
     """加重リターンを母集団内パーセンタイルで1〜99にスケールする。"""
-    valid = {k: v for k, v in scores.items() if v is not None}
+    valid = {k: v for k, v in scores.items() if v is not None and pd.notna(v)}
     result: dict[str, int | None] = {k: None for k in scores}
     if not valid:
         return result
