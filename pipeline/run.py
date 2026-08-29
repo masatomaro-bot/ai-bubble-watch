@@ -22,6 +22,11 @@ def _fmt(value, digits: int = 2):
     return round(value, digits) if isinstance(value, float) else value
 
 
+def _bool_str(value: bool | None) -> str | None:
+    """Python の bool を Sheets 上で確実に判別できる文字列にする(空欄と False の混同を防ぐ)。"""
+    return None if value is None else ("TRUE" if value else "FALSE")
+
+
 def build_ticker_metrics(config: PipelineConfig, history: dict) -> tuple[dict, dict, dict, dict]:
     """各ウォッチリスト銘柄の指標を計算する。
     戻り値: (ticker -> 指標dict, ticker -> sector, ticker -> industry, ticker -> 加重リターン)"""
@@ -129,9 +134,9 @@ def main() -> int:
                 m["rs_rating"],
                 m["sector_rs_rating"],
                 m["industry_rs_rating"],
-                m["vcp_candidate"],
+                _bool_str(m["vcp_candidate"]),
                 tt.pass_count if tt else None,
-                tt.passed if tt else None,
+                _bool_str(tt.passed if tt else None),
             ]
         )
         breadth_rows.append(
