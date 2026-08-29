@@ -13,15 +13,15 @@ market_indices:
   - symbol: "^IXIC"
     name: Nasdaq Composite
 
-# ウォッチリスト銘柄(例。実際の保有・監視銘柄に置き換えること)
+# ウォッチリスト銘柄
 watchlist:
   - ticker: NVDA
   - ticker: MSFT
   - ticker: AAPL
-  - ticker: AMZN
   - ticker: GOOGL
   - ticker: META
   - ticker: AVGO
-  - ticker: TSLA
+  - ticker: TSM
+  - ticker: MU
   - ticker: AMD
-  - ticker: CRM
+  - ticker: PLTR
