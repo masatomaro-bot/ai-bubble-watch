@@ -1,0 +1,27 @@
+name: Daily Watchlist Pipeline
+
+on:
+  schedule:
+    # 平日 22:00 UTC (米国市場クローズ後、日中/夏時間どちらでも数時間の余裕を持たせる)
+    - cron: "0 22 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - run: pip install -r requirements.txt
+
+      - name: Run daily pipeline
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+        run: python -m pipeline.run

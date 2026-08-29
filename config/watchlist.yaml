@@ -1,0 +1,27 @@
+# 慈愛の観察台 - 日次パイプライン設定
+# ここに自分のポートフォリオ/ウォッチリスト銘柄を記載する。
+# sector / industry を省略した場合は実行時に yfinance から自動取得する
+# (自動取得値をキャッシュしたい場合はここに書き足してよい)。
+
+benchmark: SPY # RS(相対力)計算の基準指数
+
+# Market Breadth / Distribution Day 判定に使う市場指数
+# (全市場スクリーニングはしないが、地合い判定には主要指数の値動きを使う)
+market_indices:
+  - symbol: "^GSPC"
+    name: S&P500
+  - symbol: "^IXIC"
+    name: Nasdaq Composite
+
+# ウォッチリスト銘柄
+watchlist:
+  - ticker: NVDA
+  - ticker: MSFT
+  - ticker: AAPL
+  - ticker: GOOGL
+  - ticker: META
+  - ticker: AVGO
+  - ticker: TSM
+  - ticker: MU
+  - ticker: AMD
+  - ticker: PLTR
