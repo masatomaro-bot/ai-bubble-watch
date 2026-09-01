@@ -19,7 +19,7 @@ SCOPES = [
 ]
 
 WATCHLIST_HEADER = [
-    "Date", "Ticker", "Sector", "Industry", "Close", "DayChangePct",
+    "Date", "Ticker", "Holding", "Sector", "Industry", "Close", "DayChangePct",
     "RelVolume", "SMA50", "SMA150", "SMA200",
     "PctFrom52wHigh", "PctFrom52wLow",
     "RSRating", "SectorRSRating", "IndustryRSRating",
