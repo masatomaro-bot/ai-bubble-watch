@@ -47,9 +47,12 @@
 
 ### Watchlist_Latest(1銘柄1行、毎日上書き)
 
-Date, Ticker, Sector, Industry, Close, DayChangePct, RelVolume, SMA50, SMA150, SMA200,
+Date, Ticker, Holding, Sector, Industry, Close, DayChangePct, RelVolume, SMA50, SMA150, SMA200,
 PctFrom52wHigh, PctFrom52wLow, RSRating, SectorRSRating, IndustryRSRating, VCPCandidate,
 TrendTemplatePassCount, TrendTemplatePass
+
+`Holding` は `config/watchlist.yaml` の `holding: true` 設定を反映したもの。
+TRUEが実際に保有しているポートフォリオ銘柄、FALSEが観察のみ(未保有)の銘柄。
 
 ### Sector_RS(セクター/業種1行、毎日上書き)
 

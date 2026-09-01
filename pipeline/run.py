@@ -121,6 +121,7 @@ def main() -> int:
             [
                 as_of,
                 entry.ticker,
+                _bool_str(entry.holding),
                 sector_of.get(entry.ticker) or "",
                 industry_of.get(entry.ticker) or "",
                 _fmt(m["close"]),

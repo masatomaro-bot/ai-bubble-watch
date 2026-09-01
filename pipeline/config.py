@@ -24,6 +24,7 @@ class WatchlistEntry:
     ticker: str
     sector: str | None = None
     industry: str | None = None
+    holding: bool = False  # True: 実際に保有しているポートフォリオ銘柄 / False: 観察のみ(未保有)
 
 
 @dataclass
@@ -47,6 +48,7 @@ def load_config(path: str | None = None) -> PipelineConfig:
             ticker=item["ticker"],
             sector=item.get("sector"),
             industry=item.get("industry"),
+            holding=bool(item.get("holding", False)),
         )
         for item in raw.get("watchlist", [])
     ]
