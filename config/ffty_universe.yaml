@@ -1,0 +1,25 @@
+# VCPバックテスト対象プール(FFTY: Innovator IBD 50 ETF 構成銘柄)
+#
+# NOTE(重要): このファイルは「現行の」構成銘柄を手動で維持する前提。
+# FFTYは概ね週次でリバランスされる。過去時点の構成銘柄変遷データは
+# 無償では入手困難なため、本バックテストは「現在の構成銘柄だけで過去
+# 5年をテストする」設計になっており、生存バイアス(過去に脱落した銘柄が
+# 含まれない)を含む。結果は docs/BACKTEST.md に記載の通り「参考値」として
+# 扱うこと。
+#
+# 更新方法: Innovator ETFs公式サイトの保有銘柄ページ
+# (https://www.innovatoretfs.com/etf/?ticker=FFTY) から最新の構成銘柄
+# ティッカーを確認し、tickers を置き換えて as_of を更新する。
+# CSVで公開されている場合は backtest.universe.load_from_holdings_csv() で
+# 直接読み込むこともできる(列名に "ticker" または "symbol" を含む列を
+# 自動検出する)。
+#
+# 以下はコード動作確認用のプレースホルダ例(少数の代表銘柄)。
+# 実際のバックテスト実行前に必ず現行のFFTY構成銘柄リストで置き換えること。
+as_of: "PLACEHOLDER - 未更新"
+tickers:
+  - NVDA
+  - PLTR
+  - AVGO
+  - MU
+  - AMD

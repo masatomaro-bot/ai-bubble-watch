@@ -1,0 +1,12 @@
+# VCPバックテストエンジン用の追加依存(backtest/ 配下)。
+# 日次パイプライン(pipeline/, requirements.txt)には含めない
+# (vectorbt/numba/plotly は重く、日次ダッシュボード更新には不要なため)。
+#
+# インストール:
+#   pip install -r requirements.txt -r requirements-backtest.txt
+vectorbt==1.1.0
+# vectorbt 1.1.0 は古いplotly APIに依存しており、最新plotly(7系)では
+# "scattermapbox" 参照でimport時にAttributeErrorになる。動作確認済みの
+# バージョンに固定する。
+plotly==5.18.0
+pyarrow>=14.0  # data/cache/ のparquetキャッシュ用
