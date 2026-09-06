@@ -1,0 +1,43 @@
+name: Technical Practice Daily (地合い + FFTYスクリーニング)
+
+on:
+  schedule:
+    # UTC日曜〜木曜 22:00 = JST月曜〜金曜 07:00
+    # (US市場の直近取引日の終値が確定した後、日本の朝に結果を見られるように
+    #  曜日をUTC側で1日前倒ししている。祝日は考慮していないため、休場日は
+    #  前営業日と同じデータが出力される)
+    - cron: "0 22 * * 0-4"
+  workflow_dispatch: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    # このリポジトリ内では technical-practice/ サブフォルダにスクリプトを
+    # 置く想定(既存の慈愛の観察台のコードと混ざらないようにするため)。
+    # 別の場所に置く場合はここを変更すること。
+    defaults:
+      run:
+        working-directory: technical-practice
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run market climate script
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+        run: python market_climate.py
+
+      - name: Run FFTY screener
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+        run: python ffty_screener.py
