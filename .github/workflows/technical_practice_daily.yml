@@ -7,7 +7,17 @@ on:
     #  曜日をUTC側で1日前倒ししている。祝日は考慮していないため、休場日は
     #  前営業日と同じデータが出力される)
     - cron: "0 22 * * 0-4"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      breadth_universe:
+        description: "ブレッドス母集団 (broad=IWV/Russell3000ベース, sp500=軽量版)"
+        type: choice
+        options: ["broad", "sp500"]
+        default: "broad"
+      max_breadth_tickers:
+        description: "母集団の件数上限(空欄=無制限。初回検証時は動作確認のため500程度を推奨)"
+        type: string
+        default: ""
 
 jobs:
   run:
@@ -15,6 +25,11 @@ jobs:
     # このリポジトリ内では technical-practice/ サブフォルダにスクリプトを
     # 置く想定(既存の慈愛の観察台のコードと混ざらないようにするため)。
     # 別の場所に置く場合はここを変更すること。
+    #
+    # timeout-minutes: 広域ユニバース(数千銘柄)のyfinance一括取得は所要時間が
+    # 未検証のため、既定の360分より短く区切って早期に異常検知できるようにする。
+    # 実際にどれくらいかかるかは初回実行のログで確認し、必要なら調整すること。
+    timeout-minutes: 90
     defaults:
       run:
         working-directory: technical-practice
@@ -34,6 +49,8 @@ jobs:
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          BREADTH_UNIVERSE: ${{ inputs.breadth_universe || 'broad' }}
+          MAX_BREADTH_TICKERS: ${{ inputs.max_breadth_tickers }}
         run: python market_climate.py
 
       - name: Run FFTY screener
