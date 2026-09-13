@@ -23,8 +23,12 @@ from market_climate import (
     compute_index_stage,
     compute_sector_rrg,
     compute_breadth_near_52w,
+    compute_breadth_extended,
+    classify_sector_temperature,
+    majority_vote_market_regime,
 )
 from ffty_screener import compute_trend_template, compute_rs_proxy_percentiles
+from universe import _parse_ishares_holdings_csv, _parse_nasdaq_listed_txt, sample_tickers
 
 
 def make_price_df(closes, volumes=None, highs=None, lows=None, start="2024-01-01"):
@@ -185,6 +189,118 @@ def test_sector_rrg_improving_for_late_acceleration():
 
     rrg = compute_sector_rrg(outperformer, benchmark)
     assert rrg["quadrant"] in {"主導", "改善"}
+
+
+def test_breadth_extended_counts_new_highs_lows_and_volume():
+    n = 260
+    # 直近の終値が過去252日の最大値になるよう明確に右肩上がりにする
+    up = make_price_df(list(np.linspace(100, 200, n)), volumes=[1_000_000.0] * (n - 1) + [2_000_000.0])
+    # 直近の終値が過去252日の最小値になるよう右肩下がりにする
+    down = make_price_df(list(np.linspace(200, 100, n)), volumes=[1_000_000.0] * (n - 1) + [500_000.0])
+
+    ext = compute_breadth_extended({"UP": up, "DOWN": down})
+    assert ext["universe_size"] == 2
+    assert ext["new_52w_highs"] == 1
+    assert ext["new_52w_lows"] == 1
+    assert ext["advancers"] == 1
+    assert ext["decliners"] == 1
+    # UPの出来高2,000,000 / (2,000,000+500,000) = 80%
+    assert ext["up_volume_pct"] == pytest.approx(80.0)
+
+
+def test_classify_sector_temperature_up_for_strong_uptrend():
+    n = 300
+    idx = pd.bdate_range("2023-01-01", periods=n)
+    # ベンチマークより明確に強く、かつ50/200日線を上回る右肩上がり
+    benchmark = pd.Series(np.linspace(100, 130, n), index=idx)
+    sector = pd.Series(np.linspace(100, 220, n), index=idx)
+    assert classify_sector_temperature(sector, benchmark) == "上昇"
+
+
+def test_classify_sector_temperature_down_for_weak_downtrend():
+    n = 300
+    idx = pd.bdate_range("2023-01-01", periods=n)
+    benchmark = pd.Series(np.linspace(100, 130, n), index=idx)
+    sector = pd.Series(np.linspace(100, 40, n), index=idx)
+    assert classify_sector_temperature(sector, benchmark) == "調整"
+
+
+def test_majority_vote_risk_off_when_majority_down():
+    temps = {f"S{i}": "調整" for i in range(7)}
+    temps.update({f"S{i}": "上昇" for i in range(7, 9)})
+    temps["S9"] = "中立"
+    temps["S10"] = "買い集め"
+    result = majority_vote_market_regime(temps)
+    assert result["judgement"] == "RISK-OFF"
+    assert result["total"] == 11
+
+
+def test_majority_vote_risk_on_when_majority_up_or_accumulating():
+    temps = {f"S{i}": "上昇" for i in range(5)}
+    temps.update({f"S{i}": "買い集め" for i in range(5, 8)})
+    temps.update({f"S{i}": "調整" for i in range(8, 11)})
+    result = majority_vote_market_regime(temps)
+    assert result["judgement"] == "RISK-ON"
+
+
+def test_majority_vote_mixed_when_no_majority():
+    temps = {"S1": "上昇", "S2": "調整", "S3": "中立", "S4": "買い集め"}
+    result = majority_vote_market_regime(temps)
+    assert result["judgement"] == "MIXED"
+
+
+def test_parse_ishares_holdings_csv_skips_preamble_and_filters_non_equity():
+    raw_csv = (
+        "iShares Russell 3000 ETF\n"
+        "Fund Holdings as of,Sep 12,2026\n"
+        "Inception Date,May 22,2000\n"
+        "\n"
+        "Ticker,Name,Sector,Asset Class,Market Value,Weight (%)\n"
+        "AAPL,Apple Inc,Information Technology,Equity,1000,1.0\n"
+        "MSFT,Microsoft Corp,Information Technology,Equity,900,0.9\n"
+        "BRK.B,Berkshire Hathaway,Financials,Equity,800,0.8\n"
+        "USD,US Dollar,Cash,Cash,50,0.05\n"
+        "XTSLA,Some Future,Derivatives,Derivative,10,0.01\n"
+    )
+    tickers = _parse_ishares_holdings_csv(raw_csv)
+    assert "AAPL" in tickers
+    assert "MSFT" in tickers
+    assert "BRK-B" in tickers  # クラス株の "." は "-" に変換
+    assert "USD" not in tickers
+    assert "XTSLA" not in tickers  # Asset Classが Equity でないため除外
+
+
+def test_parse_nasdaq_listed_txt_excludes_etf_and_test_issues():
+    raw_txt = (
+        "Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares\n"
+        "AAPL|Apple Inc|Q|N|N|100|N|N\n"
+        "QQQ|Invesco QQQ Trust|Q|N|N|100|Y|N\n"
+        "ZZZT|Test Company|Q|Y|N|100|N|N\n"
+        "File Creation Time: 0913202608:00|||||||\n"
+    )
+    tickers = _parse_nasdaq_listed_txt(raw_txt, "Symbol", "ETF", "Test Issue")
+    assert tickers == ["AAPL"]
+
+
+def test_sample_tickers_returns_all_when_no_cap():
+    tickers = [f"T{i}" for i in range(10)]
+    assert sample_tickers(tickers, None) == tickers
+    assert sample_tickers(tickers, 100) == tickers
+
+
+def test_sample_tickers_avoids_alphabetical_bias():
+    # アルファベット順のリストから先頭切り出しではなく、まんべんなく
+    # サンプリングされること(=先頭が全部Aのリストなのに、サンプルが
+    # 全部Aだけにはならないことを、十分な件数で確認する)。
+    tickers = [f"A{i:04d}" for i in range(500)] + [f"Z{i:04d}" for i in range(500)]
+    sample = sample_tickers(tickers, 100)
+    assert len(sample) == 100
+    assert any(t.startswith("Z") for t in sample)
+
+
+def test_sample_tickers_is_deterministic():
+    tickers = [f"T{i:04d}" for i in range(200)]
+    assert sample_tickers(tickers, 50) == sample_tickers(tickers, 50)
 
 
 if __name__ == "__main__":
