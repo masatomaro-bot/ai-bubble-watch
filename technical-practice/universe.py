@@ -122,6 +122,24 @@ def _parse_ishares_holdings_csv(raw_text: str) -> list[str]:
     return list(dict.fromkeys(tickers))
 
 
+def sample_tickers(tickers: list[str], max_tickers: int | None) -> list[str]:
+    """検証用にmax_tickersで母集団を絞る際、先頭からの切り出しではなく
+    固定シードのランダムサンプリングを使う。
+
+    NASDAQ Trader・S&P500(Wikipedia)いずれのティッカー一覧もアルファベット順
+    に近い並びのため、単純に先頭N件を取ると「ティッカーがA〜B台の銘柄」に
+    偏ってしまい、母集団の代表性が失われる(実機検証2026-09-13で、Market
+    LeaderがA始まりの銘柄ばかりになる形で発現した)。本番運用ではmax_tickers
+    を指定しない(全件使う)ことを想定しており、これはあくまで検証時の絞り込み
+    を代表性のあるサンプルにするための処理。
+    """
+    if not max_tickers or max_tickers >= len(tickers):
+        return tickers
+    import random
+
+    return random.Random(42).sample(tickers, max_tickers)
+
+
 def _fetch_url(url: str, timeout: int = 30) -> str:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -190,17 +208,13 @@ def get_broad_market_tickers(max_tickers: int | None = None) -> tuple[list[str],
             tickers = _parse_ishares_holdings_csv(raw)
             if not tickers:
                 continue
-            if max_tickers:
-                tickers = tickers[:max_tickers]
-            return tickers, label
+            return sample_tickers(tickers, max_tickers), label
         except Exception as e:  # noqa: BLE001
             print(f"[warn] 広域ユニバース取得失敗 ({label}): {e}", file=sys.stderr)
             continue
 
     tickers = _get_nasdaqtrader_tickers()
     if tickers:
-        if max_tickers:
-            tickers = tickers[:max_tickers]
-        return tickers, "nasdaqtrader"
+        return sample_tickers(tickers, max_tickers), "nasdaqtrader"
 
     return [], "failed"

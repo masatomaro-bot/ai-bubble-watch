@@ -28,7 +28,7 @@ from market_climate import (
     majority_vote_market_regime,
 )
 from ffty_screener import compute_trend_template, compute_rs_proxy_percentiles
-from universe import _parse_ishares_holdings_csv, _parse_nasdaq_listed_txt
+from universe import _parse_ishares_holdings_csv, _parse_nasdaq_listed_txt, sample_tickers
 
 
 def make_price_df(closes, volumes=None, highs=None, lows=None, start="2024-01-01"):
@@ -280,6 +280,27 @@ def test_parse_nasdaq_listed_txt_excludes_etf_and_test_issues():
     )
     tickers = _parse_nasdaq_listed_txt(raw_txt, "Symbol", "ETF", "Test Issue")
     assert tickers == ["AAPL"]
+
+
+def test_sample_tickers_returns_all_when_no_cap():
+    tickers = [f"T{i}" for i in range(10)]
+    assert sample_tickers(tickers, None) == tickers
+    assert sample_tickers(tickers, 100) == tickers
+
+
+def test_sample_tickers_avoids_alphabetical_bias():
+    # アルファベット順のリストから先頭切り出しではなく、まんべんなく
+    # サンプリングされること(=先頭が全部Aのリストなのに、サンプルが
+    # 全部Aだけにはならないことを、十分な件数で確認する)。
+    tickers = [f"A{i:04d}" for i in range(500)] + [f"Z{i:04d}" for i in range(500)]
+    sample = sample_tickers(tickers, 100)
+    assert len(sample) == 100
+    assert any(t.startswith("Z") for t in sample)
+
+
+def test_sample_tickers_is_deterministic():
+    tickers = [f"T{i:04d}" for i in range(200)]
+    assert sample_tickers(tickers, 50) == sample_tickers(tickers, 50)
 
 
 if __name__ == "__main__":

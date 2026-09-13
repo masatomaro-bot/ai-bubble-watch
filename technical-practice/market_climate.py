@@ -494,10 +494,10 @@ def get_breadth_universe(universe: str, max_tickers: int | None = None) -> tuple
             return tickers, source
         print("[warn] 広域ユニバース取得失敗のためS&P500にフォールバック", file=sys.stderr)
 
+    from universe import sample_tickers
+
     tickers = get_sp500_tickers()
-    if max_tickers:
-        tickers = tickers[:max_tickers]
-    return tickers, "sp500"
+    return sample_tickers(tickers, max_tickers), "sp500"
 
 
 # ----------------------------------------------------------------------------
