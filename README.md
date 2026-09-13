@@ -7,3 +7,8 @@
 - `backtest/` — VCPブレイクアウト戦略(O'Neil/Minervini式)を過去データで
   検証するバックテストエンジン(手元/CIで都度実行する研究用ツール)。
   仕様は [docs/BACKTEST.md](docs/BACKTEST.md) を参照。
+- `technical-practice/` — 「地合い」(市場全体の状態)判定とFFTYトレンド
+  テンプレートスクリーニングを日次実行するツール(GitHub Actionsで日次実行)。
+  詳細は [technical-practice/README.md](technical-practice/README.md) を参照。
+  `notebooks/market_climate_explorer.ipynb` はGoogle Colab上でロジックを
+  対話的に確認・調整するためのノートブック。

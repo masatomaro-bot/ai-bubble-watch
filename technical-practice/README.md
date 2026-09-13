@@ -169,6 +169,15 @@ Sheetsの環境変数を設定しなければ、標準出力に結果を表示�
 - `BREADTH_UNIVERSE` : `broad`(既定) または `sp500`
 - `MAX_BREADTH_TICKERS` : 母集団の件数上限(未設定なら無制限)
 
+### Google Colabで対話的に試す
+
+`notebooks/market_climate_explorer.ipynb` は、MacでもPCでもブラウザだけで
+開けるGoogle Colab用のノートブック。`market_climate.py`と同じ関数を使い、
+セクター/テーマのRRGマップを散布図で見たり、セクター温度感の閾値
+(`RS_TREND_WINDOW`等)を変えて再分類結果を試したりできる。日次自動実行には
+影響しない、あくまで手元での確認・調整用の場所。Colabで「ファイル」→
+「ノートブックを開く」→「GitHub」からこのリポジトリのURLを指定して開く。
+
 ---
 
 ## 4. ローカルで試す
