@@ -569,7 +569,13 @@ def run(
     breadth_extended = {}
     leaders = []
     if breadth_tickers:
-        price_frames = download_history_chunked(breadth_tickers, period="1y")
+        # 52週(約252営業日)ブレッドス計算とMarket LeaderのRS百分位
+        # (compute_rs_proxy_percentilesは既定でlookback_days=252営業日分の
+        # データを要求する)の両方に足りるよう、"1y"ではなく"2y"で取得する。
+        # "1y"だと実際の営業日数が252を僅かに下回ることがあり、その場合
+        # percentilesが全銘柄で計算されず market_leaders が空になる不具合が
+        # 実機検証(2026-09-13)で確認されたための修正。
+        price_frames = download_history_chunked(breadth_tickers, period="2y")
         breadth_near_52w = compute_breadth_near_52w(price_frames)
         breadth_extended = compute_breadth_extended(price_frames)
 

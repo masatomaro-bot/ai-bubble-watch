@@ -28,7 +28,7 @@ from market_climate import (
     majority_vote_market_regime,
 )
 from ffty_screener import compute_trend_template, compute_rs_proxy_percentiles
-from universe import _parse_ishares_holdings_csv
+from universe import _parse_ishares_holdings_csv, _parse_nasdaq_listed_txt
 
 
 def make_price_df(closes, volumes=None, highs=None, lows=None, start="2024-01-01"):
@@ -268,6 +268,18 @@ def test_parse_ishares_holdings_csv_skips_preamble_and_filters_non_equity():
     assert "BRK-B" in tickers  # クラス株の "." は "-" に変換
     assert "USD" not in tickers
     assert "XTSLA" not in tickers  # Asset Classが Equity でないため除外
+
+
+def test_parse_nasdaq_listed_txt_excludes_etf_and_test_issues():
+    raw_txt = (
+        "Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares\n"
+        "AAPL|Apple Inc|Q|N|N|100|N|N\n"
+        "QQQ|Invesco QQQ Trust|Q|N|N|100|Y|N\n"
+        "ZZZT|Test Company|Q|Y|N|100|N|N\n"
+        "File Creation Time: 0913202608:00|||||||\n"
+    )
+    tickers = _parse_nasdaq_listed_txt(raw_txt, "Symbol", "ETF", "Test Issue")
+    assert tickers == ["AAPL"]
 
 
 if __name__ == "__main__":

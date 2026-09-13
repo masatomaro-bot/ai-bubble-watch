@@ -15,13 +15,18 @@ S&P500よりずっと広い米国上場銘柄全体に近い規模。無料で�
   - iSharesは運用会社として毎営業日、保有銘柄の全量CSVをウェブサイト上で
     無料公開している(規制上の開示義務に基づくもの)。
 
-■ 重要な注意 (このサンドボックスでは未検証)
-このリポジトリの開発環境は外部ネットワークに出られないため、下記URLが
-実際に生きているか、CSVのフォーマット(先頭の説明行の行数や列名)が
-想定通りかは、GitHub Actions等の実行環境で初回実行して必ず確認すること。
-iShares側がURLやCSV仕様を変更した場合はここの修正が必要になる。
-取得に失敗した場合は例外を投げず、警告を出してS&P500(get_sp500_tickers)に
-自動的にフォールバックする設計にしている。
+■ 実機検証の結果 (2026-09-13, GitHub Actions)
+iShares(IWV/ITOT)のCSV取得は、実際に動かしたところ両方とも
+「ヘッダー行が見つからない」で失敗した(ヘッダー行が見つからない = 想定した
+CSVの中身が返ってきていない、という意味。iShares側がボット対策のチャレンジ
+ページ等を返している可能性がある)。原因を次回の実行ログで特定できるよう、
+失敗時にレスポンス本文の先頭部分をログに出すようにしてある。
+このため、iSharesが使えない場合の次点としてNASDAQ Trader(NASDAQが公式に
+提供する、システム利用者向けのシンボル一覧ファイル。プログラムからの
+取得を想定した単純なパイプ区切りテキストで、iSharesのような一般向け
+Webページより機械的な取得に向いている)を追加した。
+それでも全滅した場合は最終的にS&P500(get_sp500_tickers)にフォールバックする。
+取得に失敗しても例外は投げず、必ずどれか(または空リスト)を返す設計。
 """
 
 from __future__ import annotations
@@ -48,6 +53,13 @@ ITOT_HOLDINGS_URL = (
     "?fileType=csv&fileName=ITOT_holdings&dataType=fund"
 )
 
+# iSharesが両方とも使えない場合の次点候補。NASDAQが自ら「システム利用者
+# (プログラム)向け」として公開しているシンボル一覧で、パイプ("|")区切りの
+# 単純なテキスト形式。マーケティングサイトのようなボット対策が入りにくい
+# 想定だが、これも未検証(GitHub Actions等の実行環境で要確認)。
+NASDAQ_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt"
+OTHER_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt"
+
 USER_AGENT = "Mozilla/5.0"
 
 # iSharesのCSVは先頭に商品説明・基準日などのメタ情報行が数行入っており、
@@ -68,7 +80,13 @@ def _parse_ishares_holdings_csv(raw_text: str) -> list[str]:
             header_idx = i
             break
     if header_idx is None:
-        raise ValueError("iSharesホールディングスCSVのヘッダー行が見つからない(フォーマット変更の可能性)")
+        # 原因調査用に、実際に何が返ってきたか(HTMLエラーページ、ボット対策
+        # チャレンジページ等の可能性がある)を先頭200文字だけログに残す。
+        snippet = " ".join(raw_text[:200].split())
+        raise ValueError(
+            "iSharesホールディングスCSVのヘッダー行が見つからない"
+            f"(フォーマット変更の可能性)。レスポンス冒頭: {snippet!r}"
+        )
 
     csv_body = "\n".join(lines[header_idx:])
     reader = csv.DictReader(io.StringIO(csv_body))
@@ -110,12 +128,61 @@ def _fetch_url(url: str, timeout: int = 30) -> str:
         return resp.read().decode("utf-8-sig", errors="replace")
 
 
+# nasdaqtrader.comのシンボル一覧は "|" 区切り、末尾に
+# "File Creation Time: ..." という注記行が付く。ETF・テスト銘柄はブレッドス
+# 計算の母集団としてはノイズになるため除外する。
+def _parse_nasdaq_listed_txt(raw_text: str, symbol_col: str, is_etf_col: str | None, is_test_col: str | None) -> list[str]:
+    lines = [ln for ln in raw_text.splitlines() if ln.strip() and not ln.startswith("File Creation Time")]
+    if not lines:
+        return []
+    reader = csv.DictReader(lines, delimiter="|")
+    if not reader.fieldnames or symbol_col not in reader.fieldnames:
+        raise ValueError(f"想定した列が見つからない: columns={reader.fieldnames}")
+
+    tickers: list[str] = []
+    for row in reader:
+        symbol = (row.get(symbol_col) or "").strip().upper()
+        if not symbol:
+            continue
+        if is_etf_col and (row.get(is_etf_col) or "").strip().upper() == "Y":
+            continue
+        if is_test_col and (row.get(is_test_col) or "").strip().upper() == "Y":
+            continue
+        if not symbol.replace(".", "").replace("-", "").isalnum():
+            continue
+        tickers.append(symbol.replace(".", "-"))
+    return list(dict.fromkeys(tickers))
+
+
+def _get_nasdaqtrader_tickers() -> list[str]:
+    """NASDAQ Trader公式のシンボル一覧(NASDAQ上場 + その他取引所上場)から、
+    ETF・テスト銘柄を除いた普通株ティッカーの一覧を返す。取得失敗時は
+    空リストを返す(呼び出し側でさらにフォールバックする)。
+    """
+    tickers: list[str] = []
+    try:
+        raw = _fetch_url(NASDAQ_LISTED_URL)
+        tickers += _parse_nasdaq_listed_txt(raw, "Symbol", "ETF", "Test Issue")
+    except Exception as e:  # noqa: BLE001
+        print(f"[warn] NASDAQ Trader一覧取得失敗 (nasdaqlisted): {e}", file=sys.stderr)
+
+    try:
+        raw = _fetch_url(OTHER_LISTED_URL)
+        tickers += _parse_nasdaq_listed_txt(raw, "ACT Symbol", "ETF", "Test Issue")
+    except Exception as e:  # noqa: BLE001
+        print(f"[warn] NASDAQ Trader一覧取得失敗 (otherlisted): {e}", file=sys.stderr)
+
+    return list(dict.fromkeys(tickers))
+
+
 def get_broad_market_tickers(max_tickers: int | None = None) -> tuple[list[str], str]:
-    """Russell 3000(IWV)構成銘柄をベースにした広い米国株ユニバースを返す。
+    """広い米国株ユニバースを返す。
+
+    優先順位: iShares IWV(Russell3000) -> iShares ITOT -> NASDAQ Trader公式
+    シンボル一覧(ETF/テスト銘柄除外)。すべて失敗した場合は空リストと
+    "failed" を返す(呼び出し側でS&P500にさらにフォールバックすることを想定)。
 
     戻り値: (tickers, source_label)
-    取得に失敗した場合は空リストと "failed" を返す(呼び出し側でS&P500に
-    フォールバックすることを想定)。
     """
     for url, label in [(IWV_HOLDINGS_URL, "iwv"), (ITOT_HOLDINGS_URL, "itot")]:
         try:
@@ -129,5 +196,11 @@ def get_broad_market_tickers(max_tickers: int | None = None) -> tuple[list[str],
         except Exception as e:  # noqa: BLE001
             print(f"[warn] 広域ユニバース取得失敗 ({label}): {e}", file=sys.stderr)
             continue
+
+    tickers = _get_nasdaqtrader_tickers()
+    if tickers:
+        if max_tickers:
+            tickers = tickers[:max_tickers]
+        return tickers, "nasdaqtrader"
 
     return [], "failed"
