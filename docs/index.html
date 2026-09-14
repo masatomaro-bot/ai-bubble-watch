@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ja" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地合いウォッチ</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;--s6:1.5rem;--s8:2rem;
+  --r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-full:9999px;
+  --font:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans','Yu Gothic',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --bg:#111110;--surf:#161514;--off:#1e1d1b;--div:#232220;--bdr:#2e2d2b;
+  --tx:#cdccca;--muted:#797876;--faint:#5a5957;
+  --pri:#4f98a3;--pri-h:#1e3236;
+  --ok:#6daa45;--ok-h:#202f1a;
+  --err:#d163a7;--err-h:#2d1d27;
+  --warn:#bb653b;--warn-h:#2e1e14;
+  --gold:#e8af34;--gold-h:#2a2011;
+}
+html{-webkit-font-smoothing:antialiased;}
+body{min-height:100dvh;font-family:var(--font);font-size:14px;color:var(--tx);background:var(--bg);line-height:1.5;padding-bottom:var(--s8);}
+a{color:var(--pri);}
+.mono{font-family:var(--mono);}
+.wrap{max-width:1280px;margin:0 auto;padding:var(--s6) var(--s4);}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--s2);
+  padding:var(--s4);background:var(--surf);border-bottom:1px solid var(--div);}
+.topbar h1{font-size:18px;font-weight:800;letter-spacing:-0.01em;}
+.topbar .meta{font-size:12px;color:var(--muted);}
+
+.notice{display:flex;gap:var(--s2);align-items:flex-start;background:var(--gold-h);border:1px solid #3a2f16;
+  border-radius:var(--r-md);padding:var(--s3) var(--s4);margin-bottom:var(--s5);font-size:12px;color:var(--gold);}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s5);}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s5);}
+@media(max-width:800px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+.card{background:var(--surf);border:1px solid var(--div);border-radius:var(--r-lg);padding:var(--s5);margin-bottom:var(--s5);}
+.card-title{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:var(--s4);}
+
+.badge{display:inline-flex;align-items:center;font-size:12px;font-weight:700;padding:4px 10px;border-radius:var(--r-full);}
+.badge.ok{background:var(--ok-h);color:var(--ok);}
+.badge.err{background:var(--err-h);color:var(--err);}
+.badge.warn{background:var(--warn-h);color:var(--warn);}
+.badge.muted{background:var(--off);color:var(--muted);}
+
+.hero-state{font-size:22px;font-weight:800;letter-spacing:-0.01em;margin-bottom:var(--s2);}
+.sub{font-size:12px;color:var(--muted);}
+
+.sector-grid{display:flex;gap:6px;margin:var(--s3) 0;flex-wrap:wrap;}
+.sector-cell{flex:1;min-width:40px;height:34px;border-radius:6px;}
+.legend{display:flex;gap:var(--s4);flex-wrap:wrap;font-size:11px;color:var(--muted);}
+.dot{display:inline-block;width:8px;height:8px;border-radius:999px;margin-right:5px;vertical-align:middle;}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{text-align:left;color:var(--faint);font-weight:600;font-size:10.5px;padding-bottom:8px;border-bottom:1px solid var(--div);}
+td{padding:8px 0;border-bottom:1px solid var(--off);}
+td.num{text-align:right;font-family:var(--mono);}
+tr:last-child td{border-bottom:none;}
+
+.stat{display:flex;flex-direction:column;gap:4px;background:var(--off);border-radius:var(--r-md);padding:var(--s3) var(--s4);}
+.stat .label{font-size:11px;color:var(--muted);}
+.stat .value{font-family:var(--mono);font-size:20px;font-weight:700;}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--s3);margin-bottom:var(--s4);}
+
+.pill-row{display:flex;gap:var(--s2);flex-wrap:wrap;}
+.pill{font-size:10.5px;font-family:var(--mono);background:var(--off);color:var(--muted);padding:3px 8px;border-radius:999px;}
+
+.loading,.error{padding:var(--s6);text-align:center;color:var(--muted);font-size:13px;}
+.footer{max-width:1280px;margin:0 auto;padding:var(--s6) var(--s4);font-size:11px;color:var(--faint);text-align:center;}
+
+.bar-outer{height:8px;background:var(--off);border-radius:999px;overflow:hidden;position:relative;}
+.bar-inner{position:absolute;top:0;bottom:0;border-radius:999px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>地合いウォッチ</h1>
+  <div class="meta" id="topbar-meta">読み込み中...</div>
+</div>
+
+<div class="wrap">
+  <div class="notice">
+    このページは無料データを使った個人プロジェクトです。判定ロジック・数値の正確性は保証しません。
+    投資判断は自己責任でお願いします。詳細は
+    <a href="https://github.com/masatomaro-bot/ai-bubble-watch/blob/main/technical-practice/README.md" target="_blank" rel="noopener">README</a>
+    を参照してください。
+  </div>
+
+  <div id="content"><div class="loading">データを読み込み中...</div></div>
+</div>
+
+<div class="footer">
+  地合いウォッチ — oniminetrade.com の構成を参考に、無料データで自前設計したロジックを使用。
+  データは <span class="mono">docs/data/history/*.json</span> に日次で保存(gitで履歴管理)。
+  ソースは <a href="https://github.com/masatomaro-bot/ai-bubble-watch" target="_blank" rel="noopener">GitHub</a>。
+</div>
+
+<script>
+const TREND_LABELS = {
+  confirmed_uptrend: { label: "確認された上昇トレンド", cls: "ok" },
+  uptrend_under_pressure: { label: "圧力下の上昇トレンド", cls: "warn" },
+  correction: { label: "調整局面", cls: "err" },
+  "不明": { label: "判定不能(データ不足)", cls: "muted" },
+};
+const REGIME_LABELS = {
+  "RISK-ON": { label: "RISK-ON", cls: "ok" },
+  "RISK-OFF": { label: "RISK-OFF", cls: "err" },
+  "MIXED": { label: "MIXED", cls: "warn" },
+  "不明": { label: "不明", cls: "muted" },
+};
+const QUADRANT_COLOR = { "主導": "var(--ok)", "改善": "var(--pri)", "鈍化": "var(--warn)", "遅行": "var(--err)", "不明": "var(--faint)" };
+const TEMP_COLOR = { "上昇": "var(--ok)", "買い集め": "var(--pri)", "中立": "var(--faint)", "調整": "var(--err)", "不明": "var(--off)" };
+
+function fmtPct(v) {
+  if (v === null || v === undefined) return "-";
+  const sign = v > 0 ? "+" : "";
+  return `${sign}${v}%`;
+}
+function pctColor(v) {
+  if (v === null || v === undefined) return "var(--muted)";
+  return v > 0 ? "var(--ok)" : v < 0 ? "var(--err)" : "var(--muted)";
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function trendCard(name, idx) {
+  const t = idx.trend_state || {};
+  const info = TREND_LABELS[t.state] || TREND_LABELS["不明"];
+  return `
+    <div class="card">
+      <div class="card-title">${esc(name)}</div>
+      <div class="hero-state">${esc(info.label)}</div>
+      <span class="badge ${info.cls}">${esc(t.state || "不明")}</span>
+      <div class="stat-row" style="margin-top:var(--s4)">
+        <div class="stat"><div class="label">売り抜け日数</div><div class="value">${idx.distribution_days ?? "-"}</div></div>
+        <div class="stat"><div class="label">失速日数</div><div class="value">${idx.stalling_days ?? "-"}</div></div>
+        <div class="stat"><div class="label">FTD確認日</div><div class="value" style="font-size:14px">${t.ftd_date || "未確認"}</div></div>
+      </div>
+      ${t.note ? `<div class="sub">${esc(t.note)}</div>` : ""}
+    </div>`;
+}
+
+function sectorGrid(sectors) {
+  const cells = Object.entries(sectors).map(([etf, s]) =>
+    `<div class="sector-cell" style="background:${TEMP_COLOR[s.temperature] || TEMP_COLOR["不明"]}" title="${esc(s.name_jp)}: ${esc(s.temperature)}"></div>`
+  ).join("");
+  return `<div class="sector-grid">${cells}</div>`;
+}
+
+function sectorTable(sectors, withMonthly) {
+  const rows = Object.entries(sectors)
+    .sort((a, b) => (b[1].day_change_pct ?? -999) - (a[1].day_change_pct ?? -999))
+    .map(([etf, s]) => `
+      <tr>
+        <td>${esc(s.name_jp)} <span class="sub mono">${esc(etf)}</span></td>
+        <td class="num" style="color:${pctColor(s.day_change_pct)}">${fmtPct(s.day_change_pct)}</td>
+        ${withMonthly ? `<td class="num" style="color:${pctColor(s.monthly_return_pct)}">${fmtPct(s.monthly_return_pct)}</td>` : ""}
+        <td class="num" style="color:${QUADRANT_COLOR[s.quadrant] || "var(--muted)"}">${esc(s.quadrant)}</td>
+      </tr>`).join("");
+  return `
+    <table>
+      <thead><tr><th>${withMonthly ? "テーマ" : "セクター"}</th><th style="text-align:right">前日比</th>${withMonthly ? '<th style="text-align:right">月間</th>' : ""}<th style="text-align:right">RRG</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function leadersTable(leaders) {
+  if (!leaders || !leaders.length) return `<div class="sub">データなし</div>`;
+  const rows = leaders.map((l) => `
+    <tr>
+      <td class="mono" style="font-weight:600">${esc(l.ticker)}</td>
+      <td class="num mono" style="color:var(--gold);font-weight:700">${l.rs_percentile}</td>
+      <td class="num mono" style="color:${pctColor(l.day_change_pct)}">${fmtPct(l.day_change_pct)}</td>
+      <td class="num mono" style="color:${pctColor(l.one_month_pct)}">${fmtPct(l.one_month_pct)}</td>
+      <td class="num mono" style="color:${pctColor(l.three_month_pct)}">${fmtPct(l.three_month_pct)}</td>
+    </tr>`).join("");
+  return `
+    <table>
+      <thead><tr><th>SYM</th><th style="text-align:right">RS</th><th style="text-align:right">前日比</th><th style="text-align:right">1M</th><th style="text-align:right">3M</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="sub" style="margin-top:var(--s3)">RSは本物のIBD RSレーティングの代替指標(母集団内でのトレーリング1年リターン百分位)。</div>`;
+}
+
+function breadthSection(d) {
+  const ext = d.breadth_extended || {};
+  const near = d.breadth_near_52w || {};
+  const but = d.broad_universe_technicals || {};
+  return `
+    <div class="stat-row">
+      <div class="stat"><div class="label">母集団 (${esc(d.breadth_universe_source || "-")})</div><div class="value">${ext.universe_size ?? "-"}</div></div>
+      <div class="stat"><div class="label">新52週高値</div><div class="value" style="color:var(--ok)">${ext.new_52w_highs ?? "-"}</div></div>
+      <div class="stat"><div class="label">新52週安値</div><div class="value" style="color:var(--err)">${ext.new_52w_lows ?? "-"}</div></div>
+      <div class="stat"><div class="label">値上がり/値下がり</div><div class="value" style="font-size:15px">${ext.advancers ?? "-"} / ${ext.decliners ?? "-"}</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="label">出来高ブレッド</div><div class="value">${ext.up_volume_pct ?? "-"}%</div></div>
+      <div class="stat"><div class="label">累積A/Dライン</div><div class="value">${d.cumulative_ad_line ?? "-"}</div></div>
+      <div class="stat"><div class="label">50日線上比率</div><div class="value">${but.pct_above_50dma ?? "-"}%</div></div>
+      <div class="stat"><div class="label">200日線上比率</div><div class="value">${but.pct_above_200dma ?? "-"}%</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="label">トレンドテンプレート合格率</div><div class="value">${but.trend_template_pass_rate_pct ?? "-"}%</div>
+        <div class="sub">${but.trend_template_pass_count ?? "-"}銘柄が8条件合格</div></div>
+      <div class="stat"><div class="label">52週高値圏/安値圏(2%以内)</div><div class="value" style="font-size:15px">${near.near_high_pct ?? "-"}% / ${near.near_low_pct ?? "-"}%</div></div>
+    </div>`;
+}
+
+async function tryFetchJson(path) {
+  try {
+    const res = await fetch(path, { cache: "no-store" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+function dateStr(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+async function loadRecentHistory(latestDateStr, maxDays) {
+  // マニフェストを持たない素朴な実装: 直近N暦日ぶんのファイル名を推測して
+  // fetchし、存在した(=土日祝や未実行日でなかった)ものだけを使う。
+  const base = new Date(latestDateStr + "T00:00:00Z");
+  const promises = [];
+  for (let i = 0; i < maxDays; i++) {
+    const d = new Date(base);
+    d.setUTCDate(d.getUTCDate() - i);
+    const ds = dateStr(d);
+    promises.push(tryFetchJson(`data/history/${ds}.json`).then((data) => (data ? { date: ds, data } : null)));
+  }
+  const results = await Promise.all(promises);
+  return results.filter(Boolean).sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+
+function historyStrip(history) {
+  if (!history.length) return "";
+  const cells = history.map((h) => {
+    const state = (h.data.overall_trend_state) || "不明";
+    const info = TREND_LABELS[state] || TREND_LABELS["不明"];
+    const color = { ok: "var(--ok)", err: "var(--err)", warn: "var(--warn)", muted: "var(--faint)" }[info.cls];
+    return `<div class="mono" title="${h.date}: ${esc(info.label)}" style="flex:1;min-width:6px;height:24px;background:${color};border-radius:3px"></div>`;
+  }).join("");
+  return `
+    <div class="card">
+      <div class="card-title">地合い判定の推移(直近${history.length}営業日、取得できた範囲)</div>
+      <div style="display:flex;gap:3px;">${cells}</div>
+      <div class="sub" style="margin-top:var(--s3)">${history[0].date} 〜 ${history[history.length - 1].date}</div>
+    </div>`;
+}
+
+async function main() {
+  const latest = await tryFetchJson("data/history/latest.json");
+  const content = document.getElementById("content");
+  const meta = document.getElementById("topbar-meta");
+
+  if (!latest) {
+    content.innerHTML = `<div class="error">
+      データがまだありません。GitHub Actionsの日次実行が一度も成功していないか、
+      GitHub Pagesの配信設定(Settings → Pages → Source)が docs/ フォルダを
+      指していない可能性があります。
+    </div>`;
+    meta.textContent = "";
+    return;
+  }
+
+  meta.textContent = `データ日: ${latest.date}`;
+
+  const regimeInfo = REGIME_LABELS[(latest.market_regime || {}).judgement] || REGIME_LABELS["不明"];
+  const overallInfo = TREND_LABELS[latest.overall_trend_state] || TREND_LABELS["不明"];
+
+  content.innerHTML = `
+    <div class="card">
+      <div class="card-title">本日の地合い(O'Neil/IBD式フォロースルー・デイ判定)</div>
+      <div class="hero-state">${esc(overallInfo.label)}</div>
+      <span class="badge ${overallInfo.cls}">${esc(latest.overall_trend_state)}</span>
+      <span class="badge ${regimeInfo.cls}" style="margin-left:var(--s2)" title="セクター体温の多数決による参考指標(オニミネ流の近似)">
+        参考: セクター多数決 ${esc(regimeInfo.label)}
+      </span>
+    </div>
+
+    <div class="grid2">
+      ${trendCard("NASDAQ総合", latest.nasdaq || {})}
+      ${trendCard("S&P500", latest.sp500 || {})}
+    </div>
+
+    <div id="history-strip"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">セクター体温(11 GICSセクター)</div>
+        ${sectorGrid(latest.sectors || {})}
+        <div class="legend">
+          <span><span class="dot" style="background:var(--ok)"></span>上昇</span>
+          <span><span class="dot" style="background:var(--pri)"></span>買い集め</span>
+          <span><span class="dot" style="background:var(--faint)"></span>中立</span>
+          <span><span class="dot" style="background:var(--err)"></span>調整</span>
+        </div>
+        <div style="margin-top:var(--s4)">${sectorTable(latest.sectors || {}, false)}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">テーマ・ローテーション(代理ETF、近似)</div>
+        ${sectorTable(latest.themes || {}, true)}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">市場の幅(ブレッドス) — 母集団: ${esc(latest.breadth_universe_source || "-")}</div>
+      ${breadthSection(latest)}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Market Leaders(母集団内RS百分位ランキング上位)</div>
+      ${leadersTable(latest.market_leaders)}
+    </div>
+  `;
+
+  loadRecentHistory(latest.date, 30).then((history) => {
+    document.getElementById("history-strip").innerHTML = historyStrip(history);
+  });
+}
+
+main();
+</script>
+</body>
+</html>

@@ -26,8 +26,11 @@ from market_climate import (
     compute_sector_rrg,
     compute_breadth_near_52w,
     compute_breadth_extended,
+    compute_broad_universe_technicals,
     classify_sector_temperature,
     majority_vote_market_regime,
+    compute_trend_state,
+    combine_trend_states,
 )
 from ffty_screener import compute_trend_template, compute_rs_proxy_percentiles
 from universe import _parse_ishares_holdings_csv, _parse_nasdaq_listed_txt, sample_tickers
@@ -342,6 +345,95 @@ def test_yf_download_raises_immediately_on_unrelated_error(monkeypatch):
     monkeypatch.setattr(yf_retry.yf, "download", fake_download)
     with pytest.raises(ValueError):
         yf_retry.download_with_retry(["AAPL"], period="1y")
+
+
+def _build_ftd_scenario(inject_distribution_after_ftd: bool = False):
+    """安値(day59)→反発初日(day60)→FTD(day64、day_num=5)という、教科書的な
+    フォロースルー・デイのパターンを持つ120営業日分の合成データを作る。
+    inject_distribution_after_ftd=Trueの場合、直近25営業日(day95-119)に
+    売り抜け日数を5日分仕込み、"uptrend_under_pressure"になるようにする。"""
+    n = 120
+    closes = [150 - i * (50 / 59) for i in range(60)]  # day0..59: 150 -> 100.0 (単調下落)
+    volumes = [1_000_000.0] * 60
+
+    # day60: 反発初日 (陽線)。day61,62は小動き。day63は閾値未満の上昇。
+    # day64: +1.25%以上 かつ 前日より出来高増 -> FTD (day_num=5)
+    closes += [103.0, 103.5, 103.2, 103.6, 105.5]
+    volumes += [1_000_000.0, 1_000_000.0, 1_000_000.0, 1_000_000.0, 1_500_000.0]
+
+    remaining = n - len(closes)  # day65..119
+    if inject_distribution_after_ftd:
+        # day95以降(直近25営業日)に売り抜け日数5日分を仕込む。それ以外は
+        # 出来高を下げた小幅高にして誤検出を避ける。
+        for i in range(remaining):
+            day_idx = len(closes)
+            if day_idx >= 95 and (day_idx - 95) % 5 == 0 and day_idx < 95 + 25:
+                prev = closes[-1]
+                closes.append(prev * (1 - 0.006))  # -0.6% (売り抜け閾値-0.2%を超える下落)
+                volumes.append(volumes[-1] * 1.3)   # 前日より出来高増
+            else:
+                prev = closes[-1]
+                closes.append(prev * 1.0005)
+                volumes.append(500_000.0)  # 出来高は下げておく(前日超えを避ける)
+    else:
+        for i in range(remaining):
+            prev = closes[-1]
+            closes.append(prev * 1.0008)
+            volumes.append(500_000.0)
+
+    return make_price_df(closes, volumes=volumes)
+
+
+def test_trend_state_confirmed_uptrend_after_ftd():
+    df = _build_ftd_scenario(inject_distribution_after_ftd=False)
+    result = compute_trend_state(df)
+    assert result.state == "confirmed_uptrend"
+    assert result.ftd_date is not None
+    assert result.distribution_days_recent is not None
+    assert result.distribution_days_recent < mc.DISTRIBUTION_PRESSURE_THRESHOLD
+
+
+def test_trend_state_uptrend_under_pressure_after_heavy_distribution():
+    df = _build_ftd_scenario(inject_distribution_after_ftd=True)
+    result = compute_trend_state(df)
+    assert result.state == "uptrend_under_pressure"
+    assert result.distribution_days_recent >= mc.DISTRIBUTION_PRESSURE_THRESHOLD
+
+
+def test_trend_state_correction_when_no_ftd_found():
+    # 120日間ずっと右肩下がり(反発もFTDも起きない)
+    n = 120
+    closes = list(np.linspace(200, 100, n))
+    df = make_price_df(closes)
+    result = compute_trend_state(df)
+    assert result.state == "correction"
+
+
+def test_trend_state_insufficient_data_returns_unknown():
+    df = make_price_df([100.0] * 20)
+    result = compute_trend_state(df)
+    assert result.state == "不明"
+
+
+def test_combine_trend_states_worst_of_two():
+    assert combine_trend_states("confirmed_uptrend", "confirmed_uptrend") == "confirmed_uptrend"
+    assert combine_trend_states("confirmed_uptrend", "uptrend_under_pressure") == "uptrend_under_pressure"
+    assert combine_trend_states("uptrend_under_pressure", "correction") == "correction"
+    assert combine_trend_states("confirmed_uptrend", "correction") == "correction"
+
+
+def test_compute_broad_universe_technicals_counts_above_ma_and_template():
+    n = 260
+    strong = make_price_df(list(np.linspace(50, 150, n)))  # トレンドテンプレート合格になる右肩上がり
+    weak = make_price_df(list(np.linspace(150, 50, n)))    # 右肩下がり(50/200日線を下回る)
+
+    price_frames = {"STRONG": strong, "WEAK": weak}
+    rs_percentiles = {"STRONG": 90.0, "WEAK": 10.0}
+
+    result = compute_broad_universe_technicals(price_frames, rs_percentiles)
+    assert result["universe_size"] == 2
+    assert result["pct_above_200dma"] == pytest.approx(50.0)
+    assert result["trend_template_pass_count"] == 1
 
 
 def test_market_climate_and_ffty_screener_share_same_retry_function():
