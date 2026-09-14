@@ -1,0 +1,428 @@
+{
+  "date": "2026-09-14",
+  "nasdaq": {
+    "distribution_days": 5,
+    "stalling_days": 0,
+    "distribution_dates": [
+      "2026-08-11",
+      "2026-08-17",
+      "2026-08-20",
+      "2026-08-28",
+      "2026-09-08"
+    ],
+    "stalling_dates": [],
+    "trend_state": {
+      "state": "correction",
+      "rally_low_date": "2026-07-29",
+      "rally_day1_date": "2026-07-30",
+      "ftd_date": null,
+      "days_since_ftd": null,
+      "distribution_days_recent": null,
+      "note": "直近でフォロースルー・デイが確認できていない"
+    },
+    "price": 26186.41,
+    "sma50": 26053.91,
+    "sma150": 24859.84,
+    "sma200": 24493.11,
+    "above_sma50": true,
+    "above_sma150": true,
+    "above_sma200": true,
+    "sma200_rising": true
+  },
+  "sp500": {
+    "distribution_days": 4,
+    "stalling_days": 0,
+    "distribution_dates": [
+      "2026-08-17",
+      "2026-08-18",
+      "2026-08-31",
+      "2026-09-08"
+    ],
+    "stalling_dates": [],
+    "trend_state": {
+      "state": "confirmed_uptrend",
+      "rally_low_date": "2026-07-29",
+      "rally_day1_date": "2026-07-30",
+      "ftd_date": "2026-08-04",
+      "days_since_ftd": 28,
+      "distribution_days_recent": 4,
+      "note": ""
+    },
+    "price": 7619.98,
+    "sma50": 7610.07,
+    "sma150": 7260.94,
+    "sma200": 7167.13,
+    "above_sma50": true,
+    "above_sma150": true,
+    "above_sma200": true,
+    "sma200_rising": true
+  },
+  "overall_trend_state": "correction",
+  "sectors": {
+    "XLK": {
+      "name_jp": "情報技術",
+      "temperature": "中立",
+      "day_change_pct": -1.81,
+      "rs_ratio": 101.27,
+      "rs_momentum": 100.63,
+      "quadrant": "主導"
+    },
+    "XLF": {
+      "name_jp": "金融",
+      "temperature": "買い集め",
+      "day_change_pct": -0.38,
+      "rs_ratio": 99.78,
+      "rs_momentum": 99.61,
+      "quadrant": "遅行"
+    },
+    "XLE": {
+      "name_jp": "エネルギー",
+      "temperature": "上昇",
+      "day_change_pct": -0.94,
+      "rs_ratio": 101.24,
+      "rs_momentum": 100.72,
+      "quadrant": "主導"
+    },
+    "XLV": {
+      "name_jp": "ヘルスケア",
+      "temperature": "上昇",
+      "day_change_pct": 1.45,
+      "rs_ratio": 100.35,
+      "rs_momentum": 98.82,
+      "quadrant": "鈍化"
+    },
+    "XLI": {
+      "name_jp": "資本財",
+      "temperature": "調整",
+      "day_change_pct": -1.42,
+      "rs_ratio": 98.71,
+      "rs_momentum": 98.68,
+      "quadrant": "遅行"
+    },
+    "XLP": {
+      "name_jp": "生活必需品",
+      "temperature": "買い集め",
+      "day_change_pct": 1.25,
+      "rs_ratio": 98.72,
+      "rs_momentum": 99.36,
+      "quadrant": "遅行"
+    },
+    "XLY": {
+      "name_jp": "一般消費財",
+      "temperature": "調整",
+      "day_change_pct": -0.1,
+      "rs_ratio": 98.13,
+      "rs_momentum": 98.64,
+      "quadrant": "遅行"
+    },
+    "XLU": {
+      "name_jp": "公益事業",
+      "temperature": "調整",
+      "day_change_pct": -1.34,
+      "rs_ratio": 98.04,
+      "rs_momentum": 99.99,
+      "quadrant": "遅行"
+    },
+    "XLB": {
+      "name_jp": "素材",
+      "temperature": "中立",
+      "day_change_pct": -0.9,
+      "rs_ratio": 99.52,
+      "rs_momentum": 98.76,
+      "quadrant": "遅行"
+    },
+    "XLC": {
+      "name_jp": "通信サービス",
+      "temperature": "上昇",
+      "day_change_pct": 2.19,
+      "rs_ratio": 98.53,
+      "rs_momentum": 100.7,
+      "quadrant": "改善"
+    },
+    "XLRE": {
+      "name_jp": "不動産",
+      "temperature": "調整",
+      "day_change_pct": -0.69,
+      "rs_ratio": 97.83,
+      "rs_momentum": 98.96,
+      "quadrant": "遅行"
+    }
+  },
+  "market_regime": {
+    "counts": {
+      "中立": 2,
+      "買い集め": 2,
+      "上昇": 3,
+      "調整": 4
+    },
+    "total": 11,
+    "judgement": "MIXED"
+  },
+  "themes": {
+    "SOXX": {
+      "name_jp": "半導体",
+      "monthly_return_pct": -9.69,
+      "day_change_pct": -5.63,
+      "rs_ratio": 100.77,
+      "rs_momentum": 100.04,
+      "quadrant": "主導"
+    },
+    "XOP": {
+      "name_jp": "エネルギー(探鉱・生産)",
+      "monthly_return_pct": 7.98,
+      "day_change_pct": -1.15,
+      "rs_ratio": 101.43,
+      "rs_momentum": 100.83,
+      "quadrant": "主導"
+    },
+    "ICLN": {
+      "name_jp": "クリーンエネルギー",
+      "monthly_return_pct": -4.36,
+      "day_change_pct": -2.01,
+      "rs_ratio": 98.57,
+      "rs_momentum": 100.51,
+      "quadrant": "改善"
+    },
+    "IYT": {
+      "name_jp": "産業・輸送",
+      "monthly_return_pct": -6.24,
+      "day_change_pct": 0.61,
+      "rs_ratio": 99.11,
+      "rs_momentum": 98.27,
+      "quadrant": "遅行"
+    },
+    "FINX": {
+      "name_jp": "フィンテック",
+      "monthly_return_pct": -1.9,
+      "day_change_pct": 1.7,
+      "rs_ratio": 99.28,
+      "rs_momentum": 99.53,
+      "quadrant": "遅行"
+    },
+    "KRE": {
+      "name_jp": "地銀",
+      "monthly_return_pct": -4.68,
+      "day_change_pct": 0.28,
+      "rs_ratio": 99.94,
+      "rs_momentum": 99.97,
+      "quadrant": "遅行"
+    },
+    "ITA": {
+      "name_jp": "宇宙・防衛",
+      "monthly_return_pct": -13.18,
+      "day_change_pct": -1.02,
+      "rs_ratio": 98.2,
+      "rs_momentum": 98.65,
+      "quadrant": "遅行"
+    },
+    "PICK": {
+      "name_jp": "素材・鉱業",
+      "monthly_return_pct": -0.95,
+      "day_change_pct": -2.7,
+      "rs_ratio": 100.56,
+      "rs_momentum": 99.1,
+      "quadrant": "鈍化"
+    },
+    "IBB": {
+      "name_jp": "バイオテクノロジー",
+      "monthly_return_pct": 2.85,
+      "day_change_pct": 0.82,
+      "rs_ratio": 101.94,
+      "rs_momentum": 98.65,
+      "quadrant": "鈍化"
+    },
+    "BOTZ": {
+      "name_jp": "AI・ロボティクス",
+      "monthly_return_pct": -8.09,
+      "day_change_pct": -1.47,
+      "rs_ratio": 97.82,
+      "rs_momentum": 99.87,
+      "quadrant": "遅行"
+    },
+    "SRVR": {
+      "name_jp": "デジタルインフラ(データセンター)",
+      "monthly_return_pct": -9.29,
+      "day_change_pct": -3.08,
+      "rs_ratio": 98.07,
+      "rs_momentum": 99.03,
+      "quadrant": "遅行"
+    },
+    "URA": {
+      "name_jp": "原子力(ウラン)",
+      "monthly_return_pct": -6.76,
+      "day_change_pct": -3.08,
+      "rs_ratio": 98.71,
+      "rs_momentum": 99.61,
+      "quadrant": "遅行"
+    }
+  },
+  "breadth_universe_source": "nasdaqtrader",
+  "breadth_near_52w": {
+    "universe_size": 5433,
+    "near_52w_high": 463,
+    "near_52w_low": 699,
+    "near_high_pct": 8.5,
+    "near_low_pct": 12.9
+  },
+  "breadth_extended": {
+    "universe_size": 5433,
+    "new_52w_highs": 128,
+    "new_52w_lows": 389,
+    "advancers": 2299,
+    "decliners": 2790,
+    "unchanged": 344,
+    "up_volume": 4646300300.0,
+    "down_volume": 4819768335.0,
+    "up_volume_pct": 49.1
+  },
+  "broad_universe_technicals": {
+    "universe_size": 5433,
+    "pct_above_50dma": 37.6,
+    "pct_above_200dma": 45.1,
+    "trend_template_pass_count": 618,
+    "trend_template_pass_rate_pct": 11.4
+  },
+  "market_leaders": [
+    {
+      "ticker": "GTBP",
+      "rs_percentile": 100.0,
+      "day_change_pct": 35.08,
+      "one_month_pct": 3750.99,
+      "three_month_pct": 2501.79
+    },
+    {
+      "ticker": "MGRT",
+      "rs_percentile": 100.0,
+      "day_change_pct": -0.23,
+      "one_month_pct": 25.57,
+      "three_month_pct": 62.71
+    },
+    {
+      "ticker": "SNDK",
+      "rs_percentile": 100.0,
+      "day_change_pct": -4.98,
+      "one_month_pct": 1.56,
+      "three_month_pct": -26.37
+    },
+    {
+      "ticker": "AXTI",
+      "rs_percentile": 99.9,
+      "day_change_pct": -11.9,
+      "one_month_pct": -26.33,
+      "three_month_pct": -48.47
+    },
+    {
+      "ticker": "CCG",
+      "rs_percentile": 99.9,
+      "day_change_pct": -8.48,
+      "one_month_pct": -14.11,
+      "three_month_pct": 3345.75
+    },
+    {
+      "ticker": "DUKR",
+      "rs_percentile": 99.9,
+      "day_change_pct": -0.19,
+      "one_month_pct": -3.93,
+      "three_month_pct": -8.97
+    },
+    {
+      "ticker": "ERAS",
+      "rs_percentile": 99.9,
+      "day_change_pct": 1.76,
+      "one_month_pct": -9.52,
+      "three_month_pct": 11.99
+    },
+    {
+      "ticker": "NUAI",
+      "rs_percentile": 99.9,
+      "day_change_pct": -5.72,
+      "one_month_pct": 12.11,
+      "three_month_pct": -0.53
+    },
+    {
+      "ticker": "ANL",
+      "rs_percentile": 99.8,
+      "day_change_pct": 4.73,
+      "one_month_pct": 23.87,
+      "three_month_pct": 40.6
+    },
+    {
+      "ticker": "BVC",
+      "rs_percentile": 99.8,
+      "day_change_pct": -6.09,
+      "one_month_pct": 0.47,
+      "three_month_pct": 33.27
+    },
+    {
+      "ticker": "CYPH",
+      "rs_percentile": 99.8,
+      "day_change_pct": 13.91,
+      "one_month_pct": 298.15,
+      "three_month_pct": 217.34
+    },
+    {
+      "ticker": "DMRA",
+      "rs_percentile": 99.8,
+      "day_change_pct": 1.03,
+      "one_month_pct": -7.61,
+      "three_month_pct": 41.45
+    },
+    {
+      "ticker": "PRAX",
+      "rs_percentile": 99.8,
+      "day_change_pct": -1.2,
+      "one_month_pct": -10.29,
+      "three_month_pct": 24.95
+    },
+    {
+      "ticker": "ANRO",
+      "rs_percentile": 99.8,
+      "day_change_pct": -1.0,
+      "one_month_pct": -1.92,
+      "three_month_pct": 49.65
+    },
+    {
+      "ticker": "CLYM",
+      "rs_percentile": 99.7,
+      "day_change_pct": 2.18,
+      "one_month_pct": -1.15,
+      "three_month_pct": 26.72
+    },
+    {
+      "ticker": "CTSO",
+      "rs_percentile": 99.7,
+      "day_change_pct": -5.31,
+      "one_month_pct": 1540.51,
+      "three_month_pct": 1417.47
+    },
+    {
+      "ticker": "MRNA",
+      "rs_percentile": 99.7,
+      "day_change_pct": 1.89,
+      "one_month_pct": 130.46,
+      "three_month_pct": 181.39
+    },
+    {
+      "ticker": "SFWL",
+      "rs_percentile": 99.7,
+      "day_change_pct": -2.22,
+      "one_month_pct": 824.38,
+      "three_month_pct": 805.97
+    },
+    {
+      "ticker": "SLS",
+      "rs_percentile": 99.7,
+      "day_change_pct": 1.52,
+      "one_month_pct": -5.14,
+      "three_month_pct": 51.68
+    },
+    {
+      "ticker": "IMMX",
+      "rs_percentile": 99.6,
+      "day_change_pct": 0.58,
+      "one_month_pct": 11.81,
+      "three_month_pct": 44.16
+    }
+  ],
+  "cumulative_ad_line": -491.0
+}
