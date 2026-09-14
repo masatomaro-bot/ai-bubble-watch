@@ -12,3 +12,6 @@
   詳細は [technical-practice/README.md](technical-practice/README.md) を参照。
   `notebooks/market_climate_explorer.ipynb` はGoogle Colab上でロジックを
   対話的に確認・調整するためのノートブック。
+- `docs/index.html` — 「地合いウォッチ」静的ダッシュボード(GitHub Pages想定)。
+  `docs/data/history/*.json` (毎日のGitHub Actions実行でコミットされる)を
+  読んで表示する。閲覧には[GitHub Pagesの有効化](technical-practice/README.md#github-pagesダッシュボードを有効にする)が必要(手動の一回設定)。

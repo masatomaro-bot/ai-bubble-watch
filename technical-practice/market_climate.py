@@ -49,9 +49,10 @@ from universe import get_broad_market_tickers
 from yf_retry import download_with_retry
 
 try:
-    from ffty_screener import compute_rs_proxy_percentiles
+    from ffty_screener import compute_rs_proxy_percentiles, compute_trend_template
 except ImportError:  # pragma: no cover - フォールバック(単体実行時など)
     compute_rs_proxy_percentiles = None
+    compute_trend_template = None
 
 # ----------------------------------------------------------------------------
 # 設定
@@ -167,6 +168,147 @@ def compute_distribution_and_stalling_days(
         distribution_dates=[d.strftime("%Y-%m-%d") for d in dist_dates],
         stalling_dates=[d.strftime("%Y-%m-%d") for d in stall_dates],
     )
+
+
+# ----------------------------------------------------------------------------
+# 1.5. フォロースルー・デイ(FTD)によるO'Neil/IBD式3状態判定
+# ----------------------------------------------------------------------------
+#
+# O'Neilおよび後続のIBD(Investor's Business Daily)が公開している「市場の方向性」
+# 判定の考え方をできるだけそのまま実装したもの。オニミネの非公開ロジック(セクター
+# 4分類の多数決)とは別の、根拠が公開されている判定手法として位置づける。
+#
+# 定義(原典/IBDの一般的な説明に準拠):
+#   - 「反発の初日(Day 1)」: 下落が続いた後、指数が前日比プラスで引けた日
+#   - Day 1から数えてDay 4以降のいずれかの日に、指数が大幅高(+1.25%以上)かつ
+#     前日より出来高が多い日が出れば「フォロースルー・デイ(FTD)」となり、
+#     そこで新しい上昇トレンドが「確認(confirmed)」される
+#   - FTD成立前に、指数が反発開始時の安値を終値で下回ったら、その反発の試みは
+#     失敗とみなす
+#   - 上昇トレンド確認後も、売り抜け日数(distribution days)が直近25営業日で
+#     一定数を超えると「圧力下の上昇トレンド」に格下げされる
+#
+# 以下は自前の簡略化(オニミネや教科書の完全な再現ではない):
+#   - 「安値」の検出は直近ウィンドウ内の終値最小値という単純な定義とし、複数回の
+#     反発失敗〜再安値パターンは限られた回数だけ再探索する(MAX_RETRY_ON_UNDERCUT)
+#   - FTD成立を待つ期間はDay 4〜Day 10とする(流派によりDay 25まで許容する説もある)
+#   - 「反発初日」の検出は安値の後の最初の陽線という単純な定義とする
+
+FTD_GAIN_THRESHOLD = 0.0125       # フォロースルー・デイの上昇率しきい値 (+1.25%)
+FTD_WINDOW_MIN_DAY = 4             # FTDが成立しうる最短日(反発Day4から)
+FTD_WINDOW_MAX_DAY = 10            # FTDを探す最長日(反発Day10まで)
+RALLY_LOW_LOOKBACK_DAYS = 40       # 直近安値を探す遡り日数
+RALLY_ATTEMPT_MAX_SEARCH_DAYS = 15 # 安値から反発初日(陽線)を探す最長日数
+DISTRIBUTION_PRESSURE_THRESHOLD = 5  # 直近25営業日の売り抜け日数がこれ以上で「圧力下」
+MAX_RETRY_ON_UNDERCUT = 2          # 反発失敗(安値割れ)時に安値を探し直す最大回数
+
+
+@dataclass
+class TrendStateResult:
+    state: str  # "confirmed_uptrend" | "uptrend_under_pressure" | "correction" | "不明"
+    rally_low_date: str | None = None
+    rally_day1_date: str | None = None
+    ftd_date: str | None = None
+    days_since_ftd: int | None = None
+    distribution_days_recent: int | None = None
+    note: str = ""
+
+
+def _find_rally_low_and_day1(close: pd.Series, pct: pd.Series, search_start_idx: int, n: int):
+    """search_start_idx以降のウィンドウ内で直近安値と、その後最初の陽線
+    (反発初日)のインデックスを探す。反発の兆しがまだなければ day1=None。"""
+    window_end = min(search_start_idx + RALLY_LOW_LOOKBACK_DAYS, n)
+    if search_start_idx >= window_end:
+        return None, None
+    window = close.iloc[search_start_idx:window_end]
+    low_idx = search_start_idx + int(np.asarray(window.values).argmin())
+
+    for j in range(low_idx + 1, min(low_idx + 1 + RALLY_ATTEMPT_MAX_SEARCH_DAYS, n)):
+        if pct.iloc[j] > 0:
+            return low_idx, j
+    return low_idx, None
+
+
+def compute_trend_state(df: pd.DataFrame) -> TrendStateResult:
+    """df: yfinanceの日足データ(列: Close, Volume)。2年分程度を想定。"""
+    close = df["Close"].dropna()
+    volume = df["Volume"].dropna()
+    common_idx = close.index.intersection(volume.index)
+    close = close.loc[common_idx]
+    volume = volume.loc[common_idx]
+    n = len(close)
+
+    min_len = RALLY_LOW_LOOKBACK_DAYS + FTD_WINDOW_MAX_DAY
+    if n < min_len:
+        return TrendStateResult(state="不明", note=f"データ不足(必要{min_len}営業日、実際{n}営業日)")
+
+    pct = close.pct_change()
+
+    search_start = max(0, n - RALLY_LOW_LOOKBACK_DAYS - FTD_WINDOW_MAX_DAY - RALLY_ATTEMPT_MAX_SEARCH_DAYS)
+
+    low_idx = day1_idx = ftd_idx = None
+    for _attempt in range(MAX_RETRY_ON_UNDERCUT + 1):
+        low_idx, day1_idx = _find_rally_low_and_day1(close, pct, search_start, n)
+        if day1_idx is None:
+            break
+
+        rally_low = close.iloc[low_idx]
+        undercut_idx = None
+        ftd_idx = None
+        window_days = range(day1_idx, min(day1_idx + FTD_WINDOW_MAX_DAY, n))
+        for day_num, j in enumerate(window_days, start=1):
+            if close.iloc[j] < rally_low:
+                undercut_idx = j
+                break
+            if day_num >= FTD_WINDOW_MIN_DAY:
+                vol_up = volume.iloc[j] > volume.iloc[j - 1]
+                if pct.iloc[j] >= FTD_GAIN_THRESHOLD and vol_up:
+                    ftd_idx = j
+                    break
+
+        if ftd_idx is not None:
+            break
+        if undercut_idx is not None:
+            search_start = undercut_idx + 1
+            continue
+        break  # ウィンドウ内でFTDも失敗も確定しなかった(直近すぎて判定保留)
+
+    if ftd_idx is None:
+        return TrendStateResult(
+            state="correction",
+            rally_low_date=close.index[low_idx].strftime("%Y-%m-%d") if low_idx is not None else None,
+            rally_day1_date=close.index[day1_idx].strftime("%Y-%m-%d") if day1_idx is not None else None,
+            note="直近でフォロースルー・デイが確認できていない",
+        )
+
+    dist_result = compute_distribution_and_stalling_days(df.loc[common_idx])
+    distribution_days_recent = dist_result.distribution_days
+    state = (
+        "uptrend_under_pressure"
+        if distribution_days_recent >= DISTRIBUTION_PRESSURE_THRESHOLD
+        else "confirmed_uptrend"
+    )
+
+    return TrendStateResult(
+        state=state,
+        rally_low_date=close.index[low_idx].strftime("%Y-%m-%d"),
+        rally_day1_date=close.index[day1_idx].strftime("%Y-%m-%d"),
+        ftd_date=close.index[ftd_idx].strftime("%Y-%m-%d"),
+        days_since_ftd=n - 1 - ftd_idx,
+        distribution_days_recent=distribution_days_recent,
+    )
+
+
+def combine_trend_states(nasdaq_state: str, sp500_state: str) -> str:
+    """NASDAQ・S&P500いずれか弱い方に合わせる単純な統合ルール(自前設計)。"""
+    states = {nasdaq_state, sp500_state}
+    if "correction" in states:
+        return "correction"
+    if "uptrend_under_pressure" in states:
+        return "uptrend_under_pressure"
+    if states == {"confirmed_uptrend"}:
+        return "confirmed_uptrend"
+    return "不明"
 
 
 # ----------------------------------------------------------------------------
@@ -335,6 +477,62 @@ def compute_breadth_extended(price_frames: dict) -> dict:
         "up_volume": up_volume,
         "down_volume": down_volume,
         "up_volume_pct": round(100 * up_volume / total_volume, 1) if total_volume else None,
+    }
+
+
+# ----------------------------------------------------------------------------
+# 4.5. 広域ユニバース全体のテクニカル比率 (200日線上比率・トレンドテンプレート合格率)
+# ----------------------------------------------------------------------------
+#
+# S&P500のような一部指数ではなく、ブレッドス計算に使っている広域ユニバース
+# (数千銘柄)全体を対象にした比率。「何%の銘柄が上昇トレンドの型を満たしているか」
+# という、O'Neil/ミネルヴィニ流の地合い判断でよく使われる指標。
+# トレンドテンプレート合格の8条件目(RSレーティング>=70)は、ffty_screener.py と
+# 同様に「このユニバース内でのトレーリング1年リターン百分位」を代替指標として使う
+# (本物のIBD RSレーティングとは数値の意味が異なる)。
+
+TREND_TEMPLATE_RS_THRESHOLD = 70  # RS百分位proxyがこの値以上で8条件目を合格扱いにする
+
+
+def compute_broad_universe_technicals(price_frames: dict, rs_percentiles: dict) -> dict:
+    above_50 = above_200 = valid = 0
+    template_pass_all8 = template_total = 0
+
+    for ticker, df in price_frames.items():
+        close = df["Close"].dropna()
+        if len(close) < 200:
+            continue
+        sma50 = close.rolling(50).mean().iloc[-1]
+        sma200 = close.rolling(200).mean().iloc[-1]
+        if pd.isna(sma50) or pd.isna(sma200):
+            continue
+        last = close.iloc[-1]
+
+        valid += 1
+        if last > sma50:
+            above_50 += 1
+        if last > sma200:
+            above_200 += 1
+
+        if compute_trend_template is None:
+            continue
+        tmpl = compute_trend_template(df)
+        if "error" in tmpl:
+            continue
+        template_total += 1
+        rs_pct = rs_percentiles.get(ticker)
+        c8_pass = rs_pct is not None and rs_pct >= TREND_TEMPLATE_RS_THRESHOLD
+        if tmpl.get("pass_count_without_rs") == 7 and c8_pass:
+            template_pass_all8 += 1
+
+    return {
+        "universe_size": valid,
+        "pct_above_50dma": round(100 * above_50 / valid, 1) if valid else None,
+        "pct_above_200dma": round(100 * above_200 / valid, 1) if valid else None,
+        "trend_template_pass_count": template_pass_all8,
+        "trend_template_pass_rate_pct": (
+            round(100 * template_pass_all8 / template_total, 1) if template_total else None
+        ),
     }
 
 
@@ -523,15 +721,20 @@ def run(
     """
     today = dt.date.today().isoformat()
 
-    idx_hist = download_history([NASDAQ_TICKER, SP500_TICKER], period="6mo")
+    # 売り抜け日数・ステージ状態・FTD判定はいずれも同じ指数データ(1年分)で
+    # 計算できるため、ダウンロードは1回にまとめる。
+    idx_hist = download_history([NASDAQ_TICKER, SP500_TICKER], period="1y")
     nasdaq_df, sp500_df = idx_hist.get(NASDAQ_TICKER), idx_hist.get(SP500_TICKER)
 
     nasdaq_dist = compute_distribution_and_stalling_days(nasdaq_df)
     sp500_dist = compute_distribution_and_stalling_days(sp500_df)
 
-    stage_hist = download_history([NASDAQ_TICKER, SP500_TICKER], period="1y")
-    nasdaq_stage = compute_index_stage(stage_hist[NASDAQ_TICKER])
-    sp500_stage = compute_index_stage(stage_hist[SP500_TICKER])
+    nasdaq_stage = compute_index_stage(nasdaq_df)
+    sp500_stage = compute_index_stage(sp500_df)
+
+    nasdaq_trend = compute_trend_state(nasdaq_df)
+    sp500_trend = compute_trend_state(sp500_df)
+    overall_trend_state = combine_trend_states(nasdaq_trend.state, sp500_trend.state)
 
     sector_tickers = list(SECTOR_ETFS.keys()) + [BENCHMARK_FOR_SECTORS]
     sector_hist = download_history(sector_tickers, period="1y")
@@ -545,7 +748,15 @@ def run(
         etf_close = sector_hist[etf]["Close"]
         rrg = compute_sector_rrg(etf_close, benchmark_close)
         temperature = classify_sector_temperature(etf_close, benchmark_close)
-        sector_results[etf] = {"name_jp": jp_name, "temperature": temperature, **rrg}
+        day_change_pct = (
+            round(100 * (etf_close.iloc[-1] / etf_close.iloc[-2] - 1), 2) if len(etf_close) > 1 else None
+        )
+        sector_results[etf] = {
+            "name_jp": jp_name,
+            "temperature": temperature,
+            "day_change_pct": day_change_pct,
+            **rrg,
+        }
         sector_temperatures[etf] = temperature
 
     market_regime = majority_vote_market_regime(sector_temperatures)
@@ -562,13 +773,21 @@ def run(
         monthly_return = (
             round(100 * (close.iloc[-1] / close.iloc[-22] - 1), 2) if len(close) > 22 else None
         )
-        theme_results[etf] = {"name_jp": jp_name, "monthly_return_pct": monthly_return, **rrg}
+        day_change_pct = round(100 * (close.iloc[-1] / close.iloc[-2] - 1), 2) if len(close) > 1 else None
+        theme_results[etf] = {
+            "name_jp": jp_name,
+            "monthly_return_pct": monthly_return,
+            "day_change_pct": day_change_pct,
+            **rrg,
+        }
 
     # ブレッドス(市場の幅) + Market Leader(個別RSランキング)
     breadth_tickers, breadth_source = get_breadth_universe(breadth_universe, max_breadth_tickers)
     breadth_near_52w = {}
     breadth_extended = {}
+    broad_universe_technicals = {}
     leaders = []
+    percentiles: dict = {}
     if breadth_tickers:
         # 52週(約252営業日)ブレッドス計算とMarket LeaderのRS百分位
         # (compute_rs_proxy_percentilesは既定でlookback_days=252営業日分の
@@ -582,6 +801,10 @@ def run(
 
         if compute_rs_proxy_percentiles is not None and price_frames:
             percentiles = compute_rs_proxy_percentiles(price_frames)
+
+        broad_universe_technicals = compute_broad_universe_technicals(price_frames, percentiles)
+
+        if percentiles:
             ranked = sorted(percentiles.items(), key=lambda kv: kv[1], reverse=True)
             for ticker, pct in ranked[:MARKET_LEADER_TOP_N]:
                 close = price_frames[ticker]["Close"].dropna()
@@ -609,6 +832,7 @@ def run(
             "stalling_days": nasdaq_dist.stalling_days,
             "distribution_dates": nasdaq_dist.distribution_dates,
             "stalling_dates": nasdaq_dist.stalling_dates,
+            "trend_state": nasdaq_trend.__dict__,
             **nasdaq_stage,
         },
         "sp500": {
@@ -616,21 +840,26 @@ def run(
             "stalling_days": sp500_dist.stalling_days,
             "distribution_dates": sp500_dist.distribution_dates,
             "stalling_dates": sp500_dist.stalling_dates,
+            "trend_state": sp500_trend.__dict__,
             **sp500_stage,
         },
+        "overall_trend_state": overall_trend_state,
         "sectors": sector_results,
         "market_regime": market_regime,
         "themes": theme_results,
         "breadth_universe_source": breadth_source,
         "breadth_near_52w": breadth_near_52w,
         "breadth_extended": breadth_extended,
+        "broad_universe_technicals": broad_universe_technicals,
         "market_leaders": leaders,
     }
     return result
 
 
 def flatten_for_sheet(result: dict) -> list:
-    """Google Sheets への追記行 (1行) を作る。"""
+    """Google Sheets への1行分のデータを作る(upsert_rowで日付キー上書き)。
+    result["cumulative_ad_line"] は __main__ 側で history_store の履歴から
+    計算して注入される想定(run()自体はファイルI/Oを行わない)。"""
     leading_sectors = [k for k, v in result["sectors"].items() if v["quadrant"] == "主導"]
     lagging_sectors = [k for k, v in result["sectors"].items() if v["quadrant"] == "遅行"]
     leading_themes = [k for k, v in result["themes"].items() if v["quadrant"] == "主導"]
@@ -640,6 +869,9 @@ def flatten_for_sheet(result: dict) -> list:
     regime = result["market_regime"]
     ext = result["breadth_extended"]
     near = result["breadth_near_52w"]
+    but = result["broad_universe_technicals"]
+    nasdaq_trend = result["nasdaq"]["trend_state"]
+    sp500_trend = result["sp500"]["trend_state"]
 
     return [
         result["date"],
@@ -649,6 +881,11 @@ def flatten_for_sheet(result: dict) -> list:
         result["sp500"]["stalling_days"],
         result["nasdaq"]["above_sma50"],
         result["nasdaq"]["above_sma200"],
+        result["overall_trend_state"],
+        nasdaq_trend.get("state"),
+        nasdaq_trend.get("ftd_date"),
+        nasdaq_trend.get("days_since_ftd"),
+        sp500_trend.get("state"),
         regime.get("judgement"),
         regime.get("counts", {}).get("上昇", 0),
         regime.get("counts", {}).get("買い集め", 0),
@@ -661,8 +898,13 @@ def flatten_for_sheet(result: dict) -> list:
         ext.get("advancers"),
         ext.get("decliners"),
         ext.get("up_volume_pct"),
+        result.get("cumulative_ad_line"),
         near.get("near_high_pct"),
         near.get("near_low_pct"),
+        but.get("pct_above_50dma"),
+        but.get("pct_above_200dma"),
+        but.get("trend_template_pass_rate_pct"),
+        but.get("trend_template_pass_count"),
         ",".join(leading_sectors),
         ",".join(lagging_sectors),
         ",".join(leading_themes),
@@ -674,11 +916,16 @@ def flatten_for_sheet(result: dict) -> list:
 SHEET_HEADER = [
     "date", "nasdaq_dist_days", "nasdaq_stall_days", "sp500_dist_days", "sp500_stall_days",
     "nasdaq_above_sma50", "nasdaq_above_sma200",
+    "overall_trend_state", "nasdaq_trend_state", "nasdaq_ftd_date", "nasdaq_days_since_ftd",
+    "sp500_trend_state",
     "market_regime", "sector_count_up", "sector_count_accum", "sector_count_neutral", "sector_count_down",
     "breadth_universe_source", "breadth_universe_size",
     "breadth_new_52w_highs", "breadth_new_52w_lows",
     "breadth_advancers", "breadth_decliners", "breadth_up_volume_pct",
+    "cumulative_ad_line",
     "breadth_near_high_pct", "breadth_near_low_pct",
+    "broad_pct_above_50dma", "broad_pct_above_200dma",
+    "broad_trend_template_pass_rate_pct", "broad_trend_template_pass_count",
     "leading_sectors", "lagging_sectors",
     "leading_themes", "lagging_themes",
     "top_market_leaders",
@@ -707,20 +954,54 @@ if __name__ == "__main__":
     max_tickers = int(max_tickers_env) if max_tickers_env else None
 
     res = run(breadth_universe=breadth_universe_env, max_breadth_tickers=max_tickers)
+
+    # 累積A/Dライン: 「gitをDBにする」履歴JSON(history_store)を正として、
+    # 前回保存分(今日以外で最新の日付)の累積値に今日の値上がり・値下がり
+    # 銘柄数の差を積み上げる。同じ日に何度も再実行しても、そのたびに
+    # history_store側の当日ファイルが上書きされるだけなので二重加算しない。
+    try:
+        from history_store import list_history_dates, load_snapshot
+
+        prev_dates = [d for d in list_history_dates() if d != res["date"]]
+        prev_cumulative = 0.0
+        if prev_dates:
+            prev_snapshot = load_snapshot(prev_dates[-1])
+            if prev_snapshot and prev_snapshot.get("cumulative_ad_line") is not None:
+                prev_cumulative = float(prev_snapshot["cumulative_ad_line"])
+        ext = res.get("breadth_extended", {})
+        net_ad_today = (ext.get("advancers") or 0) - (ext.get("decliners") or 0)
+        res["cumulative_ad_line"] = prev_cumulative + net_ad_today
+    except Exception as e:  # noqa: BLE001
+        print(f"[warn] 累積A/Dライン計算失敗、Noneのまま保存: {e}", file=sys.stderr)
+        res["cumulative_ad_line"] = None
+
     print(json.dumps(res, ensure_ascii=False, indent=2, default=str))
+
+    # 「gitをDBにする」方式: 日次結果をリポジトリ内にJSONで保存する。
+    # git add/commit/push自体はGitHub Actionsワークフロー側のステップが行う。
+    try:
+        from history_store import save_snapshot
+
+        saved_path = save_snapshot(res)
+        print(f"[info] 履歴JSON保存完了: {saved_path}", file=sys.stderr)
+    except Exception as e:  # noqa: BLE001
+        print(f"[warn] 履歴JSON保存スキップ: {e}", file=sys.stderr)
 
     # Google Sheets へ書き込む場合 (環境変数が設定されていれば)
     try:
-        from sheets_writer import append_rows, ensure_worksheet
+        from sheets_writer import append_rows, ensure_worksheet, upsert_row
 
         sheet_id = os.environ.get("SPREADSHEET_ID")
         if sheet_id:
             ensure_worksheet(sheet_id, "地合いトラッカー", SHEET_HEADER)
-            append_rows(sheet_id, "地合いトラッカー", [flatten_for_sheet(res)])
+            upsert_row(sheet_id, "地合いトラッカー", flatten_for_sheet(res))
 
             leader_rows = flatten_leaders_for_sheet(res)
             if leader_rows:
                 ensure_worksheet(sheet_id, "Market Leaders", LEADER_SHEET_HEADER)
+                # Market Leadersは日次のスナップショット一覧として全件追記のまま
+                # (upsertすると当日分だけ複数回書き込み時に重複行のクリーンアップが
+                # 別途必要になるため、履歴JSON側を正として割り切る)。
                 append_rows(sheet_id, "Market Leaders", leader_rows)
 
             print("[info] Google Sheetsへの書き込み完了", file=sys.stderr)
