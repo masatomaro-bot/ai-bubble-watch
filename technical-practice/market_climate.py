@@ -44,9 +44,9 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
-import yfinance as yf
 
 from universe import get_broad_market_tickers
+from yf_retry import download_with_retry
 
 try:
     from ffty_screener import compute_rs_proxy_percentiles
@@ -437,11 +437,12 @@ def get_sp500_tickers() -> list:
 
 
 def download_history(tickers: list, period: str = "2y") -> dict:
-    """複数ティッカーをまとめて取得し、{ticker: DataFrame} の辞書で返す。"""
+    """複数ティッカーをまとめて取得し、{ticker: DataFrame} の辞書で返す。
+    yfinanceの"database is locked"エラー対策でリトライ付き(yf_retry.py参照)。"""
     if not tickers:
         return {}
-    raw = yf.download(tickers, period=period, interval="1d", group_by="ticker",
-                       auto_adjust=False, progress=False, threads=True)
+    raw = download_with_retry(tickers, period=period, interval="1d", group_by="ticker",
+                               auto_adjust=False, progress=False, threads=True)
     result = {}
     if len(tickers) == 1:
         result[tickers[0]] = raw
