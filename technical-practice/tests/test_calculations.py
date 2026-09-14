@@ -18,6 +18,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import market_climate as mc
+import yf_retry
 from market_climate import (
     compute_distribution_and_stalling_days,
     compute_index_stage,
@@ -301,6 +303,54 @@ def test_sample_tickers_avoids_alphabetical_bias():
 def test_sample_tickers_is_deterministic():
     tickers = [f"T{i:04d}" for i in range(200)]
     assert sample_tickers(tickers, 50) == sample_tickers(tickers, 50)
+
+
+def test_yf_download_retries_on_database_locked(monkeypatch):
+    # 2026-09-10, 2026-09-14の定期実行(cron)で実際に発生したyfinanceの
+    # "database is locked" エラーに対するリトライ挙動を検証する。
+    calls = {"n": 0}
+
+    def fake_download(*args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise Exception("OperationalError('database is locked')")
+        return "ok"
+
+    monkeypatch.setattr(yf_retry.yf, "download", fake_download)
+    monkeypatch.setattr(yf_retry.time, "sleep", lambda s: None)
+
+    result = yf_retry.download_with_retry(["AAPL"], period="1y")
+    assert result == "ok"
+    assert calls["n"] == 3
+
+
+def test_yf_download_gives_up_after_max_retries(monkeypatch):
+    def fake_download(*args, **kwargs):
+        raise Exception("database is locked")
+
+    monkeypatch.setattr(yf_retry.yf, "download", fake_download)
+    monkeypatch.setattr(yf_retry.time, "sleep", lambda s: None)
+
+    with pytest.raises(Exception, match="database is locked"):
+        yf_retry.download_with_retry(["AAPL"], period="1y")
+
+
+def test_yf_download_raises_immediately_on_unrelated_error(monkeypatch):
+    def fake_download(*args, **kwargs):
+        raise ValueError("some unrelated network error")
+
+    monkeypatch.setattr(yf_retry.yf, "download", fake_download)
+    with pytest.raises(ValueError):
+        yf_retry.download_with_retry(["AAPL"], period="1y")
+
+
+def test_market_climate_and_ffty_screener_share_same_retry_function():
+    # 循環import回避のためyf_retry.pyに切り出した関数を、両モジュールが
+    # 同じ実体として参照していることを確認する。
+    import ffty_screener
+
+    assert mc.download_with_retry is yf_retry.download_with_retry
+    assert ffty_screener.download_with_retry is yf_retry.download_with_retry
 
 
 if __name__ == "__main__":

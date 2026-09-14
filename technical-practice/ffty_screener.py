@@ -31,7 +31,8 @@ import re
 import sys
 
 import pandas as pd
-import yfinance as yf
+
+from yf_retry import download_with_retry
 
 FFTY_HOLDINGS_URL = "https://www.capforceetf.com/ffty/details"
 
@@ -211,7 +212,7 @@ def compute_rs_proxy_percentiles(price_frames: dict, lookback_days: int = 252) -
 # ----------------------------------------------------------------------------
 
 def fetch_usdjpy_rate() -> float:
-    df = yf.download("JPY=X", period="5d", interval="1d", progress=False)
+    df = download_with_retry("JPY=X", period="5d", interval="1d", progress=False)
     close = df["Close"].dropna()
     last = close.iloc[-1]
     # yfinanceのバージョンによりMultiIndex列になり、iloc[-1]がSeries(要素数1)に
@@ -242,8 +243,8 @@ def run() -> list[list]:
 
     tickers = [h["ticker"] for h in holdings]
     price_frames = {}
-    raw = yf.download(tickers, period="2y", interval="1d", group_by="ticker",
-                       auto_adjust=False, progress=False, threads=True)
+    raw = download_with_retry(tickers, period="2y", interval="1d", group_by="ticker",
+                               auto_adjust=False, progress=False, threads=True)
     for t in tickers:
         try:
             price_frames[t] = raw[t].dropna(how="all")

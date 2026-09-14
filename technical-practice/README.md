@@ -1,6 +1,18 @@
 # 練習テクニカル・トラッキングツール
 
 ## 更新履歴
+- 2026.09.14: 定期実行(cron)failureの修正
+  - PR #7マージ後、初回の定期実行(cron)が`['^IXIC']: OperationalError('database
+    is locked')`で失敗(2026-09-14T00:02 UTC、run #13)。2026-09-10の定期実行でも
+    同一エラーで失敗しており(`^GSPC`)、yfinance内部キャッシュ(cookie/crumb
+    情報のsqlite DB)への同時アクセスによる既知の断続的エラーと判断
+  - `workflow_dispatch`の手動実行では今のところ再現していないが、原因は
+    特定できていない偶発的なロック競合と考えられるため、"database is locked"
+    エラーのみを対象にリトライする共通ヘルパー`yf_retry.py`を新設
+  - `market_climate.py`・`ffty_screener.py`双方のyfinance呼び出し箇所を
+    このヘルパー経由に統一(両モジュールは相互にimportし合っているため、
+    循環importを避けて独立モジュールに切り出した)
+  - 次回の定期実行(cron)で改善するか要確認
 - 2026.09.13(その2): GitHub Actionsでの実機検証結果を反映
   - **iShares(IWV/ITOT)は実際に動かした結果、CSVではなくサイトの通常の
     HTMLページが返ってくることを確認(サイト側の仕様変更でURLが失効した
