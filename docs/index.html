@@ -26,10 +26,15 @@ a{color:var(--pri);}
 .mono{font-family:var(--mono);}
 .wrap{max-width:1280px;margin:0 auto;padding:var(--s6) var(--s4);}
 
-.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--s2);
+.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--s3);
   padding:var(--s4);background:var(--surf);border-bottom:1px solid var(--div);}
 .topbar h1{font-size:18px;font-weight:800;letter-spacing:-0.01em;}
 .topbar .meta{font-size:12px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;}
+.btn-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--pri);
+  background:var(--pri-h);border:1px solid #274449;border-radius:var(--r-md);padding:6px 12px;
+  text-decoration:none;white-space:nowrap;}
+.btn-link:hover{filter:brightness(1.15);}
 
 .notice{display:flex;gap:var(--s2);align-items:flex-start;background:var(--gold-h);border:1px solid #3a2f16;
   border-radius:var(--r-md);padding:var(--s3) var(--s4);margin-bottom:var(--s5);font-size:12px;color:var(--gold);}
@@ -80,7 +85,13 @@ tr:last-child td{border-bottom:none;}
 
 <div class="topbar">
   <h1>地合いウォッチ</h1>
-  <div class="meta" id="topbar-meta">読み込み中...</div>
+  <div class="topbar-right">
+    <a class="btn-link" href="https://docs.google.com/spreadsheets/d/1jxtZ8up5MpH1dLbW169lqAI880FUlIruDCmLQCWs4Nw/edit"
+       target="_blank" rel="noopener" title="銘柄別のウォッチリスト・ポートフォリオ管理と日次解説はこちら(Googleスプレッドシート、要ログイン)">
+      慈愛の観察台 v4 を開く ↗
+    </a>
+    <div class="meta" id="topbar-meta">読み込み中...</div>
+  </div>
 </div>
 
 <div class="wrap">
