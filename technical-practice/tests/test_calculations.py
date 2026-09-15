@@ -347,6 +347,44 @@ def test_yf_download_raises_immediately_on_unrelated_error(monkeypatch):
         yf_retry.download_with_retry(["AAPL"], period="1y")
 
 
+def test_download_history_retries_when_one_ticker_silently_missing(monkeypatch):
+    # 2026-09-15の実機cron実行で実際に発生したケースの回帰テスト: 複数ティッカー
+    # を一括取得する際、一部のティッカー(このケースでは^GSPC)だけ
+    # "database is locked" で失敗しても、yfinanceは例外を送出せず
+    # "N Failed download" という警告を出すだけで処理を続けてしまうため、
+    # yf_retry.download_with_retry(例外ベースのリトライ)では検知できず、
+    # 欠損したままcompute_distribution_and_stalling_daysがValueErrorになった。
+    # download_history側で取得後に充足性を確認し、リトライすることを検証する。
+    idx = pd.bdate_range("2024-01-01", periods=5)
+    good_cols = pd.MultiIndex.from_product([["^IXIC"], ["Open", "High", "Low", "Close", "Volume"]])
+    good_frame = pd.DataFrame([[100, 101, 99, 100.5, 1_000_000]] * 5, index=idx, columns=good_cols)
+
+    def missing_gspc_frame():
+        cols = pd.MultiIndex.from_product([["^IXIC", "^GSPC"], ["Open", "High", "Low", "Close", "Volume"]])
+        df = pd.DataFrame([[100, 101, 99, 100.5, 1_000_000] * 2] * 5, index=idx, columns=cols)
+        df[("^GSPC", "Close")] = np.nan
+        return df
+
+    def complete_frame():
+        cols = pd.MultiIndex.from_product([["^IXIC", "^GSPC"], ["Open", "High", "Low", "Close", "Volume"]])
+        return pd.DataFrame([[100, 101, 99, 100.5, 1_000_000] * 2] * 5, index=idx, columns=cols)
+
+    calls = {"n": 0}
+
+    def fake_download_with_retry(*args, **kwargs):
+        calls["n"] += 1
+        return missing_gspc_frame() if calls["n"] == 1 else complete_frame()
+
+    monkeypatch.setattr(mc, "download_with_retry", fake_download_with_retry)
+    monkeypatch.setattr(mc.time, "sleep", lambda s: None)
+
+    result = mc.download_history(["^IXIC", "^GSPC"], period="1y")
+
+    assert calls["n"] == 2  # 1回目は^GSPC欠損で再取得、2回目で揃う
+    assert not result["^GSPC"]["Close"].dropna().empty
+    assert list(result["^IXIC"]["Close"]) == [100.5] * 5
+
+
 def test_download_history_single_ticker_multiindex_columns(monkeypatch):
     # 2026-09-15、backtest_trend_state.ymlの実行(yfinance 1.7.0)で実際に
     # 発生したバグの回帰テスト: group_by="ticker"かつティッカー1件でも、
