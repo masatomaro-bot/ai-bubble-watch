@@ -636,13 +636,17 @@ def get_sp500_tickers() -> list:
 
 def download_history(tickers: list, period: str = "2y") -> dict:
     """複数ティッカーをまとめて取得し、{ticker: DataFrame} の辞書で返す。
-    yfinanceの"database is locked"エラー対策でリトライ付き(yf_retry.py参照)。"""
+    yfinanceの"database is locked"エラー対策でリトライ付き(yf_retry.py参照)。
+    group_by="ticker"を指定しても、ティッカーが1件だけの場合に列がMultiIndexに
+    なるかどうかはyfinanceのバージョンによって挙動が異なる(実際に1.7.0系で
+    MultiIndexになることを確認済み)。ティッカー数で分岐せず、返ってきた列が
+    実際にMultiIndexかどうかで判定する。"""
     if not tickers:
         return {}
     raw = download_with_retry(tickers, period=period, interval="1d", group_by="ticker",
                                auto_adjust=False, progress=False, threads=True)
     result = {}
-    if len(tickers) == 1:
+    if not isinstance(raw.columns, pd.MultiIndex):
         result[tickers[0]] = raw
         return result
     for t in tickers:
