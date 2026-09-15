@@ -347,6 +347,39 @@ def test_yf_download_raises_immediately_on_unrelated_error(monkeypatch):
         yf_retry.download_with_retry(["AAPL"], period="1y")
 
 
+def test_download_history_single_ticker_multiindex_columns(monkeypatch):
+    # 2026-09-15、backtest_trend_state.ymlの実行(yfinance 1.7.0)で実際に
+    # 発生したバグの回帰テスト: group_by="ticker"かつティッカー1件でも、
+    # yfinanceのバージョンによっては列がMultiIndexで返ってくることがあり、
+    # その場合に df["Close"] がKeyErrorになっていた。
+    idx = pd.bdate_range("2024-01-01", periods=5)
+    multi_cols = pd.MultiIndex.from_product([["^IXIC"], ["Open", "High", "Low", "Close", "Volume"]])
+    raw = pd.DataFrame(
+        [[100, 101, 99, 100.5, 1_000_000]] * 5, index=idx, columns=multi_cols,
+    )
+
+    monkeypatch.setattr(mc, "download_with_retry", lambda *a, **k: raw)
+    result = mc.download_history(["^IXIC"], period="5y")
+
+    assert "^IXIC" in result
+    assert list(result["^IXIC"]["Close"]) == [100.5] * 5
+
+
+def test_download_history_single_ticker_flat_columns(monkeypatch):
+    # 逆に、フラット列で返ってくるyfinanceバージョンでも従来通り動くことを確認する。
+    idx = pd.bdate_range("2024-01-01", periods=5)
+    raw = pd.DataFrame(
+        {"Open": [100] * 5, "High": [101] * 5, "Low": [99] * 5, "Close": [100.5] * 5, "Volume": [1_000_000] * 5},
+        index=idx,
+    )
+
+    monkeypatch.setattr(mc, "download_with_retry", lambda *a, **k: raw)
+    result = mc.download_history(["^IXIC"], period="5y")
+
+    assert "^IXIC" in result
+    assert list(result["^IXIC"]["Close"]) == [100.5] * 5
+
+
 def _build_ftd_scenario(inject_distribution_after_ftd: bool = False):
     """安値(day59)→反発初日(day60)→FTD(day64、day_num=5)という、教科書的な
     フォロースルー・デイのパターンを持つ120営業日分の合成データを作る。
