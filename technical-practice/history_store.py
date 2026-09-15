@@ -21,11 +21,28 @@ fetch()できるようにするため。technical-practice/ 配下だとPagesの
 from __future__ import annotations
 
 import json
+import math
 import os
 
 _TECHNICAL_PRACTICE_DIR = os.path.dirname(os.path.abspath(__file__))
 _REPO_ROOT = os.path.dirname(_TECHNICAL_PRACTICE_DIR)
 HISTORY_DIR = os.path.join(_REPO_ROOT, "docs", "data", "history")
+
+
+def _sanitize_for_json(obj):
+    """Python標準のjson.dumpsはNaN/InfinityをそのままNaN/Infinityという
+    リテラルで出力してしまうが、これは正式なJSON仕様(RFC 8259)には存在せず、
+    ブラウザのJSON.parse()はエラーで拒否する(実際に2026-09-15、セクター/
+    テーマのday_change_pct計算でNaNが混入し、ダッシュボード全体が
+    「データなし」表示になる不具合が発生した)。json.dumpsに渡す前に
+    NaN/InfinityをJSON標準のnullへ変換しておく。"""
+    if isinstance(obj, float):
+        return obj if math.isfinite(obj) else None
+    if isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_for_json(v) for v in obj]
+    return obj
 
 
 def save_snapshot(result: dict, history_dir: str = HISTORY_DIR) -> str:
@@ -34,7 +51,7 @@ def save_snapshot(result: dict, history_dir: str = HISTORY_DIR) -> str:
     os.makedirs(history_dir, exist_ok=True)
     date_str = result["date"]
     path = os.path.join(history_dir, f"{date_str}.json")
-    payload = json.dumps(result, ensure_ascii=False, indent=2, default=str)
+    payload = json.dumps(_sanitize_for_json(result), ensure_ascii=False, indent=2, default=str)
 
     with open(path, "w", encoding="utf-8") as f:
         f.write(payload)

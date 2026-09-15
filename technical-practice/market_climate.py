@@ -742,14 +742,19 @@ def run(
 
     sector_tickers = list(SECTOR_ETFS.keys()) + [BENCHMARK_FOR_SECTORS]
     sector_hist = download_history(sector_tickers, period="1y")
-    benchmark_close = sector_hist[BENCHMARK_FOR_SECTORS]["Close"]
+    # 2026-09-15の実行で判明: yfinanceが当日分の未確定バー(Closeが欠損)を
+    # 含めて返すことがあり、dropna()せずにiloc[-1]を使うとNaNが混入する。
+    # NaNはPythonのjson.dumpsではNaNリテラルとしてシリアライズされてしまい、
+    # ブラウザ側のJSON.parse()が失敗してダッシュボードが「データなし」表示に
+    # なる不具合につながっていた。
+    benchmark_close = sector_hist[BENCHMARK_FOR_SECTORS]["Close"].dropna()
 
     sector_results = {}
     sector_temperatures = {}
     for etf, jp_name in SECTOR_ETFS.items():
         if etf not in sector_hist or sector_hist[etf].empty:
             continue
-        etf_close = sector_hist[etf]["Close"]
+        etf_close = sector_hist[etf]["Close"].dropna()
         rrg = compute_sector_rrg(etf_close, benchmark_close)
         temperature = classify_sector_temperature(etf_close, benchmark_close)
         day_change_pct = (
@@ -772,7 +777,7 @@ def run(
     for etf, jp_name in THEME_ETFS.items():
         if etf not in theme_hist or theme_hist[etf].empty:
             continue
-        close = theme_hist[etf]["Close"]
+        close = theme_hist[etf]["Close"].dropna()
         rrg = compute_sector_rrg(close, benchmark_close)
         monthly_return = (
             round(100 * (close.iloc[-1] / close.iloc[-22] - 1), 2) if len(close) > 22 else None

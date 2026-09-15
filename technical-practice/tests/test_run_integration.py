@@ -92,6 +92,33 @@ def test_run_result_is_json_serializable(mocked_network):
     json.dumps(result, ensure_ascii=False, default=str)
 
 
+def _fake_download_history_with_trailing_nan(tickers, period="2y"):
+    """2026-09-15の実データ実行で実際に発生したケースの回帰テスト用フェイク:
+    yfinanceが当日分の未確定バー(Closeが欠損)を含めて返すことがある。
+    最終行のCloseだけNaNにした合成データを返す。"""
+    result = _fake_download_history(tickers, period=period)
+    for df in result.values():
+        df.loc[df.index[-1], "Close"] = np.nan
+    return result
+
+
+def test_run_sectors_and_themes_survive_trailing_nan_close(monkeypatch):
+    # Close列の最終行がNaN(市場未確定バー)でも、day_change_pctがNaNのまま
+    # resultに残らないこと(=json.dumpsでNaNリテラルが出力されず、ブラウザの
+    # JSON.parse()を壊さないこと)を確認する回帰テスト。
+    monkeypatch.setattr(mc, "download_history", _fake_download_history_with_trailing_nan)
+    monkeypatch.setattr(mc, "get_breadth_universe", _fake_get_breadth_universe)
+
+    result = mc.run(breadth_universe="broad", max_breadth_tickers=None)
+
+    for etf, s in result["sectors"].items():
+        dcp = s["day_change_pct"]
+        assert dcp is None or (isinstance(dcp, float) and not np.isnan(dcp)), f"{etf}: {dcp}"
+    for etf, s in result["themes"].items():
+        dcp = s["day_change_pct"]
+        assert dcp is None or (isinstance(dcp, float) and not np.isnan(dcp)), f"{etf}: {dcp}"
+
+
 def test_run_saves_to_history_store(mocked_network, tmp_path, monkeypatch):
     import history_store
 
