@@ -634,17 +634,11 @@ def get_sp500_tickers() -> list:
         return []
 
 
-def download_history(tickers: list, period: str = "2y") -> dict:
-    """複数ティッカーをまとめて取得し、{ticker: DataFrame} の辞書で返す。
-    yfinanceの"database is locked"エラー対策でリトライ付き(yf_retry.py参照)。
-    group_by="ticker"を指定しても、ティッカーが1件だけの場合に列がMultiIndexに
-    なるかどうかはyfinanceのバージョンによって挙動が異なる(実際に1.7.0系で
-    MultiIndexになることを確認済み)。ティッカー数で分岐せず、返ってきた列が
-    実際にMultiIndexかどうかで判定する。"""
-    if not tickers:
-        return {}
-    raw = download_with_retry(tickers, period=period, interval="1d", group_by="ticker",
-                               auto_adjust=False, progress=False, threads=True)
+DOWNLOAD_HISTORY_MAX_RETRIES = 3
+DOWNLOAD_HISTORY_RETRY_SLEEP_SEC = 3.0
+
+
+def _extract_ticker_frames(raw, tickers: list) -> dict:
     result = {}
     if not isinstance(raw.columns, pd.MultiIndex):
         result[tickers[0]] = raw
@@ -654,6 +648,45 @@ def download_history(tickers: list, period: str = "2y") -> dict:
             result[t] = raw[t].dropna(how="all")
         except (KeyError, Exception):  # noqa: BLE001
             continue
+    return result
+
+
+def download_history(tickers: list, period: str = "2y") -> dict:
+    """複数ティッカーをまとめて取得し、{ticker: DataFrame} の辞書で返す。
+    yfinanceの"database is locked"エラー対策でリトライ付き(yf_retry.py参照)。
+    group_by="ticker"を指定しても、ティッカーが1件だけの場合に列がMultiIndexに
+    なるかどうかはyfinanceのバージョンによって挙動が異なる(実際に1.7.0系で
+    MultiIndexになることを確認済み)。ティッカー数で分岐せず、返ってきた列が
+    実際にMultiIndexかどうかで判定する。
+
+    2026-09-15の実機実行で判明: 複数ティッカーを一括取得する際、一部の
+    ティッカーだけ"database is locked"で失敗することがあるが、yfinanceは
+    これを例外として送出せず、"N Failed download"という警告を出すだけで
+    該当ティッカーのデータが欠損したまま処理を続けてしまう。そのため
+    yf_retry.download_with_retry(例外ベースのリトライ)だけでは検知できない。
+    ここでは取得後に各ティッカーのCloseが実際に存在するかを確認し、
+    不足していれば取得全体をリトライする。"""
+    if not tickers:
+        return {}
+    result: dict = {}
+    for attempt in range(DOWNLOAD_HISTORY_MAX_RETRIES):
+        raw = download_with_retry(tickers, period=period, interval="1d", group_by="ticker",
+                                   auto_adjust=False, progress=False, threads=True)
+        result = _extract_ticker_frames(raw, tickers)
+        missing = [
+            t for t in tickers
+            if t not in result or result[t].empty or result[t]["Close"].dropna().empty
+        ]
+        if not missing:
+            return result
+        if attempt < DOWNLOAD_HISTORY_MAX_RETRIES - 1:
+            sleep_sec = DOWNLOAD_HISTORY_RETRY_SLEEP_SEC * (attempt + 1)
+            print(
+                f"[warn] download_history: 一部ティッカーのデータ取得に失敗 ({missing})、"
+                f"{sleep_sec:.0f}秒後に取得全体をリトライ ({attempt + 1}/{DOWNLOAD_HISTORY_MAX_RETRIES})",
+                file=sys.stderr,
+            )
+            time.sleep(sleep_sec)
     return result
 
 
