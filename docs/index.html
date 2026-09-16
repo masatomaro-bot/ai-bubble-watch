@@ -74,6 +74,10 @@ tr:last-child td{border-bottom:none;}
 .pill-row{display:flex;gap:var(--s2);flex-wrap:wrap;}
 .pill{font-size:10.5px;font-family:var(--mono);background:var(--off);color:var(--muted);padding:3px 8px;border-radius:999px;}
 
+.compare-line{font-size:13px;}
+.compare-stack{display:flex;flex-direction:column;gap:8px;margin-bottom:var(--s4)}
+.delta{font-size:11px;margin-top:2px;}
+
 .loading,.error{padding:var(--s6);text-align:center;color:var(--muted);font-size:13px;}
 .footer{max-width:1280px;margin:0 auto;padding:var(--s6) var(--s4);font-size:11px;color:var(--faint);text-align:center;}
 
@@ -223,6 +227,99 @@ function breadthSection(d) {
     </div>`;
 }
 
+function statDelta(label, curr, prev, opts) {
+  opts = opts || {};
+  const decimals = opts.decimals ?? 0;
+  const suffix = opts.suffix ?? "";
+  const higherIsGood = opts.higherIsGood; // undefined = 良し悪しを判定しない(中立色)
+  let deltaHtml = `<span class="sub">前日データなし</span>`;
+  if (curr !== null && curr !== undefined && prev !== null && prev !== undefined) {
+    const diff = Number((curr - prev).toFixed(decimals));
+    const sign = diff > 0 ? "+" : "";
+    let color = "var(--muted)";
+    if (higherIsGood !== undefined && diff !== 0) {
+      color = (diff > 0) === higherIsGood ? "var(--ok)" : "var(--err)";
+    }
+    deltaHtml = `<span class="mono" style="color:${color}">前日比 ${sign}${diff}${suffix}</span>`;
+  }
+  return `
+    <div class="stat">
+      <div class="label">${esc(label)}</div>
+      <div class="value">${curr ?? "-"}${curr !== null && curr !== undefined ? suffix : ""}</div>
+      <div class="delta">${deltaHtml}</div>
+    </div>`;
+}
+
+function stateChangeLine(label, currState, prevState) {
+  const currInfo = TREND_LABELS[currState] || TREND_LABELS["不明"];
+  if (prevState === null || prevState === undefined) {
+    return `<div class="compare-line">${esc(label)}: <span class="badge ${currInfo.cls}">${esc(currInfo.label)}</span> <span class="sub">(前日データなし)</span></div>`;
+  }
+  if (currState === prevState) {
+    return `<div class="compare-line">${esc(label)}: <span class="badge ${currInfo.cls}">${esc(currInfo.label)}</span> <span class="sub">(変化なし)</span></div>`;
+  }
+  const prevInfo = TREND_LABELS[prevState] || TREND_LABELS["不明"];
+  return `<div class="compare-line">${esc(label)}: <span class="badge ${prevInfo.cls}">${esc(prevInfo.label)}</span> → <span class="badge ${currInfo.cls}">${esc(currInfo.label)}</span></div>`;
+}
+
+function sectorTempChanges(currSectors, prevSectors) {
+  if (!prevSectors) return `<div class="sub">前日データなし</div>`;
+  const changed = [];
+  for (const [etf, s] of Object.entries(currSectors)) {
+    const prevTemp = (prevSectors[etf] || {}).temperature;
+    if (prevTemp && prevTemp !== s.temperature) {
+      changed.push(
+        `<span class="pill">${esc(s.name_jp)}: ${esc(prevTemp)} → <span style="color:${TEMP_COLOR[s.temperature] || "var(--muted)"}">${esc(s.temperature)}</span></span>`
+      );
+    }
+  }
+  if (!changed.length) return `<div class="sub">前日から体温が変わったセクターはありません</div>`;
+  return `<div class="pill-row">${changed.join("")}</div>`;
+}
+
+function comparisonSection(latest, prevEntry) {
+  if (!prevEntry) {
+    return `
+      <div class="card">
+        <div class="card-title">前営業日との比較</div>
+        <div class="sub">比較対象となる前営業日のデータがまだありません(履歴が蓄積されるまでお待ちください)。</div>
+      </div>`;
+  }
+  const prev = prevEntry.data;
+  const ext = latest.breadth_extended || {};
+  const prevExt = prev.breadth_extended || {};
+  const but = latest.broad_universe_technicals || {};
+  const prevBut = prev.broad_universe_technicals || {};
+  const nasdaqState = (latest.nasdaq || {}).trend_state || {};
+  const prevNasdaqState = (prev.nasdaq || {}).trend_state || {};
+  const sp500State = (latest.sp500 || {}).trend_state || {};
+  const prevSp500State = (prev.sp500 || {}).trend_state || {};
+
+  return `
+    <div class="card">
+      <div class="card-title">前営業日(${esc(prevEntry.date)})との比較</div>
+      <div class="compare-stack">
+        ${stateChangeLine("総合判定", latest.overall_trend_state, prev.overall_trend_state)}
+        ${stateChangeLine("NASDAQ総合", nasdaqState.state, prevNasdaqState.state)}
+        ${stateChangeLine("S&P500", sp500State.state, prevSp500State.state)}
+      </div>
+      <div class="stat-row">
+        ${statDelta("新52週高値", ext.new_52w_highs, prevExt.new_52w_highs, { higherIsGood: true })}
+        ${statDelta("新52週安値", ext.new_52w_lows, prevExt.new_52w_lows, { higherIsGood: false })}
+        ${statDelta("値上がり銘柄", ext.advancers, prevExt.advancers, { higherIsGood: true })}
+        ${statDelta("値下がり銘柄", ext.decliners, prevExt.decliners, { higherIsGood: false })}
+      </div>
+      <div class="stat-row">
+        ${statDelta("出来高ブレッド", ext.up_volume_pct, prevExt.up_volume_pct, { decimals: 1, suffix: "%", higherIsGood: true })}
+        ${statDelta("50日線上比率", but.pct_above_50dma, prevBut.pct_above_50dma, { decimals: 1, suffix: "%", higherIsGood: true })}
+        ${statDelta("200日線上比率", but.pct_above_200dma, prevBut.pct_above_200dma, { decimals: 1, suffix: "%", higherIsGood: true })}
+        ${statDelta("トレンドテンプレート合格率", but.trend_template_pass_rate_pct, prevBut.trend_template_pass_rate_pct, { decimals: 1, suffix: "%", higherIsGood: true })}
+      </div>
+      <div class="card-title" style="margin-top:var(--s4)">セクター体温の変化</div>
+      ${sectorTempChanges(latest.sectors || {}, prev.sectors)}
+    </div>`;
+}
+
 async function tryFetchJson(path) {
   try {
     const res = await fetch(path, { cache: "no-store" });
@@ -298,6 +395,8 @@ async function main() {
       </span>
     </div>
 
+    <div id="comparison-section"><div class="card"><div class="sub">前営業日との比較を読み込み中...</div></div></div>
+
     <div class="grid2">
       ${trendCard("NASDAQ総合", latest.nasdaq || {})}
       ${trendCard("S&P500", latest.sp500 || {})}
@@ -336,6 +435,12 @@ async function main() {
 
   loadRecentHistory(latest.date, 30).then((history) => {
     document.getElementById("history-strip").innerHTML = historyStrip(history);
+
+    // history は日付昇順。末尾が本日分のはずなので、その1つ前が「前営業日」。
+    // (取得できたファイルのみが入っているので、休場日等は自動的に飛ばされる)
+    const todayIdx = history.findIndex((h) => h.date === latest.date);
+    const prevEntry = todayIdx > 0 ? history[todayIdx - 1] : null;
+    document.getElementById("comparison-section").innerHTML = comparisonSection(latest, prevEntry);
   });
 }
 
