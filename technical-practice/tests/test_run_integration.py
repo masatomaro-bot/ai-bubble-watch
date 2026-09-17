@@ -58,7 +58,8 @@ def test_run_end_to_end_with_mocked_network(mocked_network):
     expected_top_level_keys = {
         "date", "nasdaq", "sp500", "overall_trend_state", "sectors", "market_regime",
         "themes", "breadth_universe_source", "breadth_near_52w", "breadth_extended",
-        "broad_universe_technicals", "market_leaders", "stress_gauges", "warning_flags",
+        "broad_universe_technicals", "market_leaders", "trend_template_leaders",
+        "stress_gauges", "warning_flags",
     }
     assert expected_top_level_keys <= set(result.keys())
     assert set(result["stress_gauges"].keys()) == {
@@ -66,6 +67,12 @@ def test_run_end_to_end_with_mocked_network(mocked_network):
     }
     assert len(result["warning_flags"]) == 5
     assert all("id" in f and "active" in f and "label" in f for f in result["warning_flags"])
+    assert isinstance(result["trend_template_leaders"], list)
+    assert len(result["trend_template_leaders"]) <= mc.TREND_TEMPLATE_LEADER_TOP_N
+    # trend_template_pass_tickersは内部利用後にresultから取り除かれ、
+    # JSON履歴の肥大化を避ける(トレンドテンプレート合格銘柄の生リストは
+    # 数百件になりうるため、毎日の履歴に残さない)
+    assert "trend_template_pass_tickers" not in result["broad_universe_technicals"]
 
     assert result["nasdaq"]["trend_state"]["state"] in {
         "confirmed_uptrend", "uptrend_under_pressure", "correction", "不明",

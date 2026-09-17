@@ -523,6 +523,7 @@ TREND_TEMPLATE_RS_THRESHOLD = 70  # RS百分位proxyがこの値以上で8条件
 def compute_broad_universe_technicals(price_frames: dict, rs_percentiles: dict) -> dict:
     above_50 = above_200 = valid = 0
     template_pass_all8 = template_total = 0
+    passing_tickers: list[str] = []
 
     for ticker, df in price_frames.items():
         close = df["Close"].dropna()
@@ -550,6 +551,7 @@ def compute_broad_universe_technicals(price_frames: dict, rs_percentiles: dict) 
         c8_pass = rs_pct is not None and rs_pct >= TREND_TEMPLATE_RS_THRESHOLD
         if tmpl.get("pass_count_without_rs") == 7 and c8_pass:
             template_pass_all8 += 1
+            passing_tickers.append(ticker)
 
     return {
         "universe_size": valid,
@@ -559,6 +561,7 @@ def compute_broad_universe_technicals(price_frames: dict, rs_percentiles: dict) 
         "trend_template_pass_rate_pct": (
             round(100 * template_pass_all8 / template_total, 1) if template_total else None
         ),
+        "trend_template_pass_tickers": passing_tickers,
     }
 
 
@@ -836,6 +839,7 @@ def get_breadth_universe(universe: str, max_tickers: int | None = None) -> tuple
 # ----------------------------------------------------------------------------
 
 MARKET_LEADER_TOP_N = 20  # Market Leader (RSランキング上位) の出力件数
+TREND_TEMPLATE_LEADER_TOP_N = 20  # トレンドテンプレート合格銘柄のRS上位表の出力件数
 
 # Market Leadersの「明らかにデータ異常・実用性の低い銘柄」を除外するための
 # 品質フィルタ。2026-09-15/09-16の実機実行で、NFE(前日比+3906%)・GTBP
@@ -1085,6 +1089,7 @@ def run(
     breadth_extended = {}
     broad_universe_technicals = {}
     leaders = []
+    trend_template_leaders = []
     percentiles: dict = {}
     if breadth_tickers:
         # 52週(約252営業日)ブレッドス計算とMarket LeaderのRS百分位
@@ -1104,6 +1109,17 @@ def run(
 
         if percentiles:
             leaders = select_market_leaders(price_frames, percentiles, MARKET_LEADER_TOP_N)
+
+            # トレンドテンプレート8条件(RS含む)に合格した銘柄だけのRS上位表。
+            # Market Leadersは母集団全体のRS順位なので低品質な急騰銘柄が混ざり
+            # やすいが、こちらはO'Neil/Minerviniのトレンドテンプレートで
+            # 事前にふるいにかけた銘柄群なので、より「攻めに使える」候補になる
+            # (Fable 5.1によるダッシュボードレビューでの指摘)。
+            pass_tickers = broad_universe_technicals.pop("trend_template_pass_tickers", [])
+            template_percentiles = {t: percentiles[t] for t in pass_tickers if t in percentiles}
+            trend_template_leaders = select_market_leaders(
+                price_frames, template_percentiles, TREND_TEMPLATE_LEADER_TOP_N
+            )
 
     warning_flags = compute_warning_flags(
         nasdaq_stage, sp500_stage,
@@ -1138,6 +1154,7 @@ def run(
         "breadth_extended": breadth_extended,
         "broad_universe_technicals": broad_universe_technicals,
         "market_leaders": leaders,
+        "trend_template_leaders": trend_template_leaders,
         "stress_gauges": stress_gauges,
         "warning_flags": warning_flags,
     }
