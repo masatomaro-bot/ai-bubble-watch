@@ -384,6 +384,80 @@ function comparisonSection(latest, prevEntry) {
     </div>`;
 }
 
+function sparklineSvg(values, opts) {
+  opts = opts || {};
+  const width = opts.width || 320;
+  const height = opts.height || 44;
+  const color = opts.color || "var(--pri)";
+  const valid = values.filter((v) => v !== null && v !== undefined && !Number.isNaN(v));
+  if (valid.length < 2) {
+    return `<div class="sub" style="height:${height}px;display:flex;align-items:center">データ不足(複数日分の履歴が蓄積されるまでお待ちください)</div>`;
+  }
+  const min = Math.min(...valid);
+  const max = Math.max(...valid);
+  const range = max - min || 1;
+  const n = values.length;
+  const stepX = n > 1 ? width / (n - 1) : 0;
+  const pad = 4;
+  const points = values.map((v, i) => {
+    if (v === null || v === undefined || Number.isNaN(v)) return null;
+    const x = i * stepX;
+    const y = height - pad - ((v - min) / range) * (height - pad * 2);
+    return [x, y];
+  });
+  // 欠損(未取得日)をまたぐ区間は線をつながず、連続する区間ごとに分けて描く
+  const segments = [];
+  let current = [];
+  for (const p of points) {
+    if (p === null) {
+      if (current.length) segments.push(current);
+      current = [];
+    } else {
+      current.push(p);
+    }
+  }
+  if (current.length) segments.push(current);
+  const polylines = segments.map((seg) =>
+    `<polyline points="${seg.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ")}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
+  ).join("");
+  const last = points[points.length - 1];
+  const lastDot = last ? `<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3" fill="${color}"/>` : "";
+  return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="none" style="display:block">${polylines}${lastDot}</svg>`;
+}
+
+function sparklineRow(label, values, opts) {
+  opts = opts || {};
+  const valid = values.filter((v) => v !== null && v !== undefined && !Number.isNaN(v));
+  const latestVal = valid.length ? valid[valid.length - 1] : null;
+  const suffix = opts.suffix || "";
+  return `
+    <div style="margin-bottom:var(--s4)">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <div class="sub">${esc(label)}</div>
+        <div class="mono" style="font-size:13px;font-weight:700">${latestVal ?? "-"}${latestVal !== null ? suffix : ""}</div>
+      </div>
+      ${sparklineSvg(values, opts)}
+    </div>`;
+}
+
+function trendSparklinesSection(history) {
+  if (!history.length) return `<div class="sub">データなし</div>`;
+  const adLine = history.map((h) => (h.data.cumulative_ad_line ?? null));
+  const pct50 = history.map((h) => ((h.data.broad_universe_technicals || {}).pct_above_50dma ?? null));
+  const netBreadth = history.map((h) => {
+    const ext = h.data.breadth_extended || {};
+    return (ext.new_52w_highs != null && ext.new_52w_lows != null) ? ext.new_52w_highs - ext.new_52w_lows : null;
+  });
+  const vix = history.map((h) => ((h.data.stress_gauges || {}).vix || {}).level ?? null);
+
+  return `
+    ${sparklineRow("累積A/Dライン", adLine, { color: "var(--pri)" })}
+    ${sparklineRow("50日線上比率", pct50, { color: "var(--ok)", suffix: "%" })}
+    ${sparklineRow("新高値 - 新安値(純増数)", netBreadth, { color: "var(--gold)" })}
+    ${sparklineRow("VIX水準", vix, { color: "var(--err)" })}
+    <div class="sub" style="margin-top:var(--s2)">${history[0].date} 〜 ${history[history.length - 1].date}(取得できた範囲、最大30営業日)。指数は高値圏でも、これらが切り下がる「痩せ方」に注目する。</div>`;
+}
+
 function renderTradingViewCalendar(containerId) {
   // content.innerHTML でscriptタグを流し込んでも(HTML仕様上)実行されないため、
   // DOM APIで明示的にscript要素を作って追加する。
@@ -499,6 +573,11 @@ async function main() {
 
     <div id="history-strip"></div>
 
+    <div class="card">
+      <div class="card-title">推移(指数が高値圏でも先に痩せていないか)</div>
+      <div id="trend-sparklines"><div class="sub">読み込み中...</div></div>
+    </div>
+
     <div class="grid2">
       <div class="card">
         <div class="card-title">セクター体温(11 GICSセクター)</div>
@@ -543,6 +622,7 @@ async function main() {
 
   loadRecentHistory(latest.date, 30).then((history) => {
     document.getElementById("history-strip").innerHTML = historyStrip(history);
+    document.getElementById("trend-sparklines").innerHTML = trendSparklinesSection(history);
 
     // history は日付昇順。末尾が本日分のはずなので、その1つ前が「前営業日」。
     // (取得できたファイルのみが入っているので、休場日等は自動的に飛ばされる)
