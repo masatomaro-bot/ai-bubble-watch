@@ -343,6 +343,10 @@ def compute_index_stage(df: pd.DataFrame) -> dict:
     sma200 = close.rolling(200).mean().iloc[-1]
     price = close.iloc[-1]
     sma200_1m_ago = close.rolling(200).mean().iloc[-22] if len(close) >= 222 else np.nan
+    high_52w = close.dropna().tail(252).max()
+    pct_below_52w_high = (
+        round(float(100 * (high_52w - price) / high_52w), 2) if pd.notna(high_52w) and high_52w else None
+    )
 
     return {
         "price": round(float(price), 2),
@@ -353,6 +357,7 @@ def compute_index_stage(df: pd.DataFrame) -> dict:
         "above_sma150": bool(price > sma150) if pd.notna(sma150) else None,
         "above_sma200": bool(price > sma200) if pd.notna(sma200) else None,
         "sma200_rising": bool(sma200 > sma200_1m_ago) if pd.notna(sma200_1m_ago) else None,
+        "pct_below_52w_high": pct_below_52w_high,
     }
 
 
@@ -866,14 +871,121 @@ def select_market_leaders(price_frames: dict, percentiles: dict, top_n: int = MA
             continue
         one_month = round(100 * (close.iloc[-1] / close.iloc[-22] - 1), 2) if len(close) > 22 else None
         three_month = round(100 * (close.iloc[-1] / close.iloc[-63] - 1), 2) if len(close) > 63 else None
+        sma50 = close.rolling(50).mean().iloc[-1] if len(close) >= 50 else None
+        above_sma50 = bool(close.iloc[-1] > sma50) if sma50 is not None and pd.notna(sma50) else None
         leaders.append({
             "ticker": ticker,
             "rs_percentile": pct,
             "day_change_pct": day_change,
             "one_month_pct": one_month,
             "three_month_pct": three_month,
+            "above_sma50": above_sma50,
         })
     return leaders
+
+
+# ----------------------------------------------------------------------------
+# 警戒チェックリスト(既知の「崩れの前兆」パターンの機械判定)
+# ----------------------------------------------------------------------------
+#
+# Fable 5.1によるダッシュボードレビューで、「下落を予測することはできないが、
+# 指数がまだ高値圏なのに内部(ブレッドス・リーダー株)が先に痩せていく」という
+# 乖離パターンは崩れの前によく見られる、との指摘があった。ここではその種の
+# 既知パターンを機械的に判定するが、あくまで「参考情報」であり、点灯した
+# からといって必ず下落するわけではない。閾値はすべて自前設計で、有効性は
+# backtest_trend_state.py同様、別途検証が必要(未検証)。
+
+WARNING_NEAR_HIGH_PCT = 3.0  # 52週高値からこの%以内を「高値圏」とみなす
+WARNING_LOW_BREADTH_PCT_ABOVE_50DMA = 50.0  # これ未満を「参加率が低い」とみなす
+WARNING_DISTRIBUTION_DAYS_THRESHOLD = 5  # 直近25営業日の売り抜け日数がこれ以上で点灯
+WARNING_LEADER_BREAKDOWN_RATIO = 0.5  # Market Leadersのこの比率以上が50日線割れで点灯
+DEFENSIVE_SECTOR_ETFS = ["XLP", "XLV", "XLU"]  # 生活必需品・ヘルスケア・公益
+GROWTH_SECTOR_ETFS = ["XLK", "XLY"]  # 情報技術・一般消費財
+IMPROVING_QUADRANTS = {"主導", "改善"}
+WEAKENING_QUADRANTS = {"鈍化", "遅行"}
+
+
+def compute_warning_flags(
+    nasdaq_stage: dict,
+    sp500_stage: dict,
+    nasdaq_distribution_days: int,
+    sp500_distribution_days: int,
+    breadth_extended: dict,
+    broad_universe_technicals: dict,
+    leaders: list,
+    sectors: dict,
+) -> list[dict]:
+    flags = []
+
+    # 1. 指数が52週高値圏なのに参加率(50日線上比率)が低い
+    near_high = any(
+        (stage or {}).get("pct_below_52w_high") is not None
+        and (stage or {})["pct_below_52w_high"] <= WARNING_NEAR_HIGH_PCT
+        for stage in (nasdaq_stage, sp500_stage)
+    )
+    pct_above_50dma = (broad_universe_technicals or {}).get("pct_above_50dma")
+    breadth_thrust_active = bool(
+        near_high and pct_above_50dma is not None and pct_above_50dma < WARNING_LOW_BREADTH_PCT_ABOVE_50DMA
+    )
+    flags.append({
+        "id": "breadth_thrust_divergence",
+        "label": "指数は高値圏なのに参加銘柄が少ない",
+        "active": breadth_thrust_active,
+        "detail": f"50日線上比率 {pct_above_50dma}%" if pct_above_50dma is not None else "データ不足",
+    })
+
+    # 2. 新安値が新高値を上回っている
+    ext = breadth_extended or {}
+    new_highs, new_lows = ext.get("new_52w_highs"), ext.get("new_52w_lows")
+    new_lows_exceed = bool(new_highs is not None and new_lows is not None and new_lows > new_highs)
+    flags.append({
+        "id": "new_lows_exceed_highs",
+        "label": "新安値銘柄数が新高値銘柄数を上回っている",
+        "active": new_lows_exceed,
+        "detail": f"新高値{new_highs} / 新安値{new_lows}" if new_highs is not None else "データ不足",
+    })
+
+    # 3. 売り抜け日数が多い(直近25営業日、指数いずれか)
+    max_dist_days = max(nasdaq_distribution_days or 0, sp500_distribution_days or 0)
+    flags.append({
+        "id": "elevated_distribution",
+        "label": "売り抜け日数が多い(直近25営業日)",
+        "active": max_dist_days >= WARNING_DISTRIBUTION_DAYS_THRESHOLD,
+        "detail": f"NASDAQ {nasdaq_distribution_days} / S&P500 {sp500_distribution_days}",
+    })
+
+    # 4. リーダー株の崩れ(Market Leadersの過半数が50日線割れ)
+    valid_leaders = [l for l in (leaders or []) if l.get("above_sma50") is not None]
+    if valid_leaders:
+        below_ratio = sum(1 for l in valid_leaders if not l["above_sma50"]) / len(valid_leaders)
+        leader_active = below_ratio >= WARNING_LEADER_BREAKDOWN_RATIO
+        detail = f"{round(below_ratio * 100)}%が50日線割れ({len(valid_leaders)}銘柄中)"
+    else:
+        leader_active, detail = False, "データ不足"
+    flags.append({
+        "id": "leader_breakdown",
+        "label": "Market Leadersの過半数が50日線を割っている",
+        "active": leader_active,
+        "detail": detail,
+    })
+
+    # 5. ディフェンシブ優位・グロース劣位のローテーション
+    sectors = sectors or {}
+    defensive_quads = [(sectors.get(etf) or {}).get("quadrant") for etf in DEFENSIVE_SECTOR_ETFS]
+    growth_quads = [(sectors.get(etf) or {}).get("quadrant") for etf in GROWTH_SECTOR_ETFS]
+    defensive_improving = sum(1 for q in defensive_quads if q in IMPROVING_QUADRANTS)
+    growth_weakening = sum(1 for q in growth_quads if q in WEAKENING_QUADRANTS)
+    rotation_active = bool(
+        defensive_improving >= len(defensive_quads) / 2 and growth_weakening >= len(growth_quads) / 2
+    )
+    flags.append({
+        "id": "defensive_rotation",
+        "label": "ディフェンシブ優位・グロース劣位のローテーション",
+        "active": rotation_active,
+        "detail": f"生活必需品/ヘルスケア/公益: {defensive_quads} / 情報技術/一般消費財: {growth_quads}",
+    })
+
+    return flags
 
 
 def run(
@@ -993,6 +1105,12 @@ def run(
         if percentiles:
             leaders = select_market_leaders(price_frames, percentiles, MARKET_LEADER_TOP_N)
 
+    warning_flags = compute_warning_flags(
+        nasdaq_stage, sp500_stage,
+        nasdaq_dist.distribution_days, sp500_dist.distribution_days,
+        breadth_extended, broad_universe_technicals, leaders, sector_results,
+    )
+
     result = {
         "date": today,
         "nasdaq": {
@@ -1021,6 +1139,7 @@ def run(
         "broad_universe_technicals": broad_universe_technicals,
         "market_leaders": leaders,
         "stress_gauges": stress_gauges,
+        "warning_flags": warning_flags,
     }
     return result
 
@@ -1042,6 +1161,7 @@ def flatten_for_sheet(result: dict) -> list:
     nasdaq_trend = result["nasdaq"]["trend_state"]
     sp500_trend = result["sp500"]["trend_state"]
     stress = result.get("stress_gauges", {})
+    active_warning_flags = [f["id"] for f in result.get("warning_flags", []) if f["active"]]
 
     return [
         result["date"],
@@ -1085,6 +1205,8 @@ def flatten_for_sheet(result: dict) -> list:
         (stress.get("breadth_rsp_spy") or {}).get("ratio"),
         (stress.get("risk_appetite_iwm_spy") or {}).get("ratio"),
         (stress.get("semis_soxx_spy") or {}).get("ratio"),
+        len(active_warning_flags),
+        ",".join(active_warning_flags),
     ]
 
 
@@ -1106,6 +1228,7 @@ SHEET_HEADER = [
     "top_market_leaders",
     "vix_level", "credit_hyg_ief_ratio", "breadth_rsp_spy_ratio",
     "risk_appetite_iwm_spy_ratio", "semis_soxx_spy_ratio",
+    "active_warning_flag_count", "active_warning_flags",
 ]
 
 

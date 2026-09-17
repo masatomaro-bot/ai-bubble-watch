@@ -58,12 +58,14 @@ def test_run_end_to_end_with_mocked_network(mocked_network):
     expected_top_level_keys = {
         "date", "nasdaq", "sp500", "overall_trend_state", "sectors", "market_regime",
         "themes", "breadth_universe_source", "breadth_near_52w", "breadth_extended",
-        "broad_universe_technicals", "market_leaders", "stress_gauges",
+        "broad_universe_technicals", "market_leaders", "stress_gauges", "warning_flags",
     }
     assert expected_top_level_keys <= set(result.keys())
     assert set(result["stress_gauges"].keys()) == {
         "vix", "credit_hyg_ief", "breadth_rsp_spy", "risk_appetite_iwm_spy", "semis_soxx_spy",
     }
+    assert len(result["warning_flags"]) == 5
+    assert all("id" in f and "active" in f and "label" in f for f in result["warning_flags"])
 
     assert result["nasdaq"]["trend_state"]["state"] in {
         "confirmed_uptrend", "uptrend_under_pressure", "correction", "不明",

@@ -33,6 +33,7 @@ from market_climate import (
     combine_trend_states,
     select_market_leaders,
     compute_stress_gauges,
+    compute_warning_flags,
 )
 from ffty_screener import compute_trend_template, compute_rs_proxy_percentiles
 import universe
@@ -706,6 +707,80 @@ def test_compute_stress_gauges_missing_ticker_returns_none():
     assert result["breadth_rsp_spy"]["ratio"] is None
     assert result["risk_appetite_iwm_spy"]["ratio"] is None
     assert result["semis_soxx_spy"]["ratio"] is None
+
+
+def _baseline_warning_inputs():
+    """全フラグが「消灯」になる健全な地合いを想定したベースライン入力。
+    各テストは1項目だけ悪化させて、その項目だけが点灯することを確認する。"""
+    return dict(
+        nasdaq_stage={"pct_below_52w_high": 10.0},
+        sp500_stage={"pct_below_52w_high": 10.0},
+        nasdaq_distribution_days=2,
+        sp500_distribution_days=2,
+        breadth_extended={"new_52w_highs": 100, "new_52w_lows": 50},
+        broad_universe_technicals={"pct_above_50dma": 60.0},
+        leaders=[{"above_sma50": True} for _ in range(10)],
+        sectors={
+            "XLP": {"quadrant": "遅行"}, "XLV": {"quadrant": "遅行"}, "XLU": {"quadrant": "遅行"},
+            "XLK": {"quadrant": "主導"}, "XLY": {"quadrant": "主導"},
+        },
+    )
+
+
+def _flags_by_id(flags):
+    return {f["id"]: f["active"] for f in flags}
+
+
+def test_warning_flags_all_inactive_on_healthy_baseline():
+    flags = compute_warning_flags(**_baseline_warning_inputs())
+    active = _flags_by_id(flags)
+    assert set(active.keys()) == {
+        "breadth_thrust_divergence", "new_lows_exceed_highs", "elevated_distribution",
+        "leader_breakdown", "defensive_rotation",
+    }
+    assert not any(active.values())
+
+
+def test_warning_flag_breadth_thrust_divergence():
+    inputs = _baseline_warning_inputs()
+    inputs["nasdaq_stage"] = {"pct_below_52w_high": 1.0}  # 高値圏
+    inputs["broad_universe_technicals"] = {"pct_above_50dma": 30.0}  # 参加率低い
+    active = _flags_by_id(compute_warning_flags(**inputs))
+    assert active["breadth_thrust_divergence"] is True
+    assert active["new_lows_exceed_highs"] is False
+    assert active["elevated_distribution"] is False
+
+
+def test_warning_flag_new_lows_exceed_highs():
+    inputs = _baseline_warning_inputs()
+    inputs["breadth_extended"] = {"new_52w_highs": 10, "new_52w_lows": 50}
+    active = _flags_by_id(compute_warning_flags(**inputs))
+    assert active["new_lows_exceed_highs"] is True
+    assert active["breadth_thrust_divergence"] is False
+
+
+def test_warning_flag_elevated_distribution():
+    inputs = _baseline_warning_inputs()
+    inputs["nasdaq_distribution_days"] = 6
+    active = _flags_by_id(compute_warning_flags(**inputs))
+    assert active["elevated_distribution"] is True
+
+
+def test_warning_flag_leader_breakdown():
+    inputs = _baseline_warning_inputs()
+    inputs["leaders"] = [{"above_sma50": False} for _ in range(6)] + [{"above_sma50": True} for _ in range(4)]
+    active = _flags_by_id(compute_warning_flags(**inputs))
+    assert active["leader_breakdown"] is True
+
+
+def test_warning_flag_defensive_rotation():
+    inputs = _baseline_warning_inputs()
+    inputs["sectors"] = {
+        "XLP": {"quadrant": "主導"}, "XLV": {"quadrant": "改善"}, "XLU": {"quadrant": "遅行"},
+        "XLK": {"quadrant": "鈍化"}, "XLY": {"quadrant": "遅行"},
+    }
+    active = _flags_by_id(compute_warning_flags(**inputs))
+    assert active["defensive_rotation"] is True
 
 
 def test_select_market_leaders_backfills_when_top_candidates_filtered_out():
