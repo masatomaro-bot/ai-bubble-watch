@@ -21,6 +21,10 @@
     警戒フラグの新規点灯時にIssueを自動作成(標準のGITHUB_TOKENのみで動作)
   - **前営業日との比較セクション・経済カレンダー(TradingView公式ウィジェット)・
     慈愛の観察台v4へのリンクをダッシュボードに追加**(2026.09.15-17の一連の対応)
+  - **警戒チェックリストのバックテストスクリプトを追加**
+    (`backtest_warning_flags.py`)。5項目のうち指数・セクターETFのデータだけで
+    検証できる2項目(elevated_distribution, defensive_rotation)が対象。
+    残り3項目は広域ユニバースの過去スナップショットがなく検証できていない
 - 2026.09.14(その2): 判定ロジックの見直し・履歴のgit管理化・ダッシュボード追加
   （「セクター4分類の閾値が完全に自前設計で検証もされていない」という
   レビュー指摘を受けての対応）
@@ -274,11 +278,33 @@ python backtest_trend_state.py --ticker ^IXIC --period 5y --forward-days 20
 
 FTD3状態(confirmed_uptrend / uptrend_under_pressure / correction)それぞれ
 について、判定日からforward-days営業日後の指数リターンの平均・中央値・勝率
-を表示する。**まだ実データでは実行していない**(このサンドボックスが外部
-ネットワークに出られないため)。GitHub Actions・手元PC・Google Colabの
-いずれかで一度実行し、FTD判定が実際に意味のある区別になっているかを
-確認してから、セクター温度感などの他の判定ロジックのチューニングに
-進むことを推奨する。
+を表示する。
+
+**2026-09-15にGitHub Actionsで実データ(^IXIC・^GSPC、5年、forward-days=20)
+で実行済み**。結果は正直に言うと期待とは逆で、両指数ともcorrection状態の方が
+confirmed_uptrend状態より平均・中央値リターンが高かった(理論上はcorrection
+が守りの状態、confirmed_uptrendが攻めの状態のはずが逆転している)。原因は
+特定できていない(この5年間の相場特性による平均回帰の影響、判定窓が1日ずつ
+ずれるオーバーラップ方式によるサンプルの独立性の低さ、自前実装と本家ロジック
+の乖離、等が考えられるが、いずれも確証はない)。**現状、このFTD判定が
+その後のリターンを予測する力を持つとは言えない**。ダッシュボード上もあくまで
+参考表示として扱うこと。
+
+```bash
+python backtest_warning_flags.py --index-ticker ^GSPC --period 5y --forward-days 20
+```
+
+警戒チェックリスト(`compute_warning_flags`、5項目)のうち、指数・セクター
+ETFという少数銘柄のデータだけで過去に遡って再計算できる2項目
+(`elevated_distribution`, `defensive_rotation`)について、点灯した日と
+消灯していた日それぞれのその後forward-days営業日リターンを比較する。
+**残り3項目(`breadth_thrust_divergence`, `new_lows_exceed_highs`,
+`leader_breakdown`)は、数千銘柄の広域ユニバースの「その日時点での」
+スナップショットが必要で、日次パイプライン(`docs/data/history/`)は
+2026-09-14から蓄積を始めたばかりのため検証できない(未検証のまま)。**
+2026-09-17時点でまだ実データでは実行していない。GitHub Actions・手元PC・
+Google Colabのいずれかで一度実行し、結果を確認してから警戒チェックリストの
+表示方針(閾値の見直し・信頼度の明記等)を検討すること。
 
 ### Google Colabで対話的に試す
 
