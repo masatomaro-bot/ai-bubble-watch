@@ -34,6 +34,7 @@ from __future__ import annotations
 import csv
 import io
 import sys
+import time
 import urllib.request
 
 # iShares Russell 3000 ETF (IWV) の保有銘柄CSV配布URL。
@@ -140,10 +141,32 @@ def sample_tickers(tickers: list[str], max_tickers: int | None) -> list[str]:
     return random.Random(42).sample(tickers, max_tickers)
 
 
+FETCH_MAX_RETRIES = 3
+FETCH_RETRY_BASE_SLEEP_SEC = 2.0
+
+
 def _fetch_url(url: str, timeout: int = 30) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return resp.read().decode("utf-8-sig", errors="replace")
+    """単発の一時的な通信エラー(タイムアウト等)でユニバース全体の銘柄数が
+    半減するような不具合が2026-09-14〜09-17の実機実行で疑われたため
+    (nasdaqlisted.txt/otherlisted.txtは個別にtry/exceptしており、リトライが
+    なければ片方が失敗しただけで母集団が大きく縮む)、単純なリトライを入れる。"""
+    last_error: Exception | None = None
+    for attempt in range(FETCH_MAX_RETRIES):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.read().decode("utf-8-sig", errors="replace")
+        except Exception as e:  # noqa: BLE001
+            last_error = e
+            if attempt < FETCH_MAX_RETRIES - 1:
+                sleep_sec = FETCH_RETRY_BASE_SLEEP_SEC * (2 ** attempt)
+                print(
+                    f"[warn] URL取得失敗 ({url})、{sleep_sec:.0f}秒後にリトライ "
+                    f"({attempt + 1}/{FETCH_MAX_RETRIES}): {e}",
+                    file=sys.stderr,
+                )
+                time.sleep(sleep_sec)
+    raise last_error
 
 
 # nasdaqtrader.comのシンボル一覧は "|" 区切り、末尾に
@@ -180,13 +203,17 @@ def _get_nasdaqtrader_tickers() -> list[str]:
     tickers: list[str] = []
     try:
         raw = _fetch_url(NASDAQ_LISTED_URL)
-        tickers += _parse_nasdaq_listed_txt(raw, "Symbol", "ETF", "Test Issue")
+        nasdaq_tickers = _parse_nasdaq_listed_txt(raw, "Symbol", "ETF", "Test Issue")
+        print(f"[info] nasdaqlisted.txt: {len(nasdaq_tickers)}銘柄取得", file=sys.stderr)
+        tickers += nasdaq_tickers
     except Exception as e:  # noqa: BLE001
         print(f"[warn] NASDAQ Trader一覧取得失敗 (nasdaqlisted): {e}", file=sys.stderr)
 
     try:
         raw = _fetch_url(OTHER_LISTED_URL)
-        tickers += _parse_nasdaq_listed_txt(raw, "ACT Symbol", "ETF", "Test Issue")
+        other_tickers = _parse_nasdaq_listed_txt(raw, "ACT Symbol", "ETF", "Test Issue")
+        print(f"[info] otherlisted.txt: {len(other_tickers)}銘柄取得", file=sys.stderr)
+        tickers += other_tickers
     except Exception as e:  # noqa: BLE001
         print(f"[warn] NASDAQ Trader一覧取得失敗 (otherlisted): {e}", file=sys.stderr)
 

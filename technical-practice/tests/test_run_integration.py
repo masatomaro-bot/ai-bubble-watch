@@ -12,6 +12,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import datetime as dt
 import json
 
 import numpy as np
@@ -21,7 +22,7 @@ import pytest
 import market_climate as mc
 
 
-def _fake_download_history(tickers, period="2y"):
+def _fake_download_history(tickers, period="2y", missing_tolerance=0.0):
     """どんなティッカーが来ても、それらしいOHLCVを合成して返す簡易フェイク。
     ティッカー名から決定的なシードを作るので、テスト実行のたびに結果が
     変わらない。"""
@@ -76,6 +77,17 @@ def test_run_end_to_end_with_mocked_network(mocked_network):
     assert len(result["themes"]) == len(mc.THEME_ETFS)
     assert isinstance(result["market_leaders"], list)
     assert len(result["market_leaders"]) <= mc.MARKET_LEADER_TOP_N
+
+
+def test_run_date_uses_actual_last_trading_day_not_execution_date(mocked_network):
+    # dt.date.today()(GitHub Actions実行日、UTC)は実際の株価データの最終
+    # 取引日とずれることがある。result["date"]は指数データの最終行の日付
+    # (=対象取引日)であるべきで、テスト実行日そのものであってはならない。
+    result = mc.run(breadth_universe="broad", max_breadth_tickers=None)
+
+    expected_last_trading_day = pd.bdate_range("2024-01-01", periods=520)[-1].date().isoformat()
+    assert result["date"] == expected_last_trading_day
+    assert result["date"] != dt.date.today().isoformat()
 
 
 def test_flatten_for_sheet_matches_header_length(mocked_network):
