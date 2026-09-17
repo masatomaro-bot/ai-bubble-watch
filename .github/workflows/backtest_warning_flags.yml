@@ -1,0 +1,44 @@
+name: Backtest Warning Flags (警戒チェックリストの過去検証・手動実行のみ)
+
+on:
+  workflow_dispatch:
+    inputs:
+      index_ticker:
+        description: "対象指数(例: ^GSPC, ^IXIC)"
+        type: string
+        default: "^GSPC"
+      period:
+        description: "取得期間(yfinance形式、例: 5y, 10y, max)"
+        type: string
+        default: "5y"
+      forward_days:
+        description: "判定後何営業日先のリターンを見るか"
+        type: string
+        default: "20"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    # backtest_warning_flags.py はPlaywright(ffty_screener.py用)を使わないため、
+    # technical_practice_daily.yml と違いブラウザインストールは行わない
+    # (実行時間短縮のため)。
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: technical-practice
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies (yfinance/pandas/numpyのみ)
+        run: pip install yfinance pandas numpy
+
+      - name: Run backtest
+        run: |
+          python backtest_warning_flags.py \
+            --index-ticker "${{ inputs.index_ticker }}" \
+            --period "${{ inputs.period }}" \
+            --forward-days "${{ inputs.forward_days }}"
