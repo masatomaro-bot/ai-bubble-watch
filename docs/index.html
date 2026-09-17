@@ -78,6 +78,14 @@ tr:last-child td{border-bottom:none;}
 .compare-stack{display:flex;flex-direction:column;gap:8px;margin-bottom:var(--s4)}
 .delta{font-size:11px;margin-top:2px;}
 
+.flag-row{display:flex;align-items:flex-start;gap:var(--s3);padding:var(--s3) 0;border-bottom:1px solid var(--off);}
+.flag-row:last-child{border-bottom:none;}
+.flag-dot{flex-shrink:0;width:10px;height:10px;border-radius:999px;margin-top:4px;}
+.flag-dot.active{background:var(--warn);}
+.flag-dot.inactive{background:var(--off);border:1px solid var(--div);}
+.flag-label{font-size:13px;font-weight:600;}
+.flag-detail{font-size:11.5px;color:var(--muted);margin-top:2px;}
+
 .loading,.error{padding:var(--s6);text-align:center;color:var(--muted);font-size:13px;}
 .footer{max-width:1280px;margin:0 auto;padding:var(--s6) var(--s4);font-size:11px;color:var(--faint);text-align:center;}
 
@@ -257,6 +265,29 @@ function stressGaugesSection(gauges) {
       比率の上昇/下降が良い/悪いを意味するとは限らない(例: RSP/SPYの上昇は値がさ株への集中が
       和らいでいることを示唆するが、それ自体を売買シグナルとして使うものではない)。色は方向を
       示すだけで、良し悪しの判定ではない。
+    </div>`;
+}
+
+function warningFlagsSection(flags) {
+  if (!flags || !flags.length) return `<div class="sub">データなし</div>`;
+  const activeCount = flags.filter((f) => f.active).length;
+  const rows = flags.map((f) => `
+    <div class="flag-row">
+      <div class="flag-dot ${f.active ? "active" : "inactive"}"></div>
+      <div>
+        <div class="flag-label" style="color:${f.active ? "var(--warn)" : "var(--tx)"}">${esc(f.label)}</div>
+        <div class="flag-detail">${esc(f.detail || "")}</div>
+      </div>
+    </div>`).join("");
+  return `
+    <div class="hero-state" style="font-size:16px;margin-bottom:var(--s3)">
+      ${activeCount}/${flags.length} 件が点灯中
+    </div>
+    ${rows}
+    <div class="sub" style="margin-top:var(--s4)">
+      崩れの前によく見られるとされる既知の乖離パターンを機械的に判定したものであり、
+      下落を予測するものではない(点灯しても下落しないことも、点灯せずに下落することもある)。
+      閾値は自前設計で有効性は未検証。売買判断の根拠にはしないでください。
     </div>`;
 }
 
@@ -447,6 +478,11 @@ async function main() {
       <span class="badge ${regimeInfo.cls}" style="margin-left:var(--s2)" title="セクター体温の多数決による参考指標(オニミネ流の近似)">
         参考: セクター多数決 ${esc(regimeInfo.label)}
       </span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">警戒チェックリスト(崩れの前兆として知られる乖離パターン)</div>
+      ${warningFlagsSection(latest.warning_flags)}
     </div>
 
     <div id="comparison-section"><div class="card"><div class="sub">前営業日との比較を読み込み中...</div></div></div>
