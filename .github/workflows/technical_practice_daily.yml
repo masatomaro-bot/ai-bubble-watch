@@ -21,6 +21,7 @@ on:
 
 permissions:
   contents: write  # 日次結果のJSON履歴(docs/data/history/)をリポジトリにコミットするために必要
+  issues: write    # 地合い変化の通知Issueを自動作成するために必要
 
 jobs:
   run:
@@ -77,5 +78,15 @@ jobs:
             echo "[info] 履歴JSONに変更なし、コミットをスキップ"
           else
             git commit -m "地合い履歴JSONを更新 ($(date -u +%Y-%m-%d))"
+            # 2026-09-17の実機実行で、この間に他のPRがmainへマージされて
+            # pushがnon-fast-forwardで拒否される事例が発生した。
+            # git pull --rebaseしてから再度pushする。
+            git pull --rebase origin main
             git push
           fi
+
+      - name: Notify on trend/warning flag changes
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python notify_changes.py
