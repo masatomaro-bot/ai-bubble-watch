@@ -608,6 +608,7 @@ def test_compute_broad_universe_technicals_counts_above_ma_and_template():
     assert result["universe_size"] == 2
     assert result["pct_above_200dma"] == pytest.approx(50.0)
     assert result["trend_template_pass_count"] == 1
+    assert result["trend_template_pass_tickers"] == ["STRONG"]
 
 
 def test_market_climate_and_ffty_screener_share_same_retry_function():

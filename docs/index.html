@@ -508,6 +508,51 @@ async function loadRecentHistory(latestDateStr, maxDays) {
   return results.filter(Boolean).sort((a, b) => (a.date < b.date ? -1 : 1));
 }
 
+const OFFENSE_LOOKBACK_TRADING_DAYS = 5; // 「直近N日」の新規リーダー・象限変化の比較対象
+
+function pickCompareEntry(history, todayIdx) {
+  // 直近OFFENSE_LOOKBACK_TRADING_DAYS営業日前のデータを比較対象にする。
+  // 履歴がまだ短い場合は、取得できている最も古い日を使う。
+  if (todayIdx <= 0) return null;
+  const lookbackIdx = todayIdx - OFFENSE_LOOKBACK_TRADING_DAYS;
+  return history[lookbackIdx >= 0 ? lookbackIdx : 0];
+}
+
+function newcomerLeadersSection(latestLeaders, compareEntry) {
+  if (!compareEntry) return `<div class="sub">比較対象となる過去データがまだありません。</div>`;
+  const prevTickers = new Set((compareEntry.data.market_leaders || []).map((l) => l.ticker));
+  const newcomers = (latestLeaders || []).filter((l) => !prevTickers.has(l.ticker));
+  if (!newcomers.length) {
+    return `<div class="sub">${esc(compareEntry.date)}時点のMarket Leadersと比べて新規はありません。</div>`;
+  }
+  const pills = newcomers.map((l) =>
+    `<span class="pill">${esc(l.ticker)}(RS ${l.rs_percentile})</span>`
+  ).join("");
+  return `
+    <div class="pill-row">${pills}</div>
+    <div class="sub" style="margin-top:var(--s3)">${esc(compareEntry.date)}時点のMarket Leaders上位には入っていなかった銘柄。</div>`;
+}
+
+function themeQuadrantChanges(currThemes, compareEntry) {
+  if (!compareEntry) return `<div class="sub">比較対象となる過去データがまだありません。</div>`;
+  const prevThemes = compareEntry.data.themes || {};
+  const changed = [];
+  for (const [etf, t] of Object.entries(currThemes || {})) {
+    const prevQ = (prevThemes[etf] || {}).quadrant;
+    if (prevQ && prevQ !== t.quadrant) {
+      changed.push(
+        `<span class="pill">${esc(t.name_jp)}: ${esc(prevQ)} → <span style="color:${QUADRANT_COLOR[t.quadrant] || "var(--muted)"}">${esc(t.quadrant)}</span></span>`
+      );
+    }
+  }
+  if (!changed.length) {
+    return `<div class="sub">${esc(compareEntry.date)}から象限が変わったテーマはありません。</div>`;
+  }
+  return `
+    <div class="pill-row">${changed.join("")}</div>
+    <div class="sub" style="margin-top:var(--s3)">${esc(compareEntry.date)}との比較。</div>`;
+}
+
 function historyStrip(history) {
   if (!history.length) return "";
   const cells = history.map((h) => {
@@ -593,6 +638,8 @@ async function main() {
       <div class="card">
         <div class="card-title">テーマ・ローテーション(代理ETF、近似)</div>
         ${sectorTable(latest.themes || {}, true)}
+        <div class="card-title" style="margin-top:var(--s4)">象限の変化</div>
+        <div id="theme-rotation-changes"><div class="sub">読み込み中...</div></div>
       </div>
     </div>
 
@@ -615,6 +662,13 @@ async function main() {
     <div class="card">
       <div class="card-title">Market Leaders(母集団内RS百分位ランキング上位)</div>
       ${leadersTable(latest.market_leaders)}
+      <div class="card-title" style="margin-top:var(--s4)">新規リーダー</div>
+      <div id="newcomer-leaders"><div class="sub">読み込み中...</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">トレンドテンプレート合格銘柄のRS上位(O'Neil/Minervini式8条件通過銘柄)</div>
+      ${leadersTable(latest.trend_template_leaders)}
     </div>
   `;
 
@@ -629,6 +683,12 @@ async function main() {
     const todayIdx = history.findIndex((h) => h.date === latest.date);
     const prevEntry = todayIdx > 0 ? history[todayIdx - 1] : null;
     document.getElementById("comparison-section").innerHTML = comparisonSection(latest, prevEntry);
+
+    const offenseCompareEntry = pickCompareEntry(history, todayIdx);
+    document.getElementById("newcomer-leaders").innerHTML =
+      newcomerLeadersSection(latest.market_leaders, offenseCompareEntry);
+    document.getElementById("theme-rotation-changes").innerHTML =
+      themeQuadrantChanges(latest.themes, offenseCompareEntry);
   });
 }
 
