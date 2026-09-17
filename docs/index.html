@@ -227,6 +227,39 @@ function breadthSection(d) {
     </div>`;
 }
 
+function stressGaugesSection(gauges) {
+  if (!gauges) return `<div class="sub">データなし</div>`;
+  const vix = gauges.vix || {};
+  const rows = [
+    ["credit_hyg_ief", "HYG/IEF(信用選好)"],
+    ["breadth_rsp_spy", "RSP/SPY(値がさ株への集中度)"],
+    ["risk_appetite_iwm_spy", "IWM/SPY(小型株選好)"],
+    ["semis_soxx_spy", "SOXX/SPY(半導体選好)"],
+  ].map(([key, label]) => {
+    const g = gauges[key] || {};
+    return `
+      <div class="stat">
+        <div class="label">${esc(label)}</div>
+        <div class="value" style="font-size:16px">${g.ratio ?? "-"}</div>
+        <div class="delta mono" style="color:${pctColor(g.change_10d_pct)}">${fmtPct(g.change_10d_pct)}(10営業日)</div>
+      </div>`;
+  }).join("");
+  return `
+    <div class="stat-row">
+      <div class="stat">
+        <div class="label">VIX(恐怖指数)</div>
+        <div class="value">${vix.level ?? "-"}</div>
+        <div class="delta mono" style="color:${pctColor(vix.change_10d)}">${vix.change_10d != null ? (vix.change_10d > 0 ? "+" : "") + vix.change_10d : "-"}(10営業日)</div>
+      </div>
+      ${rows}
+    </div>
+    <div class="sub" style="margin-top:var(--s3)">
+      比率の上昇/下降が良い/悪いを意味するとは限らない(例: RSP/SPYの上昇は値がさ株への集中が
+      和らいでいることを示唆するが、それ自体を売買シグナルとして使うものではない)。色は方向を
+      示すだけで、良し悪しの判定ではない。
+    </div>`;
+}
+
 function statDelta(label, curr, prev, opts) {
   opts = opts || {};
   const decimals = opts.decimals ?? 0;
@@ -421,6 +454,11 @@ async function main() {
     <div class="grid2">
       ${trendCard("NASDAQ総合", latest.nasdaq || {})}
       ${trendCard("S&P500", latest.sp500 || {})}
+    </div>
+
+    <div class="card">
+      <div class="card-title">市場ストレス指標(株価内部だけでは見えない、相場の外側の変化)</div>
+      ${stressGaugesSection(latest.stress_gauges)}
     </div>
 
     <div id="history-strip"></div>

@@ -62,6 +62,27 @@ NASDAQ_TICKER = "^IXIC"
 SP500_TICKER = "^GSPC"
 BENCHMARK_FOR_SECTORS = "SPY"
 
+# 市場ストレス指標(Fable 5.1によるダッシュボードレビューで提案): 株価内部の
+# ブレッドス指標だけでは「相場の外側」のストレス(恐怖・信用・選好の変化)が
+# 見えないという指摘に対応。いずれも無料(yfinance)で取得できるETF/指数の
+# 比率・水準で近似する。
+#   VIX: 恐怖指数そのもの
+#   HYG/IEF: ハイイールド社債(信用リスク選好)÷ 米国債(質への逃避先)
+#   RSP/SPY: 均等加重 ÷ 時価総額加重。SPYが高値でもRSPが付いてこなければ
+#            「一部の巨大株だけで持っている」痩せた相場を示唆する
+#   IWM/SPY: 小型株 ÷ 大型株。リスク選好の強弱の代理
+#   SOXX/SPY: 半導体 ÷ 大型株。景気敏感・グロースへのリスク選好の代理
+# いずれも「この水準を超えたら危険」という断定的な閾値は置かない(根拠のない
+# 閾値を作らないという方針のため)。値と直近10営業日の変化のみを示す。
+VIX_TICKER = "^VIX"
+STRESS_GAUGE_RATIO_TICKERS = {
+    "credit_hyg_ief": ("HYG", "IEF"),
+    "breadth_rsp_spy": ("RSP", "SPY"),
+    "risk_appetite_iwm_spy": ("IWM", "SPY"),
+    "semis_soxx_spy": ("SOXX", "SPY"),
+}
+STRESS_GAUGE_TICKERS = [VIX_TICKER] + sorted({t for pair in STRESS_GAUGE_RATIO_TICKERS.values() for t in pair})
+
 SECTOR_ETFS = {
     "XLK": "情報技術",
     "XLF": "金融",
@@ -537,6 +558,61 @@ def compute_broad_universe_technicals(price_frames: dict, rs_percentiles: dict) 
 
 
 # ----------------------------------------------------------------------------
+# 4.6. 市場ストレス指標 (VIX・信用・均等加重・リスク選好)
+# ----------------------------------------------------------------------------
+
+STRESS_GAUGE_CHANGE_WINDOW = 10  # 直近何営業日の変化を見るか
+
+
+def compute_stress_gauges(gauge_hist: dict) -> dict:
+    """VIX水準・信用(HYG/IEF)・広さ(RSP/SPY)・小型株選好(IWM/SPY)・
+    半導体選好(SOXX/SPY)を計算する。「この水準を超えたら危険」という
+    断定的な閾値は置かず、値と直近STRESS_GAUGE_CHANGE_WINDOW営業日の
+    変化のみを返す(解釈はダッシュボード側の注記に委ねる)。"""
+
+    def close_of(ticker):
+        df = gauge_hist.get(ticker)
+        if df is None or df.empty:
+            return None
+        close = df["Close"].dropna()
+        return close if not close.empty else None
+
+    def level_and_change(ticker):
+        close = close_of(ticker)
+        if close is None:
+            return None, None
+        level = round(float(close.iloc[-1]), 2)
+        change = (
+            round(float(close.iloc[-1] - close.iloc[-STRESS_GAUGE_CHANGE_WINDOW]), 2)
+            if len(close) > STRESS_GAUGE_CHANGE_WINDOW else None
+        )
+        return level, change
+
+    def ratio_and_change_pct(numer_ticker, denom_ticker):
+        numer, denom = close_of(numer_ticker), close_of(denom_ticker)
+        if numer is None or denom is None:
+            return None, None
+        ratio = (numer / denom).dropna()
+        if ratio.empty:
+            return None, None
+        last = round(float(ratio.iloc[-1]), 4)
+        change_pct = (
+            round(100 * (ratio.iloc[-1] / ratio.iloc[-STRESS_GAUGE_CHANGE_WINDOW] - 1), 2)
+            if len(ratio) > STRESS_GAUGE_CHANGE_WINDOW else None
+        )
+        return last, change_pct
+
+    vix_level, vix_change = level_and_change(VIX_TICKER)
+    result = {
+        "vix": {"level": vix_level, "change_10d": vix_change},
+    }
+    for key, (numer, denom) in STRESS_GAUGE_RATIO_TICKERS.items():
+        ratio, change_pct = ratio_and_change_pct(numer, denom)
+        result[key] = {"ratio": ratio, "change_10d_pct": change_pct}
+    return result
+
+
+# ----------------------------------------------------------------------------
 # 5. セクター温度感の多数決 (RISK-ON/RISK-OFF 判定)
 # ----------------------------------------------------------------------------
 #
@@ -814,9 +890,11 @@ def run(
       段階的に広げることを推奨する。
     """
     # 売り抜け日数・ステージ状態・FTD判定はいずれも同じ指数データ(1年分)で
-    # 計算できるため、ダウンロードは1回にまとめる。
-    idx_hist = download_history([NASDAQ_TICKER, SP500_TICKER], period="1y")
+    # 計算できるため、ダウンロードは1回にまとめる。市場ストレス指標
+    # (VIX・HYG/IEF等)も同じ「軽量な少数ティッカー」の性質なのでまとめて取得する。
+    idx_hist = download_history([NASDAQ_TICKER, SP500_TICKER] + STRESS_GAUGE_TICKERS, period="1y")
     nasdaq_df, sp500_df = idx_hist.get(NASDAQ_TICKER), idx_hist.get(SP500_TICKER)
+    stress_gauges = compute_stress_gauges(idx_hist)
 
     # dt.date.today()(GitHub Actions実行日、UTC)は実際の株価データの最終
     # 取引日とずれることがある(例: 深夜0時台の実行で前日分の取引しかまだ
@@ -942,6 +1020,7 @@ def run(
         "breadth_extended": breadth_extended,
         "broad_universe_technicals": broad_universe_technicals,
         "market_leaders": leaders,
+        "stress_gauges": stress_gauges,
     }
     return result
 
@@ -962,6 +1041,7 @@ def flatten_for_sheet(result: dict) -> list:
     but = result["broad_universe_technicals"]
     nasdaq_trend = result["nasdaq"]["trend_state"]
     sp500_trend = result["sp500"]["trend_state"]
+    stress = result.get("stress_gauges", {})
 
     return [
         result["date"],
@@ -1000,6 +1080,11 @@ def flatten_for_sheet(result: dict) -> list:
         ",".join(leading_themes),
         ",".join(lagging_themes),
         top_leaders,
+        (stress.get("vix") or {}).get("level"),
+        (stress.get("credit_hyg_ief") or {}).get("ratio"),
+        (stress.get("breadth_rsp_spy") or {}).get("ratio"),
+        (stress.get("risk_appetite_iwm_spy") or {}).get("ratio"),
+        (stress.get("semis_soxx_spy") or {}).get("ratio"),
     ]
 
 
@@ -1019,6 +1104,8 @@ SHEET_HEADER = [
     "leading_sectors", "lagging_sectors",
     "leading_themes", "lagging_themes",
     "top_market_leaders",
+    "vix_level", "credit_hyg_ief_ratio", "breadth_rsp_spy_ratio",
+    "risk_appetite_iwm_spy_ratio", "semis_soxx_spy_ratio",
 ]
 
 

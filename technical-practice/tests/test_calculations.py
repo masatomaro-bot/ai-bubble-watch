@@ -32,6 +32,7 @@ from market_climate import (
     compute_trend_state,
     combine_trend_states,
     select_market_leaders,
+    compute_stress_gauges,
 )
 from ffty_screener import compute_trend_template, compute_rs_proxy_percentiles
 import universe
@@ -669,6 +670,42 @@ def test_select_market_leaders_excludes_extreme_day_change():
     tickers = [l["ticker"] for l in leaders]
     assert "SPLIT" not in tickers
     assert "GOOD" in tickers
+
+
+def test_compute_stress_gauges_vix_level_and_change():
+    n = 30
+    closes = [20.0] * n
+    closes[-1] = 25.0  # 直近10営業日で+5(VIX上昇=恐怖上昇)
+    gauge_hist = {"^VIX": make_price_df(closes)}
+
+    result = compute_stress_gauges(gauge_hist)
+
+    assert result["vix"]["level"] == 25.0
+    assert result["vix"]["change_10d"] == pytest.approx(5.0)
+
+
+def test_compute_stress_gauges_ratio_and_change_pct():
+    n = 30
+    hyg = [80.0] * n
+    ief = [100.0] * n
+    hyg[-1] = 84.0  # 比率 0.8 -> 0.84 (+5%)
+    gauge_hist = {"HYG": make_price_df(hyg), "IEF": make_price_df(ief)}
+
+    result = compute_stress_gauges(gauge_hist)
+
+    assert result["credit_hyg_ief"]["ratio"] == pytest.approx(0.84)
+    assert result["credit_hyg_ief"]["change_10d_pct"] == pytest.approx(5.0, abs=0.1)
+
+
+def test_compute_stress_gauges_missing_ticker_returns_none():
+    result = compute_stress_gauges({})
+
+    assert result["vix"]["level"] is None
+    assert result["vix"]["change_10d"] is None
+    assert result["credit_hyg_ief"]["ratio"] is None
+    assert result["breadth_rsp_spy"]["ratio"] is None
+    assert result["risk_appetite_iwm_spy"]["ratio"] is None
+    assert result["semis_soxx_spy"]["ratio"] is None
 
 
 def test_select_market_leaders_backfills_when_top_candidates_filtered_out():
