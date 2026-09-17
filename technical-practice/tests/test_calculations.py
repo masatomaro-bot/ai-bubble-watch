@@ -31,8 +31,10 @@ from market_climate import (
     majority_vote_market_regime,
     compute_trend_state,
     combine_trend_states,
+    select_market_leaders,
 )
 from ffty_screener import compute_trend_template, compute_rs_proxy_percentiles
+import universe
 from universe import _parse_ishares_holdings_csv, _parse_nasdaq_listed_txt, sample_tickers
 
 
@@ -287,6 +289,49 @@ def test_parse_nasdaq_listed_txt_excludes_etf_and_test_issues():
     assert tickers == ["AAPL"]
 
 
+def test_fetch_url_retries_on_transient_failure(monkeypatch):
+    # 2026-09-14〜09-17の実機実行でbreadth_extended.universe_sizeが
+    # 5433→4280→4095→4104→4194と日によって大きく変動していた原因調査の
+    # 回帰テスト。原因はnasdaqlisted.txt/otherlisted.txtの取得(_fetch_url)に
+    # リトライがなく、一時的な通信エラーで片方が丸ごと欠けると母集団が
+    # 大きく縮んでいたこと。リトライで復旧することを検証する。
+    calls = {"n": 0}
+
+    class FakeResponse:
+        def __init__(self, data):
+            self._data = data
+        def read(self):
+            return self._data
+        def __enter__(self):
+            return self
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=30):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise TimeoutError("simulated transient network error")
+        return FakeResponse(b"ok")
+
+    monkeypatch.setattr(universe.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(universe.time, "sleep", lambda s: None)
+
+    result = universe._fetch_url("https://example.com/list.txt")
+    assert result == "ok"
+    assert calls["n"] == 3
+
+
+def test_fetch_url_raises_after_max_retries(monkeypatch):
+    def fake_urlopen(req, timeout=30):
+        raise TimeoutError("simulated persistent network error")
+
+    monkeypatch.setattr(universe.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(universe.time, "sleep", lambda s: None)
+
+    with pytest.raises(TimeoutError):
+        universe._fetch_url("https://example.com/list.txt")
+
+
 def test_sample_tickers_returns_all_when_no_cap():
     tickers = [f"T{i}" for i in range(10)]
     assert sample_tickers(tickers, None) == tickers
@@ -383,6 +428,62 @@ def test_download_history_retries_when_one_ticker_silently_missing(monkeypatch):
     assert calls["n"] == 2  # 1回目は^GSPC欠損で再取得、2回目で揃う
     assert not result["^GSPC"]["Close"].dropna().empty
     assert list(result["^IXIC"]["Close"]) == [100.5] * 5
+
+
+def test_download_history_missing_tolerance_avoids_unnecessary_retry(monkeypatch):
+    # 広域ユニバースをチャンク取得する際、数百件中の数件が上場廃止・薄商いで
+    # 恒常的に欠損するのは正常であり、その都度チャンク全体を再取得すると
+    # Yahoo側への負荷が増えて逆にレート制限を誘発しかねない(母集団サイズが
+    # 日によって大きく変動した一因と考えられる)。missing_tolerance以内の
+    # 欠損ならリトライしないことを検証する。
+    idx = pd.bdate_range("2024-01-01", periods=5)
+    tickers = [f"T{i:02d}" for i in range(20)]
+    cols = pd.MultiIndex.from_product([tickers, ["Open", "High", "Low", "Close", "Volume"]])
+    df = pd.DataFrame([[100, 101, 99, 100.5, 1_000_000] * len(tickers)] * 5, index=idx, columns=cols)
+    df[("T00", "Close")] = np.nan  # 20件中1件(5%)だけ欠損
+
+    calls = {"n": 0}
+
+    def fake_download_with_retry(*args, **kwargs):
+        calls["n"] += 1
+        return df
+
+    monkeypatch.setattr(mc, "download_with_retry", fake_download_with_retry)
+    monkeypatch.setattr(mc.time, "sleep", lambda s: None)
+
+    result = mc.download_history(tickers, period="1y", missing_tolerance=0.05)
+
+    assert calls["n"] == 1  # 許容率以内なのでリトライしない
+    assert "T00" not in result or result["T00"]["Close"].dropna().empty
+
+
+def test_download_history_missing_tolerance_still_retries_when_exceeded(monkeypatch):
+    idx = pd.bdate_range("2024-01-01", periods=5)
+    tickers = [f"T{i:02d}" for i in range(20)]
+    cols = pd.MultiIndex.from_product([tickers, ["Open", "High", "Low", "Close", "Volume"]])
+
+    def bad_frame():
+        df = pd.DataFrame([[100, 101, 99, 100.5, 1_000_000] * len(tickers)] * 5, index=idx, columns=cols)
+        for t in tickers[:4]:  # 20件中4件(20%)欠損、許容率5%を超える
+            df[(t, "Close")] = np.nan
+        return df
+
+    def good_frame():
+        return pd.DataFrame([[100, 101, 99, 100.5, 1_000_000] * len(tickers)] * 5, index=idx, columns=cols)
+
+    calls = {"n": 0}
+
+    def fake_download_with_retry(*args, **kwargs):
+        calls["n"] += 1
+        return bad_frame() if calls["n"] == 1 else good_frame()
+
+    monkeypatch.setattr(mc, "download_with_retry", fake_download_with_retry)
+    monkeypatch.setattr(mc.time, "sleep", lambda s: None)
+
+    result = mc.download_history(tickers, period="1y", missing_tolerance=0.05)
+
+    assert calls["n"] == 2  # 許容率を超えるのでリトライする
+    assert not result["T00"]["Close"].dropna().empty
 
 
 def test_download_history_single_ticker_multiindex_columns(monkeypatch):
@@ -514,6 +615,78 @@ def test_market_climate_and_ffty_screener_share_same_retry_function():
 
     assert mc.download_with_retry is yf_retry.download_with_retry
     assert ffty_screener.download_with_retry is yf_retry.download_with_retry
+
+
+def _leader_frame(n=300, price=100.0, day_change_pct=0.0, volume=1_000_000.0):
+    """select_market_leaders用の合成株価データ。最終日だけday_change_pctぶん
+    動かし、それ以外は横ばいにする(RS百分位計算には影響させたくないため)。"""
+    closes = [price] * n
+    if day_change_pct:
+        closes[-1] = closes[-2] * (1 + day_change_pct / 100)
+    return make_price_df(closes, volumes=[volume] * n)
+
+
+def test_select_market_leaders_excludes_penny_stock():
+    # 2026-09-15/09-16の実機実行で、超低位株(ペニー株)や分割未調整と
+    # 思われる異常値がMarket Leadersに混入した回帰テスト。
+    price_frames = {
+        "PENNY": _leader_frame(price=1.0),  # 最低株価未満
+        "GOOD": _leader_frame(price=50.0),
+    }
+    percentiles = {"PENNY": 99.0, "GOOD": 90.0}  # PENNYの方が百分位は高い
+
+    leaders = select_market_leaders(price_frames, percentiles, top_n=20)
+
+    tickers = [l["ticker"] for l in leaders]
+    assert "PENNY" not in tickers
+    assert "GOOD" in tickers
+
+
+def test_select_market_leaders_excludes_low_liquidity():
+    price_frames = {
+        "THIN": _leader_frame(price=50.0, volume=1_000.0),  # 売買代金が下限未満
+        "GOOD": _leader_frame(price=50.0, volume=1_000_000.0),
+    }
+    percentiles = {"THIN": 99.0, "GOOD": 90.0}
+
+    leaders = select_market_leaders(price_frames, percentiles, top_n=20)
+
+    tickers = [l["ticker"] for l in leaders]
+    assert "THIN" not in tickers
+    assert "GOOD" in tickers
+
+
+def test_select_market_leaders_excludes_extreme_day_change():
+    # NFEが前日比+3906%だった実機での事例に相当するケース
+    price_frames = {
+        "SPLIT": _leader_frame(price=50.0, day_change_pct=3906.0),
+        "GOOD": _leader_frame(price=50.0, day_change_pct=1.5),
+    }
+    percentiles = {"SPLIT": 99.0, "GOOD": 90.0}
+
+    leaders = select_market_leaders(price_frames, percentiles, top_n=20)
+
+    tickers = [l["ticker"] for l in leaders]
+    assert "SPLIT" not in tickers
+    assert "GOOD" in tickers
+
+
+def test_select_market_leaders_backfills_when_top_candidates_filtered_out():
+    # 上位候補がフィルタで弾かれても、件数がtop_nまで後続候補で埋め合わされる
+    # (単純に上位N件を切ってからフィルタすると件数不足になるバグの回帰テスト)。
+    price_frames = {
+        "PENNY1": _leader_frame(price=0.5),
+        "PENNY2": _leader_frame(price=0.5),
+        "GOOD1": _leader_frame(price=50.0),
+        "GOOD2": _leader_frame(price=60.0),
+        "GOOD3": _leader_frame(price=70.0),
+    }
+    percentiles = {"PENNY1": 99.0, "PENNY2": 98.0, "GOOD1": 97.0, "GOOD2": 96.0, "GOOD3": 95.0}
+
+    leaders = select_market_leaders(price_frames, percentiles, top_n=3)
+
+    tickers = [l["ticker"] for l in leaders]
+    assert tickers == ["GOOD1", "GOOD2", "GOOD3"]
 
 
 if __name__ == "__main__":

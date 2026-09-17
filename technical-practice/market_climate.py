@@ -651,7 +651,7 @@ def _extract_ticker_frames(raw, tickers: list) -> dict:
     return result
 
 
-def download_history(tickers: list, period: str = "2y") -> dict:
+def download_history(tickers: list, period: str = "2y", missing_tolerance: float = 0.0) -> dict:
     """複数ティッカーをまとめて取得し、{ticker: DataFrame} の辞書で返す。
     yfinanceの"database is locked"エラー対策でリトライ付き(yf_retry.py参照)。
     group_by="ticker"を指定しても、ティッカーが1件だけの場合に列がMultiIndexに
@@ -665,7 +665,15 @@ def download_history(tickers: list, period: str = "2y") -> dict:
     該当ティッカーのデータが欠損したまま処理を続けてしまう。そのため
     yf_retry.download_with_retry(例外ベースのリトライ)だけでは検知できない。
     ここでは取得後に各ティッカーのCloseが実際に存在するかを確認し、
-    不足していれば取得全体をリトライする。"""
+    不足していれば取得全体をリトライする。
+
+    missing_tolerance: 欠損許容率(0.0〜1.0)。指数(2銘柄)のように1件欠損が
+    致命的な呼び出しでは既定の0.0(1件でも欠損したら再取得)のままでよいが、
+    広域ユニバースを数百件ずつチャンク取得する場合、数百件中の数件が上場廃止・
+    薄商いで恒常的に欠損するのは正常であり、その都度チャンク全体を再取得すると
+    Yahoo側への負荷が増えて逆にレート制限を誘発しかねない(母集団サイズが
+    5433→4280→4095と日によって大きく変動した一因と考えられる)。呼び出し側で
+    チャンク単位の許容率を指定できるようにする。"""
     if not tickers:
         return {}
     result: dict = {}
@@ -677,12 +685,14 @@ def download_history(tickers: list, period: str = "2y") -> dict:
             t for t in tickers
             if t not in result or result[t].empty or result[t]["Close"].dropna().empty
         ]
-        if not missing:
+        if len(missing) <= missing_tolerance * len(tickers):
             return result
         if attempt < DOWNLOAD_HISTORY_MAX_RETRIES - 1:
             sleep_sec = DOWNLOAD_HISTORY_RETRY_SLEEP_SEC * (attempt + 1)
+            missing_preview = missing[:10] if len(missing) > 10 else missing
             print(
-                f"[warn] download_history: 一部ティッカーのデータ取得に失敗 ({missing})、"
+                f"[warn] download_history: {len(missing)}/{len(tickers)}件のデータ取得に失敗 "
+                f"({missing_preview}{'...' if len(missing) > 10 else ''})、"
                 f"{sleep_sec:.0f}秒後に取得全体をリトライ ({attempt + 1}/{DOWNLOAD_HISTORY_MAX_RETRIES})",
                 file=sys.stderr,
             )
@@ -699,6 +709,9 @@ BREADTH_DOWNLOAD_CHUNK_SIZE = 250
 BREADTH_DOWNLOAD_SLEEP_SEC = 1.0
 
 
+CHUNK_MISSING_TOLERANCE = 0.05
+
+
 def download_history_chunked(
     tickers: list,
     period: str = "1y",
@@ -709,11 +722,12 @@ def download_history_chunked(
     for i in range(0, len(tickers), chunk_size):
         chunk = tickers[i : i + chunk_size]
         try:
-            result.update(download_history(chunk, period=period))
+            result.update(download_history(chunk, period=period, missing_tolerance=CHUNK_MISSING_TOLERANCE))
         except Exception as e:  # noqa: BLE001
             print(f"[warn] チャンク取得失敗 ({i}〜{i + len(chunk)}件目): {e}", file=sys.stderr)
         if i + chunk_size < len(tickers) and sleep_sec:
             time.sleep(sleep_sec)
+    print(f"[info] download_history_chunked: 要求{len(tickers)}件中{len(result)}件取得成功", file=sys.stderr)
     return result
 
 
@@ -742,6 +756,49 @@ def get_breadth_universe(universe: str, max_tickers: int | None = None) -> tuple
 
 MARKET_LEADER_TOP_N = 20  # Market Leader (RSランキング上位) の出力件数
 
+# Market Leadersの「明らかにデータ異常・実用性の低い銘柄」を除外するための
+# 品質フィルタ。2026-09-15/09-16の実機実行で、NFE(前日比+3906%)・GTBP
+# (1ヶ月+2815%)のような、株式分割の未調整(auto_adjust=False)や超低位株
+# 特有の異常値と思われる銘柄が上位に混入することを確認したための対応。
+MARKET_LEADER_MIN_PRICE = 5.0  # 未満はいわゆるペニー株として除外
+MARKET_LEADER_MIN_AVG_DOLLAR_VOLUME = 1_000_000.0  # 直近20営業日平均の概算売買代金(ドル)下限
+MARKET_LEADER_MAX_ABS_DAY_CHANGE_PCT = 50.0  # これを超える前日比は分割未調整等のデータ異常とみなす
+
+
+def select_market_leaders(price_frames: dict, percentiles: dict, top_n: int = MARKET_LEADER_TOP_N) -> list[dict]:
+    """RS百分位の高い順に、品質フィルタ(最低株価・最低売買代金・前日比の
+    異常値除外)を通過した銘柄をtop_n件選ぶ。フィルタで弾かれた分は
+    後続の候補で埋め合わせる(単純に上位top_n件を切ってからフィルタすると
+    件数が不足するため)。"""
+    leaders: list[dict] = []
+    ranked = sorted(percentiles.items(), key=lambda kv: kv[1], reverse=True)
+    for ticker, pct in ranked:
+        if len(leaders) >= top_n:
+            break
+        df = price_frames[ticker]
+        close = df["Close"].dropna()
+        if len(close) < 2:
+            continue
+        if close.iloc[-1] < MARKET_LEADER_MIN_PRICE:
+            continue
+        recent = df.tail(20)
+        avg_dollar_volume = (recent["Close"] * recent["Volume"]).mean()
+        if pd.isna(avg_dollar_volume) or avg_dollar_volume < MARKET_LEADER_MIN_AVG_DOLLAR_VOLUME:
+            continue
+        day_change = round(100 * (close.iloc[-1] / close.iloc[-2] - 1), 2)
+        if abs(day_change) > MARKET_LEADER_MAX_ABS_DAY_CHANGE_PCT:
+            continue
+        one_month = round(100 * (close.iloc[-1] / close.iloc[-22] - 1), 2) if len(close) > 22 else None
+        three_month = round(100 * (close.iloc[-1] / close.iloc[-63] - 1), 2) if len(close) > 63 else None
+        leaders.append({
+            "ticker": ticker,
+            "rs_percentile": pct,
+            "day_change_pct": day_change,
+            "one_month_pct": one_month,
+            "three_month_pct": three_month,
+        })
+    return leaders
+
 
 def run(
     breadth_universe: str = "broad",
@@ -756,12 +813,21 @@ def run(
       読めないため、初回はこれを例えば500などに絞って実行時間を確認してから
       段階的に広げることを推奨する。
     """
-    today = dt.date.today().isoformat()
-
     # 売り抜け日数・ステージ状態・FTD判定はいずれも同じ指数データ(1年分)で
     # 計算できるため、ダウンロードは1回にまとめる。
     idx_hist = download_history([NASDAQ_TICKER, SP500_TICKER], period="1y")
     nasdaq_df, sp500_df = idx_hist.get(NASDAQ_TICKER), idx_hist.get(SP500_TICKER)
+
+    # dt.date.today()(GitHub Actions実行日、UTC)は実際の株価データの最終
+    # 取引日とずれることがある(例: 深夜0時台の実行で前日分の取引しかまだ
+    # 確定していない場合)。「今日見ている数字がいつのものか」が紛らわしく
+    # なるため、指数データの最終行の日付を対象取引日として使う。
+    if nasdaq_df is not None and not nasdaq_df.empty:
+        today = nasdaq_df.index[-1].date().isoformat()
+    elif sp500_df is not None and not sp500_df.empty:
+        today = sp500_df.index[-1].date().isoformat()
+    else:
+        today = dt.date.today().isoformat()
 
     nasdaq_dist = compute_distribution_and_stalling_days(nasdaq_df)
     sp500_dist = compute_distribution_and_stalling_days(sp500_df)
@@ -847,25 +913,7 @@ def run(
         broad_universe_technicals = compute_broad_universe_technicals(price_frames, percentiles)
 
         if percentiles:
-            ranked = sorted(percentiles.items(), key=lambda kv: kv[1], reverse=True)
-            for ticker, pct in ranked[:MARKET_LEADER_TOP_N]:
-                close = price_frames[ticker]["Close"].dropna()
-                if len(close) < 2:
-                    continue
-                day_change = round(100 * (close.iloc[-1] / close.iloc[-2] - 1), 2)
-                one_month = (
-                    round(100 * (close.iloc[-1] / close.iloc[-22] - 1), 2) if len(close) > 22 else None
-                )
-                three_month = (
-                    round(100 * (close.iloc[-1] / close.iloc[-63] - 1), 2) if len(close) > 63 else None
-                )
-                leaders.append({
-                    "ticker": ticker,
-                    "rs_percentile": pct,
-                    "day_change_pct": day_change,
-                    "one_month_pct": one_month,
-                    "three_month_pct": three_month,
-                })
+            leaders = select_market_leaders(price_frames, percentiles, MARKET_LEADER_TOP_N)
 
     result = {
         "date": today,
