@@ -21,6 +21,8 @@ function changes(latest,prev){if(!prev)return [];return Object.entries(latest.th
 function priority(c,today){if(c.state==='反証あり')return 0;if(c.date&&c.date<=today)return 1;if(c.state==='条件に進展')return 2;if(c.state==='条件を確認済み')return 3;return 4;}
 if(typeof module!=='undefined')module.exports={seed,validate,changes,priority};
 if(typeof document==='undefined')return;
+const S=window.OpportunityStories;
+let storyTicker='SBUX';
 const drafts=new Map();
 function draftKey(f){return f.dataset.review?'review:'+f.dataset.review:f.dataset.ticker?'legacy:'+f.dataset.ticker:f.id;}
 function forgetDraft(f){drafts.delete(draftKey(f));delete f.dataset.dirty;}
@@ -53,17 +55,19 @@ function discoveryView(){return `<section class="op-discovery"><h3>データ日�
   <div class="op-grid">${discovery.candidates.map(candidateView).join('')||'<div class="card"><p>確認候補はありません。データがない場合や条件に合わない場合、候補を埋めるための推測はしません。</p></div>'}</div>
   ${discovery.excluded.length?`<p class="op-alert">確認候補から保留：${e(discovery.excluded.join(', '))}。大きすぎる騰落率・不正な値・リスト間の不一致があるため、元データの確認が必要です。</p>`:''}
   <details class="card"><summary>抽出ルール・対象範囲を見る</summary><p>50日線の上→下、下→上、上位リストへの掲載、RS百分位の1ポイント以上の変化、3%以上の騰落を確認します。上昇候補は50日線より上・RS百分位90以上が条件です。</p><p>確認順は50日線変化→リスト掲載→RS変化→大幅騰落を基本とし、下落の注意も含めます。利益確率・買い順位ではありません。閾値の投資成績は未検証です。</p><p>取得対象は既存の日次処理が出力するRS上位20件とトレンド条件合格のRS上位20件。RSの計算対象が変わると百分位にも影響します。比較間隔が7日を超える場合、変化判定は行いません。</p><p>前日比の絶対値50%超、1か月200%超、3か月500%超は保留します。企業行動やデータ調整の影響を確認するためで、異常と断定するものではありません。</p><p>個別出来高、52週高値更新、ニュース、業績は未取得です。<a href="data/history/latest.json" target="_blank" rel="noopener">使用中の市場データJSON</a></p></details></section>`;}
-function card(c){const r=reportFor(c.ticker);return `<article class="card op-card"><h3>${e(c.ticker)}</h3>${reportView(r,c)}
+function card(c){const story=S?.get(c.ticker),r=story||reportFor(c.ticker);return `<article class="card op-card" id="review-${e(c.ticker)}"><h3>${e(c.ticker)}</h3>${story?S.summary(story):reportView(r,c)}
+  ${story&&c.reviewedReportId&&c.reviewedReportId!==story.id?'<p class="op-alert">前回の判断は別の資料・判定方式に対するものです。今回のストーリーを読み直してください。</p>':''}
   <div class="op-personal"><h4>あなたの判断 <span class="op-note">任意</span></h4>
   <p class="op-note">読むだけでも使えます。市場データが更新されても、あなたの判断・メモは保持します。</p>
-  <form data-review="${e(c.ticker)}" data-report="${e(r?.id||'')}"><label class="op-field">見る理由への判断<select name="judgment">${judgments.map(v=>`<option ${v===(c.judgment||'未判断')?'selected':''}>${v}</option>`).join('')}</select></label>
+  <form data-review="${e(c.ticker)}" data-report="${e(r?.id||'')}"><label class="op-field">${story?'ストーリー':'見る理由'}への判断<select name="judgment">${judgments.map(v=>`<option ${v===(c.judgment||'未判断')?'selected':''}>${v}</option>`).join('')}</select></label>
   <label class="op-field">メモ（必要なときだけ）<textarea name="note" maxlength="10000" placeholder="納得した点、気になる反証など">${e(c.note||'')}</textarea></label><button class="op-btn" type="submit">判断・メモを保存</button></form>
   ${c.reviewedReportId?`<p class="op-note">判断時のデータ：${e(c.reviewedReportId)}</p>`:''}</div>
   <details class="op-legacy"><summary>以前のメモ・詳細な監視条件</summary><p class="op-note">これまで入力した内容は、この中に保持しています。</p><form data-ticker="${e(c.ticker)}"><label class="op-field">運用の軸<select name="lane"><option value="story" ${c.lane==='story'?'selected':''}>ストーリー投資</option><option value="technical" ${c.lane==='technical'?'selected':''}>テクニカル売買</option></select></label><div class="op-form-grid">${Object.keys(fields).map(k=>field(c,k)).join('')}</div><button class="op-btn" type="submit">詳細メモを保存</button></form></details></article>`;}
 function render(){const root=document.getElementById('opportunity');if(!root)return;root.querySelectorAll('form[data-dirty=true]').forEach(f=>drafts.set(draftKey(f),{values:Object.fromEntries(new FormData(f)),reportId:f.dataset.report}));const latest=window.watchLatest,prev=window.watchPrevious;discovery=R.derive(latest,prev?.data);const today=new Date().toLocaleDateString('sv-SE');const diff=latest?changes(latest,prev?.data):[];const selected=data.cards.filter(c=>c.lane===lane).sort((a,b)=>Number(!!reportFor(b.ticker))-Number(!!reportFor(a.ticker)));const queue=selected.filter(c=>priority(c,today)<4).sort((a,b)=>priority(a,today)-priority(b,today)||(a.date||'9999').localeCompare(b.date||'9999')).slice(0,3);const age=latest?Math.floor((Date.now()-Date.parse(latest.date+'T00:00:00Z'))/86400000):null;
-root.innerHTML=`<div class="card op-hero"><div class="op-eyebrow">OPPORTUNITY WATCH / 攻めの準備</div><h2>変化のある銘柄と、見る理由が分かる。</h2><p>取得済みの市場データから自動で絞り込みます。入力も分析ファイルも不要です。</p><p class="op-note">ルールによる説明です。AI分析・ニュースの解釈ではありません。追加の外部サービス呼び出しはありません。</p><p class="op-note">${latest?`地合い：${e(({correction:'調整局面',uptrend_under_pressure:'圧力下の上昇トレンド',confirmed_uptrend:'確認された上昇トレンド'})[latest.overall_trend_state]||latest.overall_trend_state)} / データ日 ${e(latest.date)} / 自動取得・未検証`:'市場データを取得できていません。判断カードは利用できます。'}${age>3?' / データが古いため最新状況を確認してください。':''}</p></div>
-${discoveryView()}
-<h3>自分の監視銘柄・任意のメモ</h3><p class="op-note">候補を読むだけでも使えます。登録銘柄が上位リストにない場合は未判定と表示します。</p>
+root.innerHTML=`<div class="card op-hero"><div class="op-eyebrow">OPPORTUNITY WATCH / 攻めの準備</div><h2>選ばれる理由から、成長の先を考える。</h2><p>企業の魅力が、どう売上と利益につながるのか。ストーリーを読み、数字を確かめ、あなたが判断する。</p><p class="op-note">企業ストーリーと決算の実績を掲載。判断・メモは任意です。</p><p class="op-note">${latest?`地合い：${e(({correction:'調整局面',uptrend_under_pressure:'圧力下の上昇トレンド',confirmed_uptrend:'確認された上昇トレンド'})[latest.overall_trend_state]||latest.overall_trend_state)} / データ日 ${e(latest.date)} / 自動取得・未検証`:'市場データを取得できていません。判断カードは利用できます。'}${age>3?' / データが古いため最新状況を確認してください。':''}</p></div>
+${S?S.render(storyTicker,data.cards):'<p class="op-alert">企業ストーリーを読み込めませんでした。再読み込みしてください。</p>'}
+<details class="card op-market-extra"><summary>補足：値動きから見つける変化</summary>${discoveryView()}</details>
+<h3>自分の監視銘柄・任意のメモ</h3><p class="op-note">収録済みの企業はストーリーを読んで判断できます。未収録の企業はメモを残せますが、銘柄追加だけでは企業分析は作られません。</p>
 <div class="op-actions"><button type="button" class="op-btn" data-lane="story" aria-pressed="${lane==='story'}">ストーリー投資</button><button type="button" class="op-btn" data-lane="technical" aria-pressed="${lane==='technical'}">テクニカル売買</button></div>
 <div class="op-actions"><form id="op-add"><label>銘柄追加 <input aria-label="追加するティッカー" name="ticker" placeholder="例：MSFT" maxlength="12" required></label> <button class="op-btn">追加</button></form><button class="op-btn" id="op-export">バックアップ保存</button><label class="op-btn">バックアップ復元<input id="op-import" type="file" accept="application/json,.json" hidden></label></div><p class="op-note">カードはこの端末・ブラウザだけに保存します。端末間の自動同期はありません。</p><p id="op-status" class="op-status" role="status">${e(storageError)}</p><div class="op-grid">${selected.map(card).join('')||'<p class="op-empty">この運用のカードはありません。銘柄を追加してください。</p>'}</div><div class="card"><h3>自分で設定した確認候補 · 最大3件</h3><p class="op-note">反証あり → 確認日到来 → 条件に進展 → 条件確認済み、の順。購入順位ではありません。</p>${queue.length?queue.map(c=>`<p class="op-log"><strong>${e(c.ticker)}</strong> · ${e(c.state)} · ${e(c.event||'根拠と価格条件を点検')} / ${e(c.date||'日付未設定')}</p>`).join(''):'<p class="op-empty">該当なし。未設定・欠損から候補を推定しません。</p>'}</div>
 <div class="grid2"><section class="card"><h3>テーマの変化</h3><p class="op-note">${prev?`${e(prev.date)} → ${e(latest?.date)}（取得できた直前の履歴との比較）`:'比較用の履歴 '+(window.watchHistoryLoaded?'なし':'読み込み中')} / 自動取得・未検証</p>${diff.length?diff.map(d=>`<p class="op-log">${e(d.name)} (${e(d.ticker)})：${e(d.from)} → <strong>${e(d.to)}</strong></p>`).join(''):`<p class="op-empty">${prev?'象限の変化なし。':'比較結果は未判定。'}</p>`}<p class="op-note">ETFの相対的な値動きです。資金流入や企業利益の改善を直接確認したものではありません。</p></section><section class="card"><h3>判断カードの更新履歴</h3>${data.log.length?data.log.slice(0,5).map(l=>`<p class="op-log"><span class="op-note">${e(new Date(l.at).toLocaleString('ja-JP'))}</span><br>${e(l.text)}</p>`).join(''):'<p class="op-empty">まだ更新はありません。</p>'}</section></div>
@@ -74,17 +78,19 @@ root.querySelectorAll('form[data-review]').forEach(f=>f.onsubmit=ev=>{
   const values=Object.fromEntries(new FormData(f));
   const current=data.cards.find(c=>c.ticker===f.dataset.review);
   const reportId=f.dataset.report||null;
-  if(values.judgment!=='未判断'&&!reportId){message('この銘柄の市場データがないため、見る理由への判断は未設定です。メモだけなら「未判断」のまま保存できます。');return;}
+  if(values.judgment!=='未判断'&&!reportId){message('この銘柄のストーリー・市場データがないため、判断は未設定です。メモだけなら「未判断」のまま保存できます。');return;}
   const next={...current,judgment:values.judgment,note:values.note,reviewedReportId:values.judgment==='未判断'?null:reportId,updated:new Date().toISOString()};
   const updated={...data,cards:data.cards.map(c=>c.ticker===next.ticker?next:c),log:[{at:next.updated,text:`${next.ticker}：判断・メモを更新（${next.judgment}）`},...data.log].slice(0,200)};
   if(!validate(updated)){message('入力内容が無効です。');return;}
   if(persist(updated)){forgetDraft(f);pendingMarket=false;render();message(`${next.ticker} の判断・メモを保存しました。`);}
 });
+root.querySelectorAll('[data-open-review]').forEach(b=>b.onclick=()=>{lane=data.cards.find(c=>c.ticker===b.dataset.openReview)?.lane||'story';render();const f=root.querySelector(`form[data-review="${b.dataset.openReview}"]`);f?.querySelector('select')?.focus();});
+root.querySelectorAll('[data-story]').forEach(b=>b.onclick=()=>{storyTicker=b.dataset.story;render();document.getElementById('story-detail')?.focus();});
 root.querySelectorAll('[data-watch]').forEach(b=>b.onclick=()=>{
   if(storageError){message(storageError);return;}
   if(data.cards.some(c=>c.ticker===b.dataset.watch))return;
   if(data.cards.length>=100){message('監視銘柄は100件までです。');return;}
-  if(persist({...data,cards:[...data.cards,seed(b.dataset.watch)]})){render();message(`${b.dataset.watch} を監視に追加しました。`);}
+  if(persist({...data,cards:[...data.cards,seed(b.dataset.watch)]})){lane='story';render();message(`${b.dataset.watch} を監視に追加しました。`);}
 });
 root.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
   const r=reportFor(b.dataset.copy);if(!r)return;
@@ -99,13 +105,13 @@ root.querySelector('#op-add').onsubmit=ev=>{ev.preventDefault();if(storageError)
 root.querySelector('#op-export').onclick=()=>{if(storageError){message('読み込みエラーのためバックアップ出力を停止しています。');return;}const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`opportunity-watch-${today}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 root.querySelector('#op-import').onchange=async ev=>{const file=ev.target.files[0];if(!file)return;try{if(file.size>5000000)throw Error();const imported=JSON.parse(await file.text());if(!validate(imported))throw Error();if(!confirm('現在の判断カードをバックアップの内容で置き換えますか？'))return;if(persist(imported)){clearDrafts();render();message('バックアップを復元しました。');}}catch{message('復元できません。有効な機会ウォッチのJSONを選んでください。');}finally{ev.target.value='';}};
 }
-function view(name){const offense=name==='opportunity';document.getElementById('opportunity').hidden=!offense;document.getElementById('content').hidden=offense;document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===name)));}
+function view(name){const offense=name==='opportunity'||name.startsWith('review-');document.getElementById('opportunity').hidden=!offense;document.getElementById('content').hidden=offense;document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===(offense?'opportunity':'climate'))));}
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{location.hash=b.dataset.view;view(b.dataset.view);});
-window.addEventListener('hashchange',()=>view(location.hash==='#opportunity'?'opportunity':'climate'));
+window.addEventListener('hashchange',()=>view((location.hash==='#opportunity'||location.hash.startsWith('#review-'))?'opportunity':'climate'));
 function refreshAnalysis(){
   if(document.querySelector('#opportunity form[data-dirty=true]')){pendingMarket=true;message('新しいデータを受信しました。編集中の内容を保存すると表示に反映されます。');return;}
   pendingMarket=false;render();
 }
 window.addEventListener('watch-data',refreshAnalysis);
-render();view(location.hash==='#opportunity'?'opportunity':'climate');
+render();view((location.hash==='#opportunity'||location.hash.startsWith('#review-'))?'opportunity':'climate');
 })();
