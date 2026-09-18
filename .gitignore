@@ -4,3 +4,5 @@ __pycache__/
 *.env
 service-account*.json
 data/cache/
+
+tests/node_modules/

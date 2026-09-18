@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict');
+const {seed,validate,changes,priority}=require('../docs/opportunity.js');
+const data={version:1,cards:[seed('NVDA')],log:[]};
+assert.equal(validate(data),true);
+assert.equal(validate({...data,cards:[seed('NVDA'),seed('NVDA')]}),false);
+assert.equal(validate({...data,cards:[{...seed('NVDA'),state:'買い推奨'}]}),false);
+assert.deepEqual(changes({themes:{SOXX:{quadrant:'主導'}}},null),[]);
+assert.deepEqual(changes({themes:{SOXX:{quadrant:'主導'}}},{themes:{SOXX:{quadrant:'主導'}}}),[]);
+assert.equal(changes({themes:{SOXX:{quadrant:'主導'}}},{themes:{SOXX:{quadrant:'改善'}}}).length,1);
+assert.equal(priority(seed('NVDA'),'2026-09-17'),4);
+assert.equal(priority({...seed('NVDA'),date:'2026-09-17'},'2026-09-17'),1);
+assert.equal(priority({...seed('NVDA'),state:'反証あり'},'2026-09-17'),0);
+console.log('9 opportunity logic checks passed');

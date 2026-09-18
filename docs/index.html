@@ -92,6 +92,9 @@ tr:last-child td{border-bottom:none;}
 .bar-outer{height:8px;background:var(--off);border-radius:999px;overflow:hidden;position:relative;}
 .bar-inner{position:absolute;top:0;bottom:0;border-radius:999px;}
 </style>
+<link rel="stylesheet" href="opportunity.css">
+<script src="opportunity-rules.js" defer></script>
+<script src="opportunity.js" defer></script>
 </head>
 <body>
 
@@ -114,6 +117,8 @@ tr:last-child td{border-bottom:none;}
     を参照してください。
   </div>
 
+  <nav class="watch-nav" aria-label="観測画面"><button type="button" data-view="climate" aria-pressed="true">地合いウォッチ</button><button type="button" data-view="opportunity" aria-pressed="false">機会ウォッチ</button></nav>
+  <section id="opportunity" hidden aria-label="機会ウォッチ"></section>
   <div id="content"><div class="loading">データを読み込み中...</div></div>
 </div>
 
@@ -584,6 +589,8 @@ async function main() {
     return;
   }
 
+  window.watchLatest = latest;
+  window.dispatchEvent(new Event("watch-data"));
   meta.textContent = `データ日: ${latest.date}`;
 
   const regimeInfo = REGIME_LABELS[(latest.market_regime || {}).judgement] || REGIME_LABELS["不明"];
@@ -684,6 +691,9 @@ async function main() {
     const prevEntry = todayIdx > 0 ? history[todayIdx - 1] : null;
     document.getElementById("comparison-section").innerHTML = comparisonSection(latest, prevEntry);
 
+    window.watchPrevious = prevEntry;
+    window.watchHistoryLoaded = true;
+    window.dispatchEvent(new Event("watch-data"));
     const offenseCompareEntry = pickCompareEntry(history, todayIdx);
     document.getElementById("newcomer-leaders").innerHTML =
       newcomerLeadersSection(latest.market_leaders, offenseCompareEntry);
