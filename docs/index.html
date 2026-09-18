@@ -97,7 +97,6 @@ tr:last-child td{border-bottom:none;}
 <script src="opportunity-stories-data.js" defer></script>
 <script src="opportunity-stories.js" defer></script>
 <script src="opportunity.js" defer></script>
-<script src="watch-research.js" defer></script>
 </head>
 <body>
 
@@ -121,16 +120,7 @@ tr:last-child td{border-bottom:none;}
   </div>
 
   <nav class="watch-nav" aria-label="観測画面"><button type="button" data-view="climate" aria-pressed="true">地合いウォッチ</button><button type="button" data-view="opportunity" aria-pressed="false">機会ウォッチ</button></nav>
-  <div class="op-actions"><button type="button" class="op-btn" data-chat-context="market">地合いをChatGPTで深掘り</button></div>
-  <section id="research-panel" class="card research-panel" hidden aria-labelledby="research-title">
-    <div class="research-heading"><h2 id="research-title">ChatGPTで深掘り</h2><button type="button" class="op-btn" data-chat-close>閉じる</button></div>
-    <p>知りたい項目を選ぶと質問を用意します。自由に書き換えてからChatGPTを開けます。</p>
-    <div class="op-actions" data-chat-topics aria-label="質問の候補"></div>
-    <label class="op-field">ChatGPTに渡す質問<textarea class="research-editor" maxlength="10000" rows="12" aria-label="ChatGPTに渡す質問"></textarea></label>
-    <div class="op-actions"><a class="op-btn" data-chat-open target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">ChatGPTでこの質問を開く ↗</a><button type="button" class="op-btn" data-chat-copy>質問をコピー</button></div>
-    <p class="op-note" data-chat-hint></p><p class="op-status" role="status" aria-live="polite"></p>
-    <p class="op-note">回答は別タブのChatGPTで読みます。このサイトには自動で戻りません。表示中の質問はリンクを開くとChatGPTへ渡ります。保存済みの個人メモは含めません。API料金は発生せず、ChatGPT側の利用条件・上限に従います。</p>
-  </section>
+  <nav class="op-actions research-links" aria-label="市場の調査リンク"><a class="op-btn" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPTを開く ↗</a><a class="op-btn" href="https://www.tradingview.com/symbols/SPX/" target="_blank" rel="noopener noreferrer">S&amp;P 500のチャート ↗</a></nav>
   <section id="opportunity" hidden aria-label="機会ウォッチ"></section>
   <div id="content"><div class="loading">データを読み込み中...</div></div>
 </div>
