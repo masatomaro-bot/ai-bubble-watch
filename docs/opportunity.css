@@ -76,3 +76,10 @@
 #opportunity a:focus-visible,#opportunity button:focus-visible,#opportunity input:focus-visible,#opportunity textarea:focus-visible,#opportunity select:focus-visible,#opportunity summary:focus-visible,.story-detail:focus-visible{outline:3px solid var(--pri);outline-offset:4px}
 @media(max-width:900px){.story-columns{grid-template-columns:1fr;gap:8px}.story-selector{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:540px){.story-selector{grid-template-columns:repeat(2,minmax(0,1fr))}.story-metrics{grid-template-columns:1fr}.story-detail{padding:18px}.story-value{font-size:17px}.story-chart{padding:12px}.story-bar-row{font-size:14px}.op-hero{padding:20px}.op-actions{align-items:flex-start}.story-section-heading h3{font-size:21px}}
+
+/* Simple research links: the user writes their own questions. */
+.story-research{margin:24px 0;padding:20px;border:1px solid var(--bdr);border-radius:10px;background:var(--off)}
+.story-focus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.story-focus dt{font-weight:700}.story-focus dd{font-size:15px;margin:8px 0 0}
+.story-research a.op-btn,.research-links a.op-btn{display:inline-block;text-decoration:none;overflow-wrap:anywhere;max-width:100%}
+@media(max-width:850px){.story-focus{grid-template-columns:1fr}}
