@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-16",
+  "date": "2026-09-17",
   "nasdaq": {
     "distribution_days": 6,
     "stalling_days": 0,
@@ -21,15 +21,15 @@
       "distribution_days_recent": null,
       "note": "直近でフォロースルー・デイが確認できていない"
     },
-    "price": 25978.43,
-    "sma50": 26054.31,
-    "sma150": 24897.3,
-    "sma200": 24521.71,
-    "above_sma50": false,
+    "price": 26418.3,
+    "sma50": 26065.26,
+    "sma150": 24919.65,
+    "sma200": 24536.97,
+    "above_sma50": true,
     "above_sma150": true,
     "above_sma200": true,
     "sma200_rising": true,
-    "pct_below_52w_high": 4.12
+    "pct_below_52w_high": 2.49
   },
   "sp500": {
     "distribution_days": 7,
@@ -49,19 +49,19 @@
       "rally_low_date": "2026-07-29",
       "rally_day1_date": "2026-07-30",
       "ftd_date": "2026-08-04",
-      "days_since_ftd": 30,
+      "days_since_ftd": 31,
       "distribution_days_recent": 7,
       "note": ""
     },
-    "price": 7551.81,
-    "sma50": 7612.0,
-    "sma150": 7269.15,
-    "sma200": 7174.92,
-    "above_sma50": false,
+    "price": 7637.76,
+    "sma50": 7615.1,
+    "sma150": 7273.79,
+    "sma200": 7178.86,
+    "above_sma50": true,
     "above_sma150": true,
     "above_sma200": true,
     "sma200_rising": true,
-    "pct_below_52w_high": 3.17
+    "pct_below_52w_high": 2.07
   },
   "overall_trend_state": "correction",
   "sectors": {
@@ -77,8 +77,8 @@
       "name_jp": "金融",
       "temperature": "中立",
       "day_change_pct": -1.62,
-      "rs_ratio": 99.76,
-      "rs_momentum": 99.81,
+      "rs_ratio": 99.77,
+      "rs_momentum": 99.8,
       "quadrant": "遅行"
     },
     "XLE": {
@@ -109,7 +109,7 @@
       "name_jp": "生活必需品",
       "temperature": "調整",
       "day_change_pct": -0.48,
-      "rs_ratio": 98.71,
+      "rs_ratio": 98.72,
       "rs_momentum": 99.75,
       "quadrant": "遅行"
     },
@@ -125,8 +125,8 @@
       "name_jp": "公益事業",
       "temperature": "調整",
       "day_change_pct": 0.0,
-      "rs_ratio": 98.05,
-      "rs_momentum": 99.87,
+      "rs_ratio": 98.06,
+      "rs_momentum": 99.88,
       "quadrant": "遅行"
     },
     "XLB": {
@@ -169,7 +169,7 @@
       "name_jp": "半導体",
       "monthly_return_pct": -10.21,
       "day_change_pct": 0.64,
-      "rs_ratio": 100.76,
+      "rs_ratio": 100.75,
       "rs_momentum": 99.76,
       "quadrant": "鈍化"
     },
@@ -185,7 +185,7 @@
       "name_jp": "クリーンエネルギー",
       "monthly_return_pct": -4.36,
       "day_change_pct": -0.69,
-      "rs_ratio": 98.61,
+      "rs_ratio": 98.6,
       "rs_momentum": 100.36,
       "quadrant": "改善"
     },
@@ -218,22 +218,22 @@
       "monthly_return_pct": -14.3,
       "day_change_pct": 0.59,
       "rs_ratio": 98.08,
-      "rs_momentum": 98.77,
+      "rs_momentum": 98.78,
       "quadrant": "遅行"
     },
     "PICK": {
       "name_jp": "素材・鉱業",
       "monthly_return_pct": -3.33,
       "day_change_pct": -0.78,
-      "rs_ratio": 100.46,
-      "rs_momentum": 98.72,
+      "rs_ratio": 100.45,
+      "rs_momentum": 98.73,
       "quadrant": "鈍化"
     },
     "IBB": {
       "name_jp": "バイオテクノロジー",
       "monthly_return_pct": 0.23,
       "day_change_pct": 0.2,
-      "rs_ratio": 101.82,
+      "rs_ratio": 101.83,
       "rs_momentum": 98.81,
       "quadrant": "鈍化"
     },
@@ -242,7 +242,7 @@
       "monthly_return_pct": -8.2,
       "day_change_pct": 0.26,
       "rs_ratio": 97.84,
-      "rs_momentum": 99.78,
+      "rs_momentum": 99.79,
       "quadrant": "遅行"
     },
     "SRVR": {
@@ -264,28 +264,28 @@
   },
   "breadth_universe_source": "nasdaqtrader",
   "breadth_near_52w": {
-    "universe_size": 5693,
-    "near_52w_high": 384,
-    "near_52w_low": 888,
-    "near_high_pct": 6.7,
-    "near_low_pct": 15.6
+    "universe_size": 5704,
+    "near_52w_high": 391,
+    "near_52w_low": 868,
+    "near_high_pct": 6.9,
+    "near_low_pct": 15.2
   },
   "breadth_extended": {
-    "universe_size": 5693,
-    "new_52w_highs": 98,
-    "new_52w_lows": 472,
-    "advancers": 1968,
-    "decliners": 3281,
-    "unchanged": 444,
-    "up_volume": 6251670527.0,
-    "down_volume": 7127210369.0,
-    "up_volume_pct": 46.7
+    "universe_size": 5704,
+    "new_52w_highs": 95,
+    "new_52w_lows": 402,
+    "advancers": 2119,
+    "decliners": 3176,
+    "unchanged": 409,
+    "up_volume": 4573567737.0,
+    "down_volume": 8425624597.0,
+    "up_volume_pct": 35.2
   },
   "broad_universe_technicals": {
-    "universe_size": 5693,
-    "pct_above_50dma": 31.7,
-    "pct_above_200dma": 41.7,
-    "trend_template_pass_count": 576,
+    "universe_size": 5704,
+    "pct_above_50dma": 32.0,
+    "pct_above_200dma": 42.0,
+    "trend_template_pass_count": 581,
     "trend_template_pass_rate_pct": 10.2
   },
   "market_leaders": [
@@ -614,8 +614,8 @@
   ],
   "stress_gauges": {
     "vix": {
-      "level": 15.47,
-      "change_10d": 0.94
+      "level": 15.44,
+      "change_10d": 0.91
     },
     "credit_hyg_ief": {
       "ratio": 0.8643,
@@ -638,14 +638,14 @@
     {
       "id": "breadth_thrust_divergence",
       "label": "指数は高値圏なのに参加銘柄が少ない",
-      "active": false,
-      "detail": "50日線上比率 31.7%"
+      "active": true,
+      "detail": "50日線上比率 32.0%"
     },
     {
       "id": "new_lows_exceed_highs",
       "label": "新安値銘柄数が新高値銘柄数を上回っている",
       "active": true,
-      "detail": "新高値98 / 新安値472"
+      "detail": "新高値95 / 新安値402"
     },
     {
       "id": "elevated_distribution",
@@ -666,5 +666,5 @@
       "detail": "生活必需品/ヘルスケア/公益: ['遅行', '鈍化', '遅行'] / 情報技術/一般消費財: ['主導', '遅行']"
     }
   ],
-  "cumulative_ad_line": -4795.0
+  "cumulative_ad_line": -5852.0
 }
