@@ -7,12 +7,12 @@ const {seed}=require('../docs/opportunity.js');
 const PERSONAL='opportunity-watch-v1';
 const tickerRow=(ticker,extra={})=>({ticker,rs_percentile:98,day_change_pct:4,one_month_pct:12,three_month_pct:20,above_sma50:true,...extra});
 const snapshot=()=>({date:new Date().toISOString().slice(0,10),overall_trend_state:'correction',market_leaders:[tickerRow('DEMO')],trend_template_leaders:[],themes:{}});
-function boot({personal,latest=snapshot()}={}){
+function boot({personal,latest=snapshot(),stories=false}={}){
  const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'../docs/index.html'),'utf8'),{url:'https://local.test/#opportunity',runScripts:'outside-only'});
  const w=dom.window,d=w.document;let calls=0;
  if(personal!==undefined)w.localStorage.setItem(PERSONAL,typeof personal==='string'?personal:JSON.stringify(personal));
  w.fetch=()=>{calls++;throw Error('Network is forbidden in the opportunity module');};w.confirm=()=>true;w.watchLatest=latest;
- for(const file of ['opportunity-rules.js','opportunity.js'])w.eval(fs.readFileSync(path.join(__dirname,'../docs',file),'utf8'));
+ for(const file of ['opportunity-rules.js',...(stories?['opportunity-stories-data.js','opportunity-stories.js']:[]),'opportunity.js'])w.eval(fs.readFileSync(path.join(__dirname,'../docs',file),'utf8'));
  return {dom,w,d,calls:()=>calls,close:()=>w.close()};
 }
 function fill(c,selector,value){const el=c.d.querySelector(selector);el.value=value;el.dispatchEvent(new c.w.Event('input',{bubbles:true}));}
@@ -42,4 +42,62 @@ test('corrupt storage is not overwritten and HTML notes are inert',()=>{
 });
 test('optional research copy fails gracefully when clipboard is unavailable',async()=>{
  const c=boot();try{await c.d.querySelector('[data-copy=DEMO]').onclick();assert.match(c.d.getElementById('op-status').textContent,/選択してコピー/);assert.match(c.d.querySelector('.op-brief').value,/DEMO/);}finally{c.close();}
+});
+test('story catalogue leads without market data; all companies have readable evidence and charts',()=>{
+ const c=boot({stories:true,latest:null});try{
+  assert.equal(c.d.querySelectorAll('.story-choice').length,5);
+  assert.equal(c.d.querySelector('.story-detail').getAttribute('aria-label'),'SBUXの企業分析');
+  assert.equal(c.d.querySelector('.op-market-extra').open,false);
+  assert.equal(c.calls(),0);
+  for(const ticker of ['GOOGL','AAPL','NVDA','AVGO','SBUX']){
+   c.d.querySelector(`.story-choice[data-story=${ticker}]`).click();
+   const story=c.d.querySelector('.story-detail');
+   assert.match(story.textContent,/未判定/);assert.equal(story.querySelectorAll('figure').length,2);
+   assert(story.querySelector('.story-sources a').href.startsWith('https://'));
+   assert.doesNotMatch(story.innerHTML,/NaN|Infinity|undefined/);
+  }
+  assert.match(c.d.querySelector('.story-detail').textContent,/公式資料の照合待ち/);
+  assert.equal(c.d.querySelectorAll('.story-detail .story-bar').length,1);
+ }finally{c.close();}
+});
+test('story review works outside market coverage and stays linked to reviewed story through reload',()=>{
+ const c=boot({stories:true,latest:null});try{
+  fill(c,'[data-review=NVDA] [name=judgment]','納得');fill(c,'[data-review=NVDA] [name=note]','採算を追う');submit(c,'[data-review=NVDA]');
+  const saved=JSON.parse(c.w.localStorage.getItem(PERSONAL));assert.equal(saved.cards[0].reviewedReportId,'story:NVDA:2027-Q2:20260918');
+  const second=boot({stories:true,personal:saved,latest:null});try{assert.equal(second.d.querySelector('[data-review=NVDA] [name=note]').value,'採算を追う');assert.equal(second.d.querySelector('[data-review=NVDA] [name=judgment]').value,'納得');}finally{second.close();}
+ }finally{c.close();}
+});
+test('switching companies preserves drafts; watch additions and review navigation respect existing lane',()=>{
+ const c=boot({stories:true,personal:{version:1,cards:[{...seed('NVDA'),lane:'technical',story:'旧メモ'}],log:[]}});try{
+  c.d.querySelector('[data-watch=SBUX]').click();
+  fill(c,'[data-review=SBUX] [name=note]','途中のメモ');
+  c.d.querySelector('.story-choice[data-story=NVDA]').click();
+  assert.equal(c.d.querySelector('[data-review=SBUX] [name=note]').value,'途中のメモ');
+  c.d.querySelector('[data-open-review=NVDA]').click();
+  assert.equal(c.d.activeElement,c.d.querySelector('[data-review=NVDA] select'));
+  assert.equal(c.d.querySelector('[name=story]').value,'旧メモ');
+  c.d.querySelector('[data-lane=story]').click();assert.equal(c.d.querySelector('[data-review=SBUX] [name=note]').value,'途中のメモ');
+ }finally{c.close();}
+});
+test('old rule judgment is retained with a visible review warning, and backup restore retains story judgment',async()=>{
+ const original={version:1,cards:[{...seed('GOOGL'),judgment:'保留',note:'前の判断',reviewedReportId:'rules-v1:2026-09-17:GOOGL'}],log:[]};
+ const c=boot({stories:true,personal:original});try{
+  assert.match(c.d.querySelector('#review-GOOGL .op-alert').textContent,/別の資料/);
+  assert.equal(c.d.querySelector('[name=judgment]').value,'保留');
+  submit(c,'[data-review=GOOGL]');const backup=JSON.parse(c.w.localStorage.getItem(PERSONAL));
+  assert.match(backup.cards[0].reviewedReportId,/^story:/);
+  fill(c,'[data-review=GOOGL] [name=note]','変更');submit(c,'[data-review=GOOGL]');
+  await upload(c,backup);assert.equal(c.d.querySelector('[name=note]').value,'前の判断');
+  assert.equal(c.d.querySelector('[name=judgment]').value,'保留');
+ }finally{c.close();}
+});
+test('growth math preserves missing/negative bases; charts do not turn missing figures into zero',()=>{
+ const s=require('../docs/opportunity-stories.js');
+ assert.equal(s.growth(100,120),19.999999999999996);assert.equal(s.growth(null,120),null);
+ assert.equal(s.growth(-10,10),null);assert.equal(s.growth(0,10),null);assert.equal(s.margin(100,-10),-10);
+ assert.equal(s.growth('100',120),null);
+ const html=s.chart({revenue:[-10,20],period:'now',previousPeriod:'before'},'revenue','売上');
+ assert.match(html,/is-signed/);assert.doesNotMatch(html,/width:-/);
+ assert.match(s.freshness({publishedAt:'2020-01-01'}),/120日/);
+ assert.match(s.freshness({publishedAt:'2099-01-01'}),/資料日/);
 });
