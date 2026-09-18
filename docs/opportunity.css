@@ -76,3 +76,13 @@
 #opportunity a:focus-visible,#opportunity button:focus-visible,#opportunity input:focus-visible,#opportunity textarea:focus-visible,#opportunity select:focus-visible,#opportunity summary:focus-visible,.story-detail:focus-visible{outline:3px solid var(--pri);outline-offset:4px}
 @media(max-width:900px){.story-columns{grid-template-columns:1fr;gap:8px}.story-selector{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:540px){.story-selector{grid-template-columns:repeat(2,minmax(0,1fr))}.story-metrics{grid-template-columns:1fr}.story-detail{padding:18px}.story-value{font-size:17px}.story-chart{padding:12px}.story-bar-row{font-size:14px}.op-hero{padding:20px}.op-actions{align-items:flex-start}.story-section-heading h3{font-size:21px}}
+
+/* Research desk stays outside the stock view, so market updates cannot erase drafts. */
+.research-panel{border:2px solid var(--pri);font-size:16px;line-height:1.75;scroll-margin-top:20px}
+.research-heading{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}
+.research-heading h2{font-size:22px}.research-panel p{margin:12px 0}
+.research-panel .research-editor{width:100%;min-height:280px;font-size:16px;line-height:1.7;resize:vertical}
+.research-primary{background:var(--pri-h);border-color:var(--pri);font-weight:700}
+.research-panel a.op-btn{display:inline-block;text-decoration:none}.research-panel [aria-disabled=true]{color:var(--muted);cursor:default}
+.research-panel :focus-visible{outline:3px solid var(--pri);outline-offset:3px}
+@media(max-width:540px){.research-panel{padding:16px}.research-panel .op-actions>*{max-width:100%;white-space:normal}.research-heading h2{font-size:20px}}

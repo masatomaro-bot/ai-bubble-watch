@@ -30,6 +30,7 @@ function render(ticker,cards){
  <div class="story-selector" role="group" aria-label="ストーリーを読む企業">${all.map(x=>`<button type="button" class="story-choice" data-story="${esc(x.ticker)}" aria-pressed="${x.ticker===s.ticker}"><strong>${esc(x.ticker)}</strong><span>${esc(x.name)}</span><small>${esc(x.sector)}</small></button>`).join('')}</div>
  <article class="story-detail card" id="story-detail" tabindex="-1" aria-label="${esc(s.ticker)}の企業分析">
  <header class="story-heading"><div><p class="op-tag">${esc(s.sector)} / ${esc(s.kind)}</p><h3>${esc(s.name)} <span>${esc(s.ticker)}</span></h3></div><span class="story-state">${revenueGrowth!==null&&profitGrowth!==null?(revenueGrowth>0&&profitGrowth>0?'実績：増収・増益':'実績を個別に確認'):'実績：一部照合待ち'}</span></header>
+ <div class="op-actions"><button type="button" class="op-btn research-primary" data-chat-context="${esc(s.ticker)}">ChatGPTで深掘り</button>${s.ticker==='SBUX'?'<button type="button" class="op-btn" data-chat-context="SBUX" data-chat-topic="ceo">CEO交代</button><button type="button" class="op-btn" data-chat-context="SBUX" data-chat-topic="revenue">減収の理由</button><button type="button" class="op-btn" data-chat-context="SBUX" data-chat-topic="japan">日本事業売却</button>':''}</div>
  <h4 class="story-title">${esc(s.title)}</h4><p class="story-value">${esc(s.value)}</p>
  <p class="op-note">資料：${esc(s.period)} / 発表 ${esc(s.publishedAt)} / 編集確認 ${esc(s.reviewedAt)} · ${esc(s.sourceLevel)}</p>
  ${age?`<p class="op-alert">${esc(age)}</p>`:''}
