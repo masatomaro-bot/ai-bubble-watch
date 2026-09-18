@@ -16,3 +16,10 @@
 .op-actions form{min-width:0;max-width:100%}.op-field input,.op-field textarea,.op-field select{box-sizing:border-box;min-width:0}
 .op-btn[aria-pressed=true]{border-color:var(--pri);background:var(--pri-h)}
 @media(max-width:850px){.op-grid{grid-template-columns:1fr}.op-actions input[name=ticker]{max-width:160px}}
+/* Rule-based discovery. Candidates are useful without creating a personal card. */
+.op-discovery{margin:24px 0 32px}.op-discovery>h3{margin-bottom:10px}
+.op-discovery>.op-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:16px}
+.op-discovery details p{margin:12px 0;line-height:1.7}.op-candidate{min-width:0}
+.op-brief{display:block;width:100%;box-sizing:border-box;min-height:260px;background:var(--bg);color:var(--tx);border:1px solid var(--bdr);padding:12px;resize:vertical;white-space:pre-wrap;font:inherit;font-size:12px;margin:12px 0}
+.op-btn:disabled{opacity:.6;cursor:default}
+@media(max-width:1050px){.op-discovery>.op-grid{grid-template-columns:1fr}}
