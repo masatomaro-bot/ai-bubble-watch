@@ -35,6 +35,16 @@ let data={version:1,cards:['NVDA','GOOGL','AVGO'].map(seed),log:[]},lane='story'
 try{const raw=localStorage.getItem(KEY);if(raw){const parsed=JSON.parse(raw);if(!validate(parsed))throw Error('invalid');data=parsed;}}catch{storageError='保存データを読み込めません。元データ保護のため保存を停止しています。バックアップから復元してください。';}
 function persist(next){try{localStorage.setItem(KEY,JSON.stringify(next));data=next;storageError='';return true;}catch{message('保存できませんでした。ブラウザの保存設定・空き容量を確認してください。');return false;}}
 function message(t){document.getElementById('op-status').textContent=t;}
+function addWatch(ticker){
+ if(storageError)return {ok:false,message:storageError};
+ if(!/^[A-Z0-9.^-]{1,12}$/.test(ticker))return {ok:false,message:'ティッカーが無効です。'};
+ if(data.cards.some(c=>c.ticker===ticker))return {ok:true,message:`${ticker} は監視に登録済みです。`};
+ if(data.cards.length>=100)return {ok:false,message:'監視銘柄は100件までです。'};
+ if(!persist({...data,cards:[...data.cards,seed(ticker)]}))return {ok:false,message:'保存できません。ブラウザの保存設定・空き容量を確認してください。'};
+ render();window.dispatchEvent(new Event('watchlist-changed'));
+ return {ok:true,message:`${ticker} を機会ウォッチの監視に追加しました。`};
+}
+window.OpportunityWatch={add:addWatch,has:ticker=>data.cards.some(c=>c.ticker===ticker)};
 function field(c,k){let control;if(choices[k])control=`<select name="${k}">${choices[k].map(v=>`<option ${c[k]===v?'selected':''}>${e(v)}</option>`).join('')}</select>`;else if(k==='date')control=`<input name="date" type="date" value="${e(c.date)}">`;else control=`<textarea name="${k}" maxlength="10000">${e(c[k])}</textarea>`;return `<label class="op-field">${fields[k]}${control}</label>`;}
 function reportFor(ticker){
  const candidate=offenseDiscovery?.all.find(r=>r.ticker===ticker);
@@ -57,8 +67,8 @@ function candidateView(r){return `<article class="card op-card op-candidate"><sp
   <details><summary>必要なときだけ深掘りする</summary><p class="op-note">ここまでの説明は自動表示です。さらに調べたい場合だけ、このメモをチャットへ渡せます。</p><textarea class="op-brief" aria-label="${e(r.ticker)}の調査メモ" readonly>${e(R.briefing(r,discovery.date,discovery.previousDate))}</textarea><button class="op-btn" data-copy="${e(r.ticker)}">調査メモをコピー</button></details></article>`;}
 function discoveryView(){return `<section class="op-discovery"><h3>データ日の確認候補 · 最大3件</h3><p class="op-note">${e(discovery.notice)} ${discovery.previousDate?e(discovery.previousDate)+' → '+e(discovery.date):''}</p>
   ${discovery.stale?'<p class="op-alert">現在の投資機会を示すものではありません。市場データの更新を確認してください。</p>':''}
-  <p class="op-note">取得済みの上位2リスト・重複除外後 ${discovery.coverage} 銘柄から ${discovery.all.length} 件が条件に該当。全米国株をこの画面で再検索しているわけではありません。</p>
-  <div class="op-grid">${discovery.candidates.map(candidateView).join('')||'<div class="card"><p>確認候補はありません。データがない場合や条件に合わない場合、候補を埋めるための推測はしません。</p></div>'}</div>
+  <p class="op-note">取得済みの上位2リスト・重複除外後 ${discovery.coverage} 銘柄から ${discovery.all.filter(r=>window.IssuerProfiles?.get(r.ticker).status==='eligible').length} 件が地域確認と条件を通過。全米国株をこの画面で再検索しているわけではありません。</p>
+  <div class="op-grid">${(discovery.stale?[]:discovery.all.filter(r=>window.IssuerProfiles?.get(r.ticker).status==='eligible').slice(0,3)).map(candidateView).join('')||'<div class="card"><p>確認候補はありません。データがない場合や条件に合わない場合、候補を埋めるための推測はしません。</p></div>'}</div>
   ${discovery.excluded.length?`<p class="op-alert">確認候補から保留：${e(discovery.excluded.join(', '))}。大きすぎる騰落率・不正な値・リスト間の不一致があるため、元データの確認が必要です。</p>`:''}
   <details class="card"><summary>抽出ルール・対象範囲を見る</summary><p>50日線の上→下、下→上、上位リストへの掲載、RS百分位の1ポイント以上の変化、3%以上の騰落を確認します。上昇候補は50日線より上・RS百分位90以上が条件です。</p><p>確認順は50日線変化→リスト掲載→RS変化→大幅騰落を基本とし、下落の注意も含めます。利益確率・買い順位ではありません。閾値の投資成績は未検証です。</p><p>取得対象は既存の日次処理が出力するRS上位20件とトレンド条件合格のRS上位20件。RSの計算対象が変わると百分位にも影響します。比較間隔が7日を超える場合、変化判定は行いません。</p><p>前日比の絶対値50%超、1か月200%超、3か月500%超は保留します。企業行動やデータ調整の影響を確認するためで、異常と断定するものではありません。</p><p>個別出来高、52週高値更新、ニュース、業績は未取得です。<a href="data/history/latest.json" target="_blank" rel="noopener">使用中の市場データJSON</a></p></details></section>`;}
 function card(c){const story=S?.get(c.ticker),r=story||reportFor(c.ticker);return `<article class="card op-card" id="review-${e(c.ticker)}"><h3>${e(c.ticker)}</h3>${story&&offenseDiscovery?.all.some(x=>x.ticker===c.ticker)?reportView(reportFor(c.ticker),{}):''}${story?S.summary(story):reportView(r,c)}
@@ -100,7 +110,8 @@ root.querySelectorAll('[data-watch]').forEach(b=>b.onclick=()=>{
   if(persist({...data,cards:[...data.cards,seed(b.dataset.watch)]})){lane='story';render();message(`${b.dataset.watch} を監視に追加しました。`);}
 });
 root.querySelectorAll('[data-company-copy]').forEach(b=>b.onclick=async()=>{
- const area=root.querySelector(`[data-company-prompt="${b.dataset.companyCopy}"]`),status=root.querySelector(`[data-company-status="${b.dataset.companyCopy}"]`);
+ const scope=b.closest('[data-research-controls]')||root;
+ const area=scope.querySelector(`[data-company-prompt="${b.dataset.companyCopy}"]`),status=scope.querySelector(`[data-company-status="${b.dataset.companyCopy}"]`);
  try{await navigator.clipboard.writeText(area.value);status.textContent='コピーしました。ChatGPTに貼り付けて送信してください。';}
  catch{area.focus();area.select();status.textContent='自動コピーできません。選択された質問を⌘C（WindowsはCtrl+C）でコピーしてください。';}
 });

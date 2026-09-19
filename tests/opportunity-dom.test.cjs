@@ -12,7 +12,8 @@ function boot({personal,latest=snapshot(),stories=false}={}){
  const w=dom.window,d=w.document;let calls=0;
  if(personal!==undefined)w.localStorage.setItem(PERSONAL,typeof personal==='string'?personal:JSON.stringify(personal));
  w.fetch=()=>{calls++;throw Error('Network is forbidden in the opportunity module');};w.confirm=()=>true;w.watchLatest=latest;
- for(const file of ['opportunity-rules.js','opportunity-discovery.js',...(stories?['opportunity-stories-data.js','opportunity-stories.js']:[]),'opportunity.js'])w.eval(fs.readFileSync(path.join(__dirname,'../docs',file),'utf8'));
+ w.IssuerProfiles={get:()=>({status:'eligible'})};
+ for(const file of ['opportunity-rules.js','issuer-profiles.js','opportunity-discovery.js',...(stories?['opportunity-stories-data.js','opportunity-stories.js']:[]),'opportunity.js']){w.eval(fs.readFileSync(path.join(__dirname,'../docs',file),'utf8'));if(file==='issuer-profiles.js'){const original=w.IssuerProfiles.get;w.IssuerProfiles.get=(ticker,...args)=>ticker==='DEMO'?{status:'eligible',name:'Test fixture',business:'Fixture only'}:original(ticker,...args);}}
  return {dom,w,d,calls:()=>calls,close:()=>w.close()};
 }
 function fill(c,selector,value){const el=c.d.querySelector(selector);el.value=value;el.dispatchEvent(new c.w.Event('input',{bubbles:true}));}

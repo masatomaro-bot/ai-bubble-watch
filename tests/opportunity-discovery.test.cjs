@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const {select,render}=require('../docs/opportunity-discovery.js');
 const row=(ticker,extra={})=>({ticker,rs_percentile:95,day_change_pct:0,one_month_pct:10,three_month_pct:20,above_sma50:true,...extra});
 const snap=(date,rows)=>({date,market_leaders:rows,trend_template_leaders:[]});
-const run=(s,p)=>select(s,p,'2026-09-19');
+const run=(s,p)=>select(s,p,'2026-09-19',{get:()=>({status:'eligible'})});
 const broad=(date,rows,method='broad-close-return-252-percentile-v1')=>({date,opportunity_universe:{method,source:'broad',rows:rows.map(r=>({...r,observed_date:date}))}});
 test('steady strength can qualify without a one-day jump; falls and rebounds do not',()=>{
  const r=run(snap('2026-09-17',[row('STEADY'),row('FALL',{day_change_pct:-4}),row('BOUNCE',{day_change_pct:8,one_month_pct:-5}),row('WEAK',{above_sma50:false})]));
