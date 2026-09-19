@@ -33,3 +33,13 @@ test('deterministic shortlist is capped; no fallback to fixed stories',()=>{
  assert.match(render(run(null),{get:()=>({ticker:'SBUX'})},[]),/固定の企業紹介で候補を補充しません/);
  assert.match(render(r,null,[]),/業績・堀・株価への織り込みは未検証/);
 });
+
+test('research URL round-trips ticker, dated public figures and fundamental instructions',()=>{
+ const {researchPrompt,researchUrl}=require('../docs/opportunity-discovery.js');
+ const result=run(snap('2026-09-17',[row('MGRT')]));
+ const prompt=researchPrompt('MGRT',result),url=new URL(researchUrl('MGRT',result));
+ assert.equal(url.origin,'https://chatgpt.com');assert.equal(url.searchParams.get('q'),prompt);
+ for(const text of ['MGRT','2026-09-17','正式社名','SEC','前年同期','模倣','最有力シナリオ','未確認','テクニカル説明は不要'])assert(prompt.includes(text));
+ assert.throws(()=>researchPrompt('<img>'),/Invalid ticker/);
+ assert(researchUrl('MGRT',result).length<10000);
+});

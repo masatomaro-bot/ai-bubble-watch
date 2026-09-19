@@ -99,6 +99,11 @@ root.querySelectorAll('[data-watch]').forEach(b=>b.onclick=()=>{
   if(data.cards.length>=100){message('監視銘柄は100件までです。');return;}
   if(persist({...data,cards:[...data.cards,seed(b.dataset.watch)]})){lane='story';render();message(`${b.dataset.watch} を監視に追加しました。`);}
 });
+root.querySelectorAll('[data-company-copy]').forEach(b=>b.onclick=async()=>{
+ const area=root.querySelector(`[data-company-prompt="${b.dataset.companyCopy}"]`),status=root.querySelector(`[data-company-status="${b.dataset.companyCopy}"]`);
+ try{await navigator.clipboard.writeText(area.value);status.textContent='コピーしました。ChatGPTに貼り付けて送信してください。';}
+ catch{area.focus();area.select();status.textContent='自動コピーできません。選択された質問を⌘C（WindowsはCtrl+C）でコピーしてください。';}
+});
 root.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
   const r=reportFor(b.dataset.copy);if(!r)return;
   try{await navigator.clipboard.writeText(R.briefing(r,discovery.date,discovery.previousDate));message('調査メモをコピーしました。');}
