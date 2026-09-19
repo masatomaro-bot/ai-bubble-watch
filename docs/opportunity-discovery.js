@@ -2,6 +2,7 @@
 (function(root){
 'use strict';
 const R=typeof module!=='undefined'&&module.exports?require('./opportunity-rules.js'):root.OpportunityRules;
+const P=typeof module!=='undefined'&&module.exports?require('./issuer-profiles.js'):root.IssuerProfiles;
 const METHOD='broad-close-return-252-percentile-v1';
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
 function universe(snapshot){
@@ -15,15 +16,17 @@ function universe(snapshot){
  return {...R.rows(snapshot),scope:'legacy',key:`legacy-top-lists:${snapshot?.breadth_universe_source||'unknown'}`};
 }
 function qualifies(r){return !!r&&finite(r.day_change_pct)&&finite(r.rs_percentile)&&r.rs_percentile>=90&&r.above_sma50===true&&finite(r.one_month_pct)&&r.one_month_pct>0&&finite(r.three_month_pct)&&r.three_month_pct>0;}
-function select(latest,previous,today=new Date().toISOString().slice(0,10)){
- const empty={date:null,previousDate:null,candidates:[],all:[],cautions:[],excluded:[],coverage:0,scope:'none',stale:false,comparable:false};
+function select(latest,previous,today=new Date().toISOString().slice(0,10),policy=P){
+ const empty={date:null,previousDate:null,candidates:[],all:[],cautions:[],excluded:[],regionExcluded:[],regionReview:[],coverage:0,scope:'none',stale:false,comparable:false};
  if(!R.validDate(latest?.date)||!R.validDate(today)||latest.date>today)return empty;
  const current=universe(latest),prior=universe(previous);
  const gap=R.validDate(previous?.date)?(Date.parse(latest.date)-Date.parse(previous.date))/86400000:0;
  const comparable=!!current.key&&current.key===prior.key&&gap>0&&gap<=7;
  const stale=(Date.parse(today)-Date.parse(latest.date))/86400000>4;
- const all=[],cautions=[];
+ const all=[],cautions=[],regionExcluded=[],regionReview=[];
  for(const [ticker,row]of current.map){
+  const profile=policy?.get(ticker,today)||{status:'review',reason:'企業情報を読み込めません。'};
+  if(profile.status!=='eligible'){(profile.status==='excluded'?regionExcluded:regionReview).push({ticker,profile});continue;}
   const before=comparable?prior.map.get(ticker):null;
   if(row.above_sma50===false||(finite(row.day_change_pct)&&row.day_change_pct<=-3)){
    cautions.push({ticker,row,reason:row.above_sma50===false?'50日線より下':'当日3%以上の下落'});continue;
@@ -31,17 +34,18 @@ function select(latest,previous,today=new Date().toISOString().slice(0,10)){
   if(!qualifies(row))continue;
   const persistent=qualifies(before);
   const reasons=[`市場内RS百分位 ${row.rs_percentile.toFixed(1)}（年間騰落率による順位）`,`1か月 ${R.pct(row.one_month_pct)}・3か月 ${R.pct(row.three_month_pct)}。両期間とも上昇`,`50日移動平均線より上`,persistent?`${previous.date}と${latest.date}の2時点で同じ条件を満たす（間の全日を確認した意味ではありません）`:'比較可能な過去の条件充足を確認できないため、継続性は未確認'];
-  all.push({ticker,row,persistent,reasons,id:`discovery-v1:${latest.date}:${ticker}`,researchStatus:'業績・堀・株価への織り込みは未検証'});
+  all.push({ticker,profile,row,persistent,reasons,id:`discovery-v1:${latest.date}:${ticker}`,researchStatus:'業績・堀・株価への織り込みは未検証'});
  }
  all.sort((a,b)=>Number(b.persistent)-Number(a.persistent)||b.row.rs_percentile-a.row.rs_percentile||a.ticker.localeCompare(b.ticker));
- return {...empty,date:latest.date,previousDate:comparable?previous.date:null,comparable,stale,scope:current.scope,coverage:current.map.size,rankedCount:current.rankedCount,excluded:[...current.bad].sort(),all,candidates:stale?[]:all.slice(0,3),cautions};
+ return {...empty,date:latest.date,previousDate:comparable?previous.date:null,comparable,stale,scope:current.scope,coverage:current.map.size,rankedCount:current.rankedCount,excluded:[...current.bad].sort(),all,candidates:stale?[]:all.slice(0,3),cautions,regionExcluded,regionReview};
 }
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function researchPrompt(ticker,result){
  if(typeof ticker!=='string'||!/^[A-Z0-9.^-]{1,12}$/.test(ticker))throw Error('Invalid ticker');
  const r=result?.all?.find(x=>x.ticker===ticker);
- const context=r?`抽出日${result.date}。自動取得・未検証：RS百分位${r.row.rs_percentile}、1か月${R.pct(r.row.one_month_pct)}、3か月${R.pct(r.row.three_month_pct)}。これは価格条件の通過で、事業の優秀さや堀は未確認。`:'価格条件で選ばれた調査候補で、事業の優秀さや堀は未確認。';
+ const context=r?`抽出日${result.date}。自動取得・未検証：RS百分位${r.row.rs_percentile}、1か月${R.pct(r.row.one_month_pct)}、3か月${R.pct(r.row.three_month_pct)}。これは価格条件の通過で、事業の優秀さや堀は未確認。`:`照会元の市場データ日：${result?.date||'未取得'}。市場一覧からの調査です。条件充足・事業の優秀さ・堀は、この質問だけでは確認できません。`;
  return `米国上場銘柄 ${ticker} を日本語で深掘りしてください。最初に正式社名・取引所・事業を照合し、同定できなければ断定しないでください。${context}
+${P?.get(ticker)?.name||'社名は要照合'}。登記地・経営の拠点・中核事業の所在地・支配関係を確認してください。中国本土・香港が基盤の企業は候補から外す方針です。米国上場だけで米国企業と判断せず、中国への販売だけとは区別してください。
 最新の企業IR・SEC開示を検索し、資料日・対象期間・出典リンクを示してください。検索できない場合はその旨を明示し、古い記憶を最新情報として扱わないでください。
 結論を先に、その企業ならではの因果関係を段落で説明してください。50日線などのテクニカル説明は不要です。
 何を誰に売り、どう利益が残るか。事業別売上・成長率・営業利益・利益率・営業CF・設備投資・現金・負債を直近と前年同期で比較し、数字の意味を説明してください。GAAPと調整後、一時要因を分け、未取得値を捏造・補間しないでください。
@@ -49,15 +53,17 @@ function researchPrompt(ticker,result){
 成長の源泉、最も強い反証、現在株価に織り込まれた期待を検証し、最後に最有力シナリオとその理由、強気・中立・弱気、壊れる条件2〜3個を提示してください。事業評価と株価評価を分け、確率は根拠がある場合のみ数値化。売買指示は不要です。Web数値は暫定として扱い、事実と考察を区別してください。`;
 }
 function researchUrl(ticker,result){return 'https://chatgpt.com/?q='+encodeURIComponent(researchPrompt(ticker,result));}
-function researchControls(ticker,result){return `<a class="op-btn op-research-primary" href="${esc(researchUrl(ticker,result))}" target="_blank" rel="noopener noreferrer">${esc(ticker)}の事業・決算・堀をChatGPTで調べる ↗</a><details class="op-research-fallback"><summary>質問が引き継がれない場合</summary><p class="op-note">下の質問をコピーし、ChatGPTの入力欄に貼り付けて送信してください。</p><textarea class="op-brief" data-company-prompt="${esc(ticker)}" aria-label="${esc(ticker)}の企業分析の質問" readonly>${esc(researchPrompt(ticker,result))}</textarea><button type="button" class="op-btn" data-company-copy="${esc(ticker)}">質問をコピー</button><p data-company-status="${esc(ticker)}" role="status"></p></details>`;}
+function researchControls(ticker,result){return `<div data-research-controls><a class="op-btn op-research-primary" href="${esc(researchUrl(ticker,result))}" target="_blank" rel="noopener noreferrer">${esc(ticker)}の事業・決算・堀をChatGPTで調べる ↗</a><details class="op-research-fallback"><summary>質問が引き継がれない場合</summary><p class="op-note">下の質問をコピーし、ChatGPTの入力欄に貼り付けて送信してください。</p><textarea class="op-brief" data-company-prompt="${esc(ticker)}" aria-label="${esc(ticker)}の企業分析の質問" readonly>${esc(researchPrompt(ticker,result))}</textarea><button type="button" class="op-btn" data-company-copy="${esc(ticker)}">質問をコピー</button><p data-company-status="${esc(ticker)}" role="status"></p></details></div>`;}
 function render(result,stories,cards){
  const list=xs=>`<ul>${xs.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
  return `<section class="op-discovery op-data-led" aria-label="データから選んだ調査候補"><h3>データから選んだ調査候補</h3>
  <p>市場で強さが見える企業について、その背景に売上・利益の改善と持続する競争優位があるかを調べます。候補入りだけでは、良い企業・割安・買い時とは判断しません。</p>
  <p class="op-note">データ日 ${esc(result.date||'未取得')} / 比較日 ${esc(result.previousDate||'比較不可')} / 自動取得・未検証</p>
- <p class="op-note">${result.scope==='broad'?'既存の日次処理で取得した市場データから、価格・売買代金などの条件を通過した範囲':result.scope==='legacy'?'旧データのため、RS上位20件とトレンド条件上位20件の範囲のみ':result.scope==='unsupported'?'未対応のデータ形式のため抽出を停止':'市場データを取得できていません'}：${result.coverage}銘柄。抽出条件に合う${result.all.length}件から最大3件を表示。</p>
+ <p class="op-note">${result.scope==='broad'?'既存の日次処理で取得した市場データから、価格・売買代金などの条件を通過した範囲':result.scope==='legacy'?'旧データのため、RS上位20件とトレンド条件上位20件の範囲のみ':result.scope==='unsupported'?'未対応のデータ形式のため抽出を停止':'市場データを取得できていません'}：${result.coverage}銘柄。地域の確認と抽出条件を通過した${result.all.length}件から最大3件を表示。</p>
+ <p class="op-note">中国本土・香港に事業・経営の中核がある企業は対象外。不明な企業は確認待ち。地域判定は公開資料による暫定の確認で、堀や安全性の評価ではありません。</p>
+ ${regionDetails(result)}
  ${result.stale?'<p class="op-alert">データ日から4日を超えています。更新されるまで現在の候補は表示しません。</p>':''}
- <div class="op-grid">${result.candidates.map(r=>`<article class="card op-fundamental-candidate"><p class="op-tag">${r.persistent?'2時点で強さを確認':'継続性の確認待ち'} · 調査候補</p><h3>${esc(r.ticker)}</h3><p class="op-note">価格の抽出条件を通過。企業の実力はこれから確認します。</p>
+ <div class="op-grid">${result.candidates.map(r=>`<article class="card op-fundamental-candidate"><p class="op-tag">${r.persistent?'2時点で強さを確認':'継続性の確認待ち'} · 調査候補</p><h3>${esc(r.ticker)} · ${esc(r.profile?.name||'')}</h3><p>${esc(r.profile?.business||'')}</p><p class="op-note">価格の抽出条件を通過。企業の実力はこれから確認します。</p>
  ${researchControls(r.ticker,result)}
  ${stories?.get(r.ticker)?`<button class="op-btn" data-story="${esc(r.ticker)}">保存済みの企業資料を確認</button>`:''}
  <button class="op-btn" data-watch="${esc(r.ticker)}" ${cards.some(c=>c.ticker===r.ticker)?'disabled':''}>${cards.some(c=>c.ticker===r.ticker)?'監視に登録済み':'監視に追加'}</button>
@@ -66,6 +72,7 @@ function render(result,stories,cards){
  ${result.cautions.length?`<details class="card"><summary>悪化・下落を確認する企業 ${result.cautions.length}件</summary>${list(result.cautions.map(r=>`${r.ticker}：${r.reason}`))}</details>`:''}
  ${result.excluded.length?`<p class="op-alert">数値の不整合・異常値・対象日不一致による保留：${esc(result.excluded.join(', '))}</p>`:''}</section>`;
 }
-const api={select,render,qualifies,researchPrompt,researchUrl};
+function regionDetails(result){return [['regionExcluded','方針による対象外'],['regionReview','企業情報の確認待ち']].map(([key,label])=>result[key]?.length?`<details class="card"><summary>${label} ${result[key].length}件</summary>${result[key].map(x=>`<p><strong>${esc(x.ticker)} · ${esc(x.profile.name)}</strong>：${esc(x.profile.reason)}</p>`).join('')}</details>`:'').join('');}
+const api={select,render,qualifies,researchPrompt,researchUrl,researchControls};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.OpportunityDiscovery=api;
 })(typeof window!=='undefined'?window:this);
