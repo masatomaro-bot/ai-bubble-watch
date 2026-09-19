@@ -5,9 +5,9 @@ const fields=['rs_percentile','day_change_pct','one_month_pct','three_month_pct'
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
 const validDate=x=>typeof x==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x)&&Number.isFinite(Date.parse(x))&&new Date(x).toISOString().slice(0,10)===x;
 const pct=x=>finite(x)?`${x>0?'+':''}${x.toFixed(2)}%`:'未取得';
-function rows(snapshot){
+function rows(snapshot,names=['market_leaders','trend_template_leaders']){
   const map=new Map(),bad=new Set();
-  for(const name of ['market_leaders','trend_template_leaders']){
+  for(const name of names){
     for(const row of Array.isArray(snapshot?.[name])?snapshot[name]:[]){
       if(!row||typeof row.ticker!=='string'||!/^[A-Z0-9.^-]{1,12}$/.test(row.ticker))continue;
       const prior=map.get(row.ticker);
@@ -74,6 +74,6 @@ function briefing(result,date,previousDate){
     ...result.limitations.map(s=>`未確認・注意：${s}`),`次の確認：${result.next}`,
     '深掘りする場合：企業の直近一次資料を確認し、この値動きが売上・利益の変化を伴うか、反証とともに説明してください。データの欠損から推定しないでください。'].join('\n');
 }
-const api={derive,briefing,pct};
+const api={derive,briefing,pct,rows,validDate};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.OpportunityRules=api;
 })(typeof window!=='undefined'?window:this);

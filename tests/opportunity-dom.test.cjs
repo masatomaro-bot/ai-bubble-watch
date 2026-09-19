@@ -12,7 +12,7 @@ function boot({personal,latest=snapshot(),stories=false}={}){
  const w=dom.window,d=w.document;let calls=0;
  if(personal!==undefined)w.localStorage.setItem(PERSONAL,typeof personal==='string'?personal:JSON.stringify(personal));
  w.fetch=()=>{calls++;throw Error('Network is forbidden in the opportunity module');};w.confirm=()=>true;w.watchLatest=latest;
- for(const file of ['opportunity-rules.js',...(stories?['opportunity-stories-data.js','opportunity-stories.js']:[]),'opportunity.js'])w.eval(fs.readFileSync(path.join(__dirname,'../docs',file),'utf8'));
+ for(const file of ['opportunity-rules.js','opportunity-discovery.js',...(stories?['opportunity-stories-data.js','opportunity-stories.js']:[]),'opportunity.js'])w.eval(fs.readFileSync(path.join(__dirname,'../docs',file),'utf8'));
  return {dom,w,d,calls:()=>calls,close:()=>w.close()};
 }
 function fill(c,selector,value){const el=c.d.querySelector(selector);el.value=value;el.dispatchEvent(new c.w.Event('input',{bubbles:true}));}
@@ -25,7 +25,7 @@ test('unknown saved ticker is explicitly outside data coverage; old notes are in
  const c=boot({personal:{version:1,cards:[{...seed('NVDA'),story:'以前の仮説',note:'保存済み'}],log:[]}});try{assert.equal(c.d.querySelector('[name=story]').value,'以前の仮説');assert.match(c.d.querySelector('.op-analysis-empty').textContent,/データなし/);fill(c,'[data-review=NVDA] [name=note]','追記');submit(c,'[data-review=NVDA]');assert.equal(JSON.parse(c.w.localStorage.getItem(PERSONAL)).cards[0].story,'以前の仮説');}finally{c.close();}
 });
 test('watch button adds a discovered stock once; judgment is tied to snapshot',()=>{
- const c=boot();try{c.d.querySelector('[data-watch=DEMO]').click();assert.equal(c.d.querySelector('[data-watch=DEMO]').disabled,true);fill(c,'[data-review=DEMO] [name=judgment]','保留');submit(c,'[data-review=DEMO]');const cards=JSON.parse(c.w.localStorage.getItem(PERSONAL)).cards;assert.equal(cards.filter(x=>x.ticker==='DEMO').length,1);assert.match(cards.find(x=>x.ticker==='DEMO').reviewedReportId,/^rules-v1:/);}finally{c.close();}
+ const c=boot();try{c.d.querySelector('[data-watch=DEMO]').click();assert.equal(c.d.querySelector('[data-watch=DEMO]').disabled,true);fill(c,'[data-review=DEMO] [name=judgment]','保留');submit(c,'[data-review=DEMO]');const cards=JSON.parse(c.w.localStorage.getItem(PERSONAL)).cards;assert.equal(cards.filter(x=>x.ticker==='DEMO').length,1);assert.match(cards.find(x=>x.ticker==='DEMO').reviewedReportId,/^discovery-v1:/);}finally{c.close();}
 });
 test('missing data stays empty then updates automatically when the existing pipeline emits data',()=>{
  const c=boot({latest:null});try{assert.equal(c.d.querySelectorAll('.op-candidate').length,0);c.w.watchLatest=snapshot();c.w.dispatchEvent(new c.w.Event('watch-data'));assert.equal(c.d.querySelectorAll('.op-candidate').length,1);assert.equal(c.calls(),0);}finally{c.close();}
@@ -43,7 +43,7 @@ test('corrupt storage is not overwritten and HTML notes are inert',()=>{
 test('optional research copy fails gracefully when clipboard is unavailable',async()=>{
  const c=boot();try{await c.d.querySelector('[data-copy=DEMO]').onclick();assert.match(c.d.getElementById('op-status').textContent,/選択してコピー/);assert.match(c.d.querySelector('.op-brief').value,/DEMO/);}finally{c.close();}
 });
-test('story catalogue leads without market data; all companies have readable evidence and charts',()=>{
+test('archived story catalogue remains accessible without market data; all companies have readable evidence and charts',()=>{
  const c=boot({stories:true,latest:null});try{
   assert.equal(c.d.querySelectorAll('.story-choice').length,5);
   assert.equal(c.d.querySelector('.story-detail').getAttribute('aria-label'),'SBUXの企業分析');
@@ -101,3 +101,13 @@ test('growth math preserves missing/negative bases; charts do not turn missing f
  assert.match(s.freshness({publishedAt:'2020-01-01'}),/120日/);
  assert.match(s.freshness({publishedAt:'2099-01-01'}),/資料日/);
 });
+
+ test('data-led selection precedes the collapsed archive and keeps extracted reasons on watch cards',()=>{
+ const c=boot({stories:true});try{
+  const panel=c.d.querySelector('.op-data-led'),archive=c.d.querySelector('.op-story-archive');
+  assert.equal(archive.open,false);assert(panel.compareDocumentPosition(archive)&c.w.Node.DOCUMENT_POSITION_FOLLOWING);
+  assert.match(panel.textContent,/DEMO/);assert.match(panel.textContent,/業績・堀・株価への織り込みは未検証/);
+  panel.querySelector('[data-watch=DEMO]').click();assert.match(c.d.querySelector('#review-DEMO').textContent,/年間騰落率による順位/);
+  c.d.querySelector('[data-story=GOOGL]').click();assert.equal(c.d.querySelector('.op-story-archive').open,true);
+ }finally{c.close();}
+ });

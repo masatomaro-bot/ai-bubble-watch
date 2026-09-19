@@ -87,6 +87,9 @@ def test_run_end_to_end_with_mocked_network(mocked_network):
     assert result["breadth_extended"]["universe_size"] == 20
     assert len(result["sectors"]) == len(mc.SECTOR_ETFS)
     assert len(result["themes"]) == len(mc.THEME_ETFS)
+    assert result["opportunity_universe"]["method"] == "broad-close-return-252-percentile-v1"
+    assert result["opportunity_universe"]["ranked_count"] == 20
+    assert all(r["observed_date"] == result["date"] for r in result["opportunity_universe"]["rows"])
     assert isinstance(result["market_leaders"], list)
     assert len(result["market_leaders"]) <= mc.MARKET_LEADER_TOP_N
 
