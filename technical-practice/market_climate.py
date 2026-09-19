@@ -888,6 +888,34 @@ def select_market_leaders(price_frames: dict, percentiles: dict, top_n: int = MA
     return leaders
 
 
+def build_opportunity_universe(price_frames: dict, percentiles: dict, date: str, source: str) -> dict:
+    """Reuse downloaded bars; retain every quality-passing row, not only top 20.
+
+    Drop symbols whose most recent usable close is not the snapshot trading date.
+    This is a research universe, not a fundamental or liquidity suitability rating.
+    """
+    rows = select_market_leaders(price_frames, percentiles, top_n=len(percentiles))
+    current = []
+    for row in rows:
+        close = price_frames[row["ticker"]]["Close"].dropna()
+        observed = close.index[-1].date().isoformat()
+        if observed == date:
+            current.append({**row, "observed_date": observed})
+    return {
+        "method": "broad-close-return-252-percentile-v1",
+        "source": source,
+        "ranked_count": len(percentiles),
+        "eligible_count": len(current),
+        "excluded_stale_count": len(rows) - len(current),
+        "filters": {
+            "min_price_usd": MARKET_LEADER_MIN_PRICE,
+            "min_avg_dollar_volume_20d": MARKET_LEADER_MIN_AVG_DOLLAR_VOLUME,
+            "max_abs_day_change_pct": MARKET_LEADER_MAX_ABS_DAY_CHANGE_PCT,
+        },
+        "rows": current,
+    }
+
+
 # ----------------------------------------------------------------------------
 # 警戒チェックリスト(既知の「崩れの前兆」パターンの機械判定)
 # ----------------------------------------------------------------------------
@@ -1090,6 +1118,7 @@ def run(
     broad_universe_technicals = {}
     leaders = []
     trend_template_leaders = []
+    opportunity_universe = None
     percentiles: dict = {}
     if breadth_tickers:
         # 52週(約252営業日)ブレッドス計算とMarket LeaderのRS百分位
@@ -1108,6 +1137,7 @@ def run(
         broad_universe_technicals = compute_broad_universe_technicals(price_frames, percentiles)
 
         if percentiles:
+            opportunity_universe = build_opportunity_universe(price_frames, percentiles, today, breadth_source)
             leaders = select_market_leaders(price_frames, percentiles, MARKET_LEADER_TOP_N)
 
             # トレンドテンプレート8条件(RS含む)に合格した銘柄だけのRS上位表。
@@ -1153,6 +1183,7 @@ def run(
         "breadth_near_52w": breadth_near_52w,
         "breadth_extended": breadth_extended,
         "broad_universe_technicals": broad_universe_technicals,
+        "opportunity_universe": opportunity_universe,
         "market_leaders": leaders,
         "trend_template_leaders": trend_template_leaders,
         "stress_gauges": stress_gauges,
