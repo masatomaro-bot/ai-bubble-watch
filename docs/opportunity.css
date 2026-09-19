@@ -83,3 +83,9 @@
 .story-focus dt{font-weight:700}.story-focus dd{font-size:15px;margin:8px 0 0}
 .story-research a.op-btn,.research-links a.op-btn{display:inline-block;text-decoration:none;overflow-wrap:anywhere;max-width:100%}
 @media(max-width:850px){.story-focus{grid-template-columns:1fr}}
+
+/* Company research is the main action; screening evidence stays available. */
+.op-fundamental-candidate .op-research-primary{display:block;background:var(--pri);color:white;text-decoration:none;font-weight:700;line-height:1.6;margin:16px 0;white-space:normal;overflow-wrap:anywhere}
+.op-fundamental-candidate .op-selection-evidence,.op-research-fallback{margin:16px 0}
+.op-fundamental-candidate summary{cursor:pointer;font-size:14px}
+.op-research-fallback textarea{width:100%;box-sizing:border-box;min-height:180px}

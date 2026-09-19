@@ -111,3 +111,21 @@ test('growth math preserves missing/negative bases; charts do not turn missing f
   c.d.querySelector('[data-story=GOOGL]').click();assert.equal(c.d.querySelector('.op-story-archive').open,true);
  }finally{c.close();}
  });
+
+test('research links match their ticker; screening is collapsed and copy failure remains usable',async()=>{
+ const c=boot();try{
+ const card=c.d.querySelector('.op-fundamental-candidate');
+ assert.equal(card.querySelector('.op-selection-evidence').open,false);
+ assert(!card.textContent.includes('次に検証すること'));
+ const link=card.querySelector('.op-research-primary');
+ assert(new URL(link.href).searchParams.get('q').includes('米国上場銘柄 DEMO'));
+ let copied='';Object.defineProperty(c.w.navigator,'clipboard',{configurable:true,value:{writeText:async t=>{copied=t;}}});
+ await card.querySelector('[data-company-copy]').onclick();assert(copied.includes('DEMO'));assert(copied.includes('堀'));
+ assert.match(card.querySelector('[role=status]').textContent,/コピーしました/);
+ Object.defineProperty(c.w.navigator,'clipboard',{configurable:true,value:undefined});
+ card.querySelector('.op-research-fallback').open=true;
+ await card.querySelector('[data-company-copy]').onclick();assert.match(card.querySelector('[role=status]').textContent,/自動コピーできません/);
+ const area=card.querySelector('[data-company-prompt]');assert.equal(area.selectionEnd,area.value.length);
+ assert.equal(c.calls(),0);
+ }finally{c.close();}
+});
