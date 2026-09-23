@@ -57,6 +57,15 @@ a{color:var(--pri);}
 
 .sector-grid{display:flex;gap:6px;margin:var(--s3) 0;flex-wrap:wrap;}
 .sector-cell{flex:1;min-width:40px;height:34px;border-radius:6px;}
+.story-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:var(--s3);}
+.story-card{border:1px solid var(--div);border-radius:var(--r-md);padding:var(--s4);background:var(--off);}
+.story-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);margin-bottom:var(--s3);}
+.story-ticker{font:700 18px var(--mono);}
+.story-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:var(--s3);}
+.story-metric{background:var(--surf);border-radius:6px;padding:7px 9px;}
+.story-metric span{display:block;font-size:10px;color:var(--muted);}
+.story-metric strong{font-family:var(--mono);font-size:13px;}
+.story-note{font-size:11px;color:var(--muted);margin-bottom:var(--s3);}
 .legend{display:flex;gap:var(--s4);flex-wrap:wrap;font-size:11px;color:var(--muted);}
 .dot{display:inline-block;width:8px;height:8px;border-radius:999px;margin-right:5px;vertical-align:middle;}
 
@@ -99,8 +108,6 @@ tr:last-child td{border-bottom:none;}
 <script src="opportunity-stories-data.js" defer></script>
 <script src="opportunity-stories.js" defer></script>
 <script src="opportunity.js" defer></script>
-<script src="leader-actions.js" defer></script>
-<link rel="stylesheet" href="leader-actions.css">
 </head>
 <body>
 
@@ -188,25 +195,46 @@ function sectorGrid(sectors) {
   return `<div class="sector-grid">${cells}</div>`;
 }
 
-function sectorTable(sectors, withMonthly) {
+function sectorTable(sectors) {
   const rows = Object.entries(sectors)
     .sort((a, b) => (b[1].day_change_pct ?? -999) - (a[1].day_change_pct ?? -999))
     .map(([etf, s]) => `
       <tr>
         <td>${esc(s.name_jp)} <span class="sub mono">${esc(etf)}</span></td>
         <td class="num" style="color:${pctColor(s.day_change_pct)}">${fmtPct(s.day_change_pct)}</td>
-        ${withMonthly ? `<td class="num" style="color:${pctColor(s.monthly_return_pct)}">${fmtPct(s.monthly_return_pct)}</td>` : ""}
+        <td class="num" style="color:${pctColor(s.one_week_pct)}">${fmtPct(s.one_week_pct)}</td>
+        <td class="num" style="color:${pctColor(s.one_month_pct ?? s.monthly_return_pct)}">${fmtPct(s.one_month_pct ?? s.monthly_return_pct)}</td>
         <td class="num" style="color:${QUADRANT_COLOR[s.quadrant] || "var(--muted)"}">${esc(s.quadrant)}</td>
       </tr>`).join("");
   return `
     <table>
-      <thead><tr><th>${withMonthly ? "テーマ" : "セクター"}</th><th style="text-align:right">前日比</th>${withMonthly ? '<th style="text-align:right">月間</th>' : ""}<th style="text-align:right">RRG</th></tr></thead>
+      <thead><tr><th>セクター／テーマ</th><th style="text-align:right">1D</th><th style="text-align:right">1W</th><th style="text-align:right">1M</th><th style="text-align:right">RRG</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
 
 function leadersTable(leaders) {
-  return window.LeaderActions ? window.LeaderActions.render(leaders, window.watchLatest?.date) : '<div class="sub">企業一覧を読み込み中...</div>';
+  const rows=(leaders||[]).map(row=>`<tr><td class="mono"><strong>${esc(row.ticker)}</strong></td><td class="num">${esc(row.rs_percentile??"-")}</td><td class="num" style="color:${pctColor(row.day_change_pct)}">${fmtPct(row.day_change_pct)}</td><td class="num" style="color:${pctColor(row.one_month_pct)}">${fmtPct(row.one_month_pct)}</td><td class="num" style="color:${pctColor(row.three_month_pct)}">${fmtPct(row.three_month_pct)}</td></tr>`).join("");
+  return rows?`<table><thead><tr><th>銘柄</th><th style="text-align:right">RS</th><th style="text-align:right">1D</th><th style="text-align:right">1M</th><th style="text-align:right">3M</th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="sub">該当銘柄なし</div>';
+}
+
+function storyPrompt(row,date){
+  return `${row.ticker}が${date}に${fmtPct(row.day_change_pct)}上昇し、S&P500を${fmtPct(row.market_excess_pct)}上回りました。出来高は20日平均の${row.volume_ratio_20d}倍、1週間${fmtPct(row.one_week_pct)}、1か月${fmtPct(row.one_month_pct)}です。最新の企業IR、SEC、決算、信頼できる報道、アナリスト変更を検索し、上昇原因を特定してください。出来事→市場の解釈→売上・利益への影響の3層で説明し、一時的需給か6〜12か月続くストーリーかを判定してください。原因を確認できない場合は推測で断定しないでください。`;
+}
+
+function storyCandidatesSection(rows,date){
+  if(!rows?.length)return `<div class="sub">本日は「市場比＋2%以上」かつ「出来高20日平均比1.5倍以上」を満たす調査候補がありません。</div>`;
+  return `<div class="story-grid">${rows.map(row=>`<article class="story-card">
+    <div class="story-head"><span class="story-ticker">${esc(row.ticker)}</span><span class="badge muted">原因未確認</span></div>
+    <div class="story-metrics">
+      <div class="story-metric"><span>1D</span><strong style="color:${pctColor(row.day_change_pct)}">${fmtPct(row.day_change_pct)}</strong></div>
+      <div class="story-metric"><span>市場超過</span><strong style="color:${pctColor(row.market_excess_pct)}">${fmtPct(row.market_excess_pct)}</strong></div>
+      <div class="story-metric"><span>出来高／20日平均</span><strong>${esc(row.volume_ratio_20d)}倍</strong></div>
+      <div class="story-metric"><span>1W ／ 1M</span><strong>${fmtPct(row.one_week_pct)} ／ ${fmtPct(row.one_month_pct)}</strong></div>
+    </div>
+    <p class="story-note">機械選出：${esc(row.selection_reason)}。価格だけでは上昇理由は分かりません。</p>
+    <a class="btn-link" target="_blank" rel="noopener noreferrer" href="https://chatgpt.com/?q=${encodeURIComponent(storyPrompt(row,date))}">ChatGPTで物語を分析 ↗</a>
+  </article>`).join("")}</div>`;
 }
 
 function breadthSection(d) {
@@ -619,13 +647,19 @@ async function main() {
     <div id="history-strip"></div>
 
     <div class="card">
+      <div class="card-title">今日、市場が買った物語（半自動調査）</div>
+      <div class="sub" style="margin-bottom:var(--s4)">価格・出来高の異変を機械が選びます。上昇理由は断定せず、ボタンから最新情報を調べます。</div>
+      ${storyCandidatesSection(latest.story_candidates || [], latest.date)}
+    </div>
+
+    <div class="card">
       <div class="card-title">推移(指数が高値圏でも先に痩せていないか)</div>
       <div id="trend-sparklines"><div class="sub">読み込み中...</div></div>
     </div>
 
     <div class="grid2">
       <div class="card">
-        <div class="card-title">セクター体温(11 GICSセクター)</div>
+        <div class="card-title">セクター体温(11 GICSセクター) — 1D順</div>
         ${sectorGrid(latest.sectors || {})}
         <div class="legend">
           <span><span class="dot" style="background:var(--ok)"></span>上昇</span>
@@ -633,11 +667,12 @@ async function main() {
           <span><span class="dot" style="background:var(--faint)"></span>中立</span>
           <span><span class="dot" style="background:var(--err)"></span>調整</span>
         </div>
-        <div style="margin-top:var(--s4)">${sectorTable(latest.sectors || {}, false)}</div>
+        <div class="sub" style="margin-top:var(--s3)">体温は50日・200日線と市場比の状態、1D／1W／1Mは実際の騰落率です。短期反発と継続的な資金流入を分けて見ます。</div>
+        <div style="margin-top:var(--s4)">${sectorTable(latest.sectors || {})}</div>
       </div>
       <div class="card">
         <div class="card-title">テーマ・ローテーション(代理ETF、近似)</div>
-        ${sectorTable(latest.themes || {}, true)}
+        ${sectorTable(latest.themes || {})}
         <div class="card-title" style="margin-top:var(--s4)">象限の変化</div>
         <div id="theme-rotation-changes"><div class="sub">読み込み中...</div></div>
       </div>
@@ -661,6 +696,7 @@ async function main() {
 
     <div class="card">
       <div class="card-title">Market Leaders(母集団内RS百分位ランキング上位)</div>
+      <div class="sub" style="margin-bottom:var(--s3)">地合い確認用の簡潔なランキングです。個別候補の調査・登録は機会ウォッチで行います。</div>
       <div data-leader-list="market_leaders">${leadersTable(latest.market_leaders)}</div>
       <div class="card-title" style="margin-top:var(--s4)">新規リーダー</div>
       <div id="newcomer-leaders"><div class="sub">読み込み中...</div></div>
@@ -668,6 +704,7 @@ async function main() {
 
     <div class="card">
       <div class="card-title">トレンドテンプレート合格銘柄のRS上位(O'Neil/Minervini式8条件通過銘柄)</div>
+      <div class="sub" style="margin-bottom:var(--s3)">地合い確認用の簡潔なランキングです。個別候補の調査・登録は機会ウォッチで行います。</div>
       <div data-leader-list="trend_template_leaders">${leadersTable(latest.trend_template_leaders)}</div>
     </div>
   `;
