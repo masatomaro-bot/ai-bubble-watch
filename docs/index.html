@@ -223,7 +223,11 @@ function storyPrompt(row,date){
 }
 
 function storyCandidatesSection(rows,date){
-  if(!rows?.length)return `<div class="sub">本日は「市場比＋2%以上」かつ「出来高20日平均比1.5倍以上」を満たす調査候補がありません。</div>`;
+  if(!rows?.length){
+    const fallbackPrompt=`${date}の米国株市場で、出来高を伴って市場平均より強く上昇した主要銘柄を最新情報から調べてください。候補を最大5銘柄に絞り、各銘柄について、出来事→市場の解釈→売上・利益への影響の3層で説明してください。一時的な需給か6〜12か月続くストーリーかを判定し、原因を確認できない場合は推測で断定しないでください。`;
+    return `<div class="sub" style="margin-bottom:var(--s3)">本日は「市場比＋2%以上」かつ「出来高20日平均比1.5倍以上」を満たす自動候補がありません。条件外の動きも含めてChatGPTで確認できます。</div>
+      <a class="btn-link" target="_blank" rel="noopener noreferrer" href="https://chatgpt.com/?q=${encodeURIComponent(fallbackPrompt)}">ChatGPTで今日の市場を確認 ↗</a>`;
+  }
   return `<div class="story-grid">${rows.map(row=>`<article class="story-card">
     <div class="story-head"><span class="story-ticker">${esc(row.ticker)}</span><span class="badge muted">原因未確認</span></div>
     <div class="story-metrics">
