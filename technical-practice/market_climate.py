@@ -840,6 +840,7 @@ def get_breadth_universe(universe: str, max_tickers: int | None = None) -> tuple
 
 MARKET_LEADER_TOP_N = 20  # Market Leader (RSランキング上位) の出力件数
 TREND_TEMPLATE_LEADER_TOP_N = 20  # トレンドテンプレート合格銘柄のRS上位表の出力件数
+STORY_CANDIDATE_TOP_N = 5  # 「今日、市場が買った物語」の半自動調査候補
 
 # Market Leadersの「明らかにデータ異常・実用性の低い銘柄」を除外するための
 # 品質フィルタ。2026-09-15/09-16の実機実行で、NFE(前日比+3906%)・GTBP
@@ -886,6 +887,68 @@ def select_market_leaders(price_frames: dict, percentiles: dict, top_n: int = MA
             "above_sma50": above_sma50,
         })
     return leaders
+
+
+def select_story_candidates(
+    price_frames: dict,
+    percentiles: dict,
+    benchmark_close: pd.Series,
+    date: str,
+    top_n: int = STORY_CANDIDATE_TOP_N,
+) -> list[dict]:
+    """価格と出来高の異変から、AIで理由を調べる候補だけを機械選出する。
+
+    上昇理由はここで推測・断定しない。市場超過リターンと出来高急増を必須にし、
+    1週・1か月の継続性を加点する。原因分析は画面のChatGPT用プロンプトで行う。
+    """
+    benchmark = benchmark_close.dropna()
+    if len(benchmark) < 22:
+        return []
+    benchmark_day = 100 * (benchmark.iloc[-1] / benchmark.iloc[-2] - 1)
+    candidates: list[dict] = []
+    for ticker, rs_percentile in percentiles.items():
+        df = price_frames.get(ticker)
+        if df is None or df.empty or "Close" not in df or "Volume" not in df:
+            continue
+        close = df["Close"].dropna()
+        volume = df["Volume"].dropna()
+        if len(close) < 22 or len(volume) < 21:
+            continue
+        if close.index[-1].date().isoformat() != date or close.iloc[-1] < MARKET_LEADER_MIN_PRICE:
+            continue
+        recent = df.tail(20)
+        avg_dollar_volume = (recent["Close"] * recent["Volume"]).mean()
+        if pd.isna(avg_dollar_volume) or avg_dollar_volume < MARKET_LEADER_MIN_AVG_DOLLAR_VOLUME:
+            continue
+        day_change = 100 * (close.iloc[-1] / close.iloc[-2] - 1)
+        if abs(day_change) > MARKET_LEADER_MAX_ABS_DAY_CHANGE_PCT:
+            continue
+        relative_day = day_change - benchmark_day
+        previous_volume = volume.iloc[-21:-1].mean()
+        volume_ratio = volume.iloc[-1] / previous_volume if previous_volume > 0 else float("nan")
+        # 単なる指数高ではなく「市場より2%以上強く、通常の1.5倍以上の出来高」。
+        if day_change <= 0 or relative_day < 2.0 or pd.isna(volume_ratio) or volume_ratio < 1.5:
+            continue
+        one_week = 100 * (close.iloc[-1] / close.iloc[-6] - 1) if len(close) >= 6 else None
+        one_month = 100 * (close.iloc[-1] / close.iloc[-22] - 1)
+        score = relative_day + min(float(volume_ratio), 5.0) * 2
+        if one_week is not None and one_week > 0:
+            score += min(one_week, 20) * 0.1
+        if one_month > 0:
+            score += min(one_month, 40) * 0.05
+        candidates.append({
+            "ticker": ticker,
+            "score": round(score, 2),
+            "day_change_pct": round(day_change, 2),
+            "market_excess_pct": round(relative_day, 2),
+            "volume_ratio_20d": round(float(volume_ratio), 2),
+            "one_week_pct": round(one_week, 2) if one_week is not None else None,
+            "one_month_pct": round(one_month, 2),
+            "rs_percentile": round(float(rs_percentile), 1),
+            "selection_reason": "市場比+2%以上・出来高20日平均比1.5倍以上",
+            "cause_status": "未確認",
+        })
+    return sorted(candidates, key=lambda row: row["score"], reverse=True)[:top_n]
 
 
 def build_opportunity_universe(price_frames: dict, percentiles: dict, date: str, source: str) -> dict:
@@ -1081,10 +1144,18 @@ def run(
         day_change_pct = (
             round(100 * (etf_close.iloc[-1] / etf_close.iloc[-2] - 1), 2) if len(etf_close) > 1 else None
         )
+        one_week_pct = (
+            round(100 * (etf_close.iloc[-1] / etf_close.iloc[-6] - 1), 2) if len(etf_close) >= 6 else None
+        )
+        one_month_pct = (
+            round(100 * (etf_close.iloc[-1] / etf_close.iloc[-22] - 1), 2) if len(etf_close) >= 22 else None
+        )
         sector_results[etf] = {
             "name_jp": jp_name,
             "temperature": temperature,
             "day_change_pct": day_change_pct,
+            "one_week_pct": one_week_pct,
+            "one_month_pct": one_month_pct,
             **rrg,
         }
         sector_temperatures[etf] = temperature
@@ -1100,13 +1171,16 @@ def run(
             continue
         close = theme_hist[etf]["Close"].dropna()
         rrg = compute_sector_rrg(close, benchmark_close)
-        monthly_return = (
+        one_month_pct = (
             round(100 * (close.iloc[-1] / close.iloc[-22] - 1), 2) if len(close) > 22 else None
         )
+        one_week_pct = round(100 * (close.iloc[-1] / close.iloc[-6] - 1), 2) if len(close) >= 6 else None
         day_change_pct = round(100 * (close.iloc[-1] / close.iloc[-2] - 1), 2) if len(close) > 1 else None
         theme_results[etf] = {
             "name_jp": jp_name,
-            "monthly_return_pct": monthly_return,
+            "monthly_return_pct": one_month_pct,
+            "one_week_pct": one_week_pct,
+            "one_month_pct": one_month_pct,
             "day_change_pct": day_change_pct,
             **rrg,
         }
@@ -1119,6 +1193,7 @@ def run(
     leaders = []
     trend_template_leaders = []
     opportunity_universe = None
+    story_candidates = []
     percentiles: dict = {}
     if breadth_tickers:
         # 52週(約252営業日)ブレッドス計算とMarket LeaderのRS百分位
@@ -1139,6 +1214,9 @@ def run(
         if percentiles:
             opportunity_universe = build_opportunity_universe(price_frames, percentiles, today, breadth_source)
             leaders = select_market_leaders(price_frames, percentiles, MARKET_LEADER_TOP_N)
+            story_candidates = select_story_candidates(
+                price_frames, percentiles, sp500_df["Close"], today, STORY_CANDIDATE_TOP_N
+            ) if sp500_df is not None and not sp500_df.empty else []
 
             # トレンドテンプレート8条件(RS含む)に合格した銘柄だけのRS上位表。
             # Market Leadersは母集団全体のRS順位なので低品質な急騰銘柄が混ざり
@@ -1186,6 +1264,7 @@ def run(
         "opportunity_universe": opportunity_universe,
         "market_leaders": leaders,
         "trend_template_leaders": trend_template_leaders,
+        "story_candidates": story_candidates,
         "stress_gauges": stress_gauges,
         "warning_flags": warning_flags,
     }

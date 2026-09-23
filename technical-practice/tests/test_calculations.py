@@ -32,6 +32,7 @@ from market_climate import (
     compute_trend_state,
     combine_trend_states,
     select_market_leaders,
+    select_story_candidates,
     compute_stress_gauges,
     compute_warning_flags,
 )
@@ -800,6 +801,31 @@ def test_select_market_leaders_backfills_when_top_candidates_filtered_out():
 
     tickers = [l["ticker"] for l in leaders]
     assert tickers == ["GOOD1", "GOOD2", "GOOD3"]
+
+
+def test_story_candidates_require_market_excess_and_volume_surge():
+    dates = pd.bdate_range("2026-08-01", periods=30)
+    benchmark = pd.Series(np.full(30, 100.0), index=dates)
+    strong = make_price_df(
+        [100.0] * 29 + [104.0],
+        volumes=[1_000_000.0] * 29 + [2_000_000.0],
+        start="2026-08-01",
+    )
+    price_only = make_price_df(
+        [100.0] * 29 + [104.0],
+        volumes=[1_000_000.0] * 30,
+        start="2026-08-01",
+    )
+    result = select_story_candidates(
+        {"STRONG": strong, "PRICEONLY": price_only},
+        {"STRONG": 95.0, "PRICEONLY": 96.0},
+        benchmark,
+        dates[-1].date().isoformat(),
+    )
+    assert [row["ticker"] for row in result] == ["STRONG"]
+    assert result[0]["market_excess_pct"] == 4.0
+    assert result[0]["volume_ratio_20d"] == 2.0
+    assert result[0]["cause_status"] == "未確認"
 
 
 if __name__ == "__main__":
