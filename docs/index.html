@@ -100,6 +100,19 @@ tr:last-child td{border-bottom:none;}
 
 .bar-outer{height:8px;background:var(--off);border-radius:999px;overflow:hidden;position:relative;}
 .bar-inner{position:absolute;top:0;bottom:0;border-radius:999px;}
+
+.guide{margin-top:var(--s4);border:1px solid #c9dfe2;border-radius:var(--r-md);background:#f4fafb;overflow:hidden;}
+.guide summary{cursor:pointer;list-style:none;padding:10px 12px;font-size:12px;font-weight:700;color:var(--pri);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.guide summary::-webkit-details-marker{display:none;}
+.guide summary::after{content:"＋";font:700 16px var(--mono);}
+.guide[open] summary::after{content:"－";}
+.guide-body{border-top:1px solid #d7e8ea;padding:12px;color:var(--tx);font-size:12px;}
+.guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;}
+.guide-item{background:var(--surf);border:1px solid var(--div);border-radius:6px;padding:10px;}
+.guide-item strong{display:block;margin-bottom:4px;font-size:12px;}
+.guide-current{margin-top:10px;padding:10px;border-left:3px solid var(--pri);background:var(--surf);border-radius:0 6px 6px 0;}
+.guide-caution{margin-top:10px;color:var(--muted);font-size:11px;}
+@media(max-width:600px){.guide-grid{grid-template-columns:1fr}.guide summary{padding:11px 10px}}
 </style>
 <link rel="stylesheet" href="opportunity.css">
 <script src="opportunity-rules.js" defer></script>
@@ -296,6 +309,111 @@ function stressGaugesSection(gauges) {
       和らいでいることを示唆するが、それ自体を売買シグナルとして使うものではない)。色は方向を
       示すだけで、良し悪しの判定ではない。
     </div>`;
+}
+
+function guidePanel(summary, body) {
+  return `<details class="guide">
+    <summary>${esc(summary)}</summary>
+    <div class="guide-body">${body}</div>
+  </details>`;
+}
+
+function marketStateGuide(latest) {
+  const state = latest.overall_trend_state || "不明";
+  const distribution = Math.max(
+    Number((latest.nasdaq || {}).distribution_days || 0),
+    Number((latest.sp500 || {}).distribution_days || 0)
+  );
+  const current = state === "confirmed_uptrend"
+    ? "上昇トレンド確認。新規買いを検討できる地合いですが、売り抜け日の増加は別に確認します。"
+    : state === "uptrend_under_pressure"
+      ? "上昇基調は残るものの圧力あり。新規買いを絞り、保有株の崩れを優先して確認する段階です。"
+      : state === "correction"
+        ? "調整局面。攻めるより現金と損失管理を優先し、次のFTDを待つ状態です。"
+        : "判定材料が不足しています。";
+  return guidePanel("地合い判定・FTD・売り抜け日の読み方", `
+    <div class="guide-grid">
+      <div class="guide-item"><strong>地合い判定</strong>NASDAQとS&P500の値動きから、市場全体が新規買いに向くかを段階表示します。</div>
+      <div class="guide-item"><strong>FTD（フォロースルー・デイ）</strong>調整後に、指数が出来高を伴って強く上昇した日です。反転の確認材料ですが、上昇継続の保証ではありません。</div>
+      <div class="guide-item"><strong>売り抜け日</strong>指数下落と出来高増加が重なった日です。4〜6日前後へ積み上がるほど、機関投資家の売り圧力を警戒します。</div>
+    </div>
+    <div class="guide-current"><strong>現在の読み方：</strong>${esc(current)} 最大売り抜け日数は ${distribution} 日です。</div>
+    <div class="guide-caution">使い方：個別株の買い理由ではなく、攻める量・現金比率・警戒度を決める土台として使います。</div>`);
+}
+
+function stressGuide(gauges) {
+  gauges = gauges || {};
+  const vix = (gauges.vix || {}).level;
+  const credit = (gauges.credit_hyg_ief || {}).change_10d_pct;
+  const small = (gauges.risk_appetite_iwm_spy || {}).change_10d_pct;
+  const semis = (gauges.semis_soxx_spy || {}).change_10d_pct;
+  const vixRead = vix == null ? "未取得" : vix >= 30 ? "強い恐怖" : vix >= 20 ? "警戒域" : "平常圏";
+  const dir = (v, up, down) => v == null ? "未取得" : v > 0 ? up : v < 0 ? down : "横ばい";
+  return guidePanel("VIX・信用・集中度・小型株・半導体の読み方", `
+    <div class="guide-grid">
+      <div class="guide-item"><strong>VIX</strong>市場が織り込む短期変動です。急上昇は恐怖の拡大、低下は落ち着きを示します。低いだけで安全とは限りません。</div>
+      <div class="guide-item"><strong>HYG/IEF</strong>低格付け社債と米国債の比率です。上昇は信用リスクを取る動き、低下は安全資産への逃避を示します。</div>
+      <div class="guide-item"><strong>RSP/SPY</strong>均等加重S&P500と時価総額加重S&P500の比率です。低下は大型株だけに上昇が集中している可能性を示します。</div>
+      <div class="guide-item"><strong>IWM/SPY</strong>小型株対大型株です。上昇はリスク選好の広がり、低下は大型株偏重を示します。</div>
+      <div class="guide-item"><strong>SOXX/SPY</strong>半導体対市場全体です。上昇はAI・半導体が主導、低下は主導力の弱まりを示します。</div>
+    </div>
+    <div class="guide-current"><strong>現在の読み方：</strong>VIXは${esc(vixRead)}。10営業日では信用が${esc(dir(credit,"改善","悪化"))}、小型株が${esc(dir(small,"優位化","劣後"))}、半導体が${esc(dir(semis,"優位化","劣後"))}しています。</div>
+    <div class="guide-caution">単独で売買せず、複数指標が同方向へ動くか、価格内部のブレッドスと一致するかを確認します。</div>`);
+}
+
+function trendChartGuide() {
+  return guidePanel("4本の推移チャートをどう読むか", `
+    <div class="guide-grid">
+      <div class="guide-item"><strong>累積A/Dライン</strong>値上がり銘柄数−値下がり銘柄数の累積。指数上昇中に低下すれば、少数の大型株だけで支えている可能性があります。</div>
+      <div class="guide-item"><strong>50日線上比率</strong>中期上昇トレンドにいる銘柄の割合。上昇は参加銘柄の拡大、低下は市場内部の弱まりです。</div>
+      <div class="guide-item"><strong>新高値−新安値</strong>プラス拡大は強さの広がり、マイナス拡大は弱さの広がりを示します。</div>
+      <div class="guide-item"><strong>VIX水準</strong>急上昇は不安の高まり。価格指標が悪化する前後で跳ねていないかを見ます。</div>
+    </div>
+    <div class="guide-current"><strong>見る順番：</strong>傾き → 指数との逆行 → 1日だけでなく数日継続しているか。特に指数が高値圏なのにA/Dラインと50日線上比率が下がる状態を警戒します。</div>`);
+}
+
+function sectorGuide() {
+  return guidePanel("セクター体温・RRG象限の読み方", `
+    <div class="guide-grid">
+      <div class="guide-item"><strong>1D / 1W / 1M</strong>実際の騰落率です。1日だけ強いのか、1週間・1か月へ継続しているのかを分けます。</div>
+      <div class="guide-item"><strong>主導</strong>市場平均より強く、勢いも強い状態。資金流入が続いている候補です。</div>
+      <div class="guide-item"><strong>鈍化</strong>市場平均より強いものの勢いが低下。主導から外れる初期変化を確認します。</div>
+      <div class="guide-item"><strong>遅行</strong>市場平均より弱く、勢いも弱い状態。積極的に追う局面ではありません。</div>
+      <div class="guide-item"><strong>改善</strong>まだ市場平均より弱いものの勢いが上向き。次の主導候補ですが、主導入りの確認が必要です。</div>
+    </div>
+    <div class="guide-current"><strong>使い方：</strong>「1D上昇」だけで選ばず、1W・1MとRRGが同じ方向を向くセクターを優先します。象限変化は5営業日前との比較です。</div>`);
+}
+
+function breadthGuide(d) {
+  const ext = d.breadth_extended || {};
+  const tech = d.broad_universe_technicals || {};
+  const pct50 = Number(tech.pct_above_50dma);
+  const highs = Number(ext.new_52w_highs || 0);
+  const lows = Number(ext.new_52w_lows || 0);
+  const read = Number.isFinite(pct50)
+    ? (pct50 >= 60 ? "参加銘柄は広い" : pct50 >= 40 ? "中立だが広がりは限定的" : "参加銘柄が少なく内部は弱い")
+    : "判定材料が不足";
+  return guidePanel("ブレッドス指標の意味と現在の状態", `
+    <div class="guide-grid">
+      <div class="guide-item"><strong>新高値 / 新安値</strong>52週高値・安値を更新した銘柄数。新安値が増えるほど弱さが市場全体へ広がっています。</div>
+      <div class="guide-item"><strong>値上がり / 値下がり</strong>その日の参加銘柄の多数決。指数の方向と一致しない日は大型株偏重を疑います。</div>
+      <div class="guide-item"><strong>出来高ブレッド</strong>上昇銘柄側の出来高比率。50%超は買い側優勢、低下は売り側優勢の目安です。</div>
+      <div class="guide-item"><strong>50日・200日線上比率</strong>50日は中期、200日は長期トレンドの広がり。両方の低下が続くほど地合い悪化です。</div>
+      <div class="guide-item"><strong>トレンドテンプレート合格率</strong>Minervini式8条件を満たす割合。上昇は健全な候補の増加、低下は候補の枯れを示します。</div>
+    </div>
+    <div class="guide-current"><strong>現在の読み方：</strong>50日線上比率は ${Number.isFinite(pct50) ? pct50 + "%" : "未取得"} で「${esc(read)}」。新高値 ${highs} に対し新安値 ${lows} です。</div>
+    <div class="guide-caution">母集団や取得元の影響を受けます。水準そのものより、数日〜数週間の方向と指数との逆行を重視します。</div>`);
+}
+
+function leadersGuide(isTemplate) {
+  return guidePanel(isTemplate ? "トレンドテンプレートとRSの読み方" : "Market LeadersとRSの読み方", `
+    <div class="guide-grid">
+      <div class="guide-item"><strong>RS百分位</strong>過去約1年の値動きを市場内で順位化した値です。RS 90は市場の約90%より強い意味で、90%上昇した意味ではありません。</div>
+      <div class="guide-item"><strong>1D / 1M / 3M</strong>強さが直近も継続しているかを確認します。3Mが強くても1Mが失速していれば勢いの変化を疑います。</div>
+      <div class="guide-item"><strong>${isTemplate ? "8条件合格" : "上位入り"}</strong>${isTemplate ? "価格が主要移動平均線より上など、上昇トレンドの形を満たす銘柄です。" : "母集団内で相対的に強い銘柄ですが、事業の質や割安さは判定していません。"}</div>
+    </div>
+    <div class="guide-current"><strong>使い方：</strong>これは調査の順番を決めるリストです。候補は企業同定、決算、売上・利益の成長、堀、上昇材料の持続性を機会ウォッチで確認してから残します。</div>
+    <div class="guide-caution">RS上位＝買いではありません。低流動性銘柄、特殊証券、単発材料による急騰が混ざることがあります。</div>`);
 }
 
 function warningFlagsSection(flags) {
@@ -629,6 +747,7 @@ async function main() {
       <span class="badge ${regimeInfo.cls}" style="margin-left:var(--s2)" title="セクター体温の多数決による参考指標(オニミネ流の近似)">
         参考: セクター多数決 ${esc(regimeInfo.label)}
       </span>
+      ${marketStateGuide(latest)}
     </div>
 
     <div class="card">
@@ -646,6 +765,7 @@ async function main() {
     <div class="card">
       <div class="card-title">市場ストレス指標(株価内部だけでは見えない、相場の外側の変化)</div>
       ${stressGaugesSection(latest.stress_gauges)}
+      ${stressGuide(latest.stress_gauges)}
     </div>
 
     <div id="history-strip"></div>
@@ -659,6 +779,7 @@ async function main() {
     <div class="card">
       <div class="card-title">推移(指数が高値圏でも先に痩せていないか)</div>
       <div id="trend-sparklines"><div class="sub">読み込み中...</div></div>
+      ${trendChartGuide()}
     </div>
 
     <div class="grid2">
@@ -673,6 +794,7 @@ async function main() {
         </div>
         <div class="sub" style="margin-top:var(--s3)">体温は50日・200日線と市場比の状態、1D／1W／1Mは実際の騰落率です。短期反発と継続的な資金流入を分けて見ます。</div>
         <div style="margin-top:var(--s4)">${sectorTable(latest.sectors || {})}</div>
+        ${sectorGuide()}
       </div>
       <div class="card">
         <div class="card-title">テーマ・ローテーション(代理ETF、近似)</div>
@@ -696,12 +818,14 @@ async function main() {
     <div class="card">
       <div class="card-title">市場の幅(ブレッドス) — 母集団: ${esc(latest.breadth_universe_source || "-")}</div>
       ${breadthSection(latest)}
+      ${breadthGuide(latest)}
     </div>
 
     <div class="card">
       <div class="card-title">Market Leaders(母集団内RS百分位ランキング上位)</div>
       <div class="sub" style="margin-bottom:var(--s3)">地合い確認用の簡潔なランキングです。個別候補の調査・登録は機会ウォッチで行います。</div>
       <div data-leader-list="market_leaders">${leadersTable(latest.market_leaders)}</div>
+      ${leadersGuide(false)}
       <div class="card-title" style="margin-top:var(--s4)">新規リーダー</div>
       <div id="newcomer-leaders"><div class="sub">読み込み中...</div></div>
     </div>
@@ -710,6 +834,7 @@ async function main() {
       <div class="card-title">トレンドテンプレート合格銘柄のRS上位(O'Neil/Minervini式8条件通過銘柄)</div>
       <div class="sub" style="margin-bottom:var(--s3)">地合い確認用の簡潔なランキングです。個別候補の調査・登録は機会ウォッチで行います。</div>
       <div data-leader-list="trend_template_leaders">${leadersTable(latest.trend_template_leaders)}</div>
+      ${leadersGuide(true)}
     </div>
   `;
 
