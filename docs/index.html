@@ -113,6 +113,9 @@ tr:last-child td{border-bottom:none;}
 .guide-current{margin-top:10px;padding:10px;border-left:3px solid var(--pri);background:var(--surf);border-radius:0 6px 6px 0;}
 .guide-caution{margin-top:10px;color:var(--muted);font-size:11px;}
 @media(max-width:600px){.guide-grid{grid-template-columns:1fr}.guide summary{padding:11px 10px}}
+.mini-trend{margin-top:9px;min-height:54px;max-width:260px}
+.mini-trend-caption{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px;margin-top:3px;font-variant-numeric:tabular-nums}
+.stat{min-width:0}
 </style>
 <link rel="stylesheet" href="opportunity.css">
 <script src="opportunity-rules.js" defer></script>
@@ -261,20 +264,20 @@ function breadthSection(d) {
   return `
     <div class="stat-row">
       <div class="stat"><div class="label">母集団 (${esc(d.breadth_universe_source || "-")})</div><div class="value">${ext.universe_size ?? "-"}</div></div>
-      <div class="stat"><div class="label">新52週高値</div><div class="value" style="color:var(--ok)">${ext.new_52w_highs ?? "-"}</div></div>
-      <div class="stat"><div class="label">新52週安値</div><div class="value" style="color:var(--err)">${ext.new_52w_lows ?? "-"}</div></div>
-      <div class="stat"><div class="label">値上がり/値下がり</div><div class="value" style="font-size:15px">${ext.advancers ?? "-"} / ${ext.decliners ?? "-"}</div></div>
+      <div class="stat"><div class="label">新52週高値</div><div class="value" style="color:var(--ok)">${ext.new_52w_highs ?? "-"}</div><div class="mini-trend" data-mini-trend="new_highs"></div></div>
+      <div class="stat"><div class="label">新52週安値</div><div class="value" style="color:var(--err)">${ext.new_52w_lows ?? "-"}</div><div class="mini-trend" data-mini-trend="new_lows"></div></div>
+      <div class="stat"><div class="label">値上がり/値下がり</div><div class="value" style="font-size:15px">${ext.advancers ?? "-"} / ${ext.decliners ?? "-"}</div><div class="mini-trend" data-mini-trend="advance_decline"></div></div>
     </div>
     <div class="stat-row">
-      <div class="stat"><div class="label">出来高ブレッド</div><div class="value">${ext.up_volume_pct ?? "-"}%</div></div>
-      <div class="stat"><div class="label">累積A/Dライン</div><div class="value">${d.cumulative_ad_line ?? "-"}</div></div>
-      <div class="stat"><div class="label">50日線上比率</div><div class="value">${but.pct_above_50dma ?? "-"}%</div></div>
-      <div class="stat"><div class="label">200日線上比率</div><div class="value">${but.pct_above_200dma ?? "-"}%</div></div>
+      <div class="stat"><div class="label">出来高ブレッド</div><div class="value">${ext.up_volume_pct ?? "-"}%</div><div class="mini-trend" data-mini-trend="up_volume"></div></div>
+      <div class="stat"><div class="label">累積A/Dライン</div><div class="value">${d.cumulative_ad_line ?? "-"}</div><div class="mini-trend" data-mini-trend="ad_line"></div></div>
+      <div class="stat"><div class="label">50日線上比率</div><div class="value">${but.pct_above_50dma ?? "-"}%</div><div class="mini-trend" data-mini-trend="above_50"></div></div>
+      <div class="stat"><div class="label">200日線上比率</div><div class="value">${but.pct_above_200dma ?? "-"}%</div><div class="mini-trend" data-mini-trend="above_200"></div></div>
     </div>
     <div class="stat-row">
       <div class="stat"><div class="label">トレンドテンプレート合格率</div><div class="value">${but.trend_template_pass_rate_pct ?? "-"}%</div>
-        <div class="sub">${but.trend_template_pass_count ?? "-"}銘柄が8条件合格</div></div>
-      <div class="stat"><div class="label">52週高値圏/安値圏(2%以内)</div><div class="value" style="font-size:15px">${near.near_high_pct ?? "-"}% / ${near.near_low_pct ?? "-"}%</div></div>
+        <div class="sub">${but.trend_template_pass_count ?? "-"}銘柄が8条件合格</div><div class="mini-trend" data-mini-trend="template_pass"></div></div>
+      <div class="stat"><div class="label">52週高値圏/安値圏(2%以内)</div><div class="value" style="font-size:15px">${near.near_high_pct ?? "-"}% / ${near.near_low_pct ?? "-"}%</div><div class="mini-trend" data-mini-trend="near_high"></div></div>
     </div>`;
 }
 
@@ -292,7 +295,7 @@ function stressGaugesSection(gauges) {
       <div class="stat">
         <div class="label">${esc(label)}</div>
         <div class="value" style="font-size:16px">${g.ratio ?? "-"}</div>
-        <div class="delta mono" style="color:${pctColor(g.change_10d_pct)}">${fmtPct(g.change_10d_pct)}(10営業日)</div>
+        <div class="delta mono" style="color:${pctColor(g.change_10d_pct)}">${fmtPct(g.change_10d_pct)}(10営業日)</div><div class="mini-trend" data-mini-trend="${key}"></div>
       </div>`;
   }).join("");
   return `
@@ -300,7 +303,7 @@ function stressGaugesSection(gauges) {
       <div class="stat">
         <div class="label">VIX(恐怖指数)</div>
         <div class="value">${vix.level ?? "-"}</div>
-        <div class="delta mono" style="color:${pctColor(vix.change_10d)}">${vix.change_10d != null ? (vix.change_10d > 0 ? "+" : "") + vix.change_10d : "-"}(10営業日)</div>
+        <div class="delta mono" style="color:${pctColor(vix.change_10d)}">${vix.change_10d != null ? (vix.change_10d > 0 ? "+" : "") + vix.change_10d : "-"}(10営業日)</div><div class="mini-trend" data-mini-trend="vix"></div>
       </div>
       ${rows}
     </div>
@@ -588,6 +591,46 @@ function sparklineRow(label, values, opts) {
     </div>`;
 }
 
+
+function renderInlineHistoryCharts(history) {
+  const series = {
+    new_highs: d => d.breadth_extended?.new_52w_highs,
+    new_lows: d => d.breadth_extended?.new_52w_lows,
+    advance_decline: d => (d.breadth_extended?.advancers != null && d.breadth_extended?.decliners != null) ? d.breadth_extended.advancers - d.breadth_extended.decliners : null,
+    up_volume: d => d.breadth_extended?.up_volume_pct,
+    ad_line: d => d.cumulative_ad_line,
+    above_50: d => d.broad_universe_technicals?.pct_above_50dma,
+    above_200: d => d.broad_universe_technicals?.pct_above_200dma,
+    template_pass: d => d.broad_universe_technicals?.trend_template_pass_rate_pct,
+    near_high: d => d.breadth_near_52w?.near_high_pct,
+    vix: d => d.stress_gauges?.vix?.level,
+    credit_hyg_ief: d => d.stress_gauges?.credit_hyg_ief?.ratio,
+    breadth_rsp_spy: d => d.stress_gauges?.breadth_rsp_spy?.ratio,
+    risk_appetite_iwm_spy: d => d.stress_gauges?.risk_appetite_iwm_spy?.ratio,
+    semis_soxx_spy: d => d.stress_gauges?.semis_soxx_spy?.ratio
+  };
+  document.querySelectorAll('[data-mini-trend]').forEach(el => {
+    const key = el.getAttribute('data-mini-trend');
+    const getter = series[key];
+    if (!getter) return;
+    const data = history.map(h => {
+      const val = getter(h.data);
+      return val === undefined || val === null || !Number.isFinite(Number(val)) ? null : Number(val);
+    });
+    const valid = data.filter(x => x !== null);
+    if (valid.length < 2) {
+      el.innerHTML = '<span class="sub">推移データ不足</span>';
+      return;
+    }
+    const first = valid[0], last = valid[valid.length - 1], delta = last - first;
+    const changeText = (delta > 0 ? '+' : '') + (Math.round(delta * 100) / 100).toLocaleString('ja-JP');
+    const color = delta > 0 ? 'var(--ok)' : delta < 0 ? 'var(--err)' : 'var(--pri)';
+    el.innerHTML = sparklineSvg(data, {height:34, color}) +
+      '<div class="mini-trend-caption"><span>直近' + valid.length + '営業日</span><span style="color:' + color + '">期間差 ' + changeText + '</span></div>';
+    el.title = history[0].date + ' 〜 ' + history[history.length-1].date + '（欠損日は線を接続しません。色は数値の増減であり良否判定ではありません）';
+  });
+}
+
 function trendSparklinesSection(history) {
   if (!history.length) return `<div class="sub">データなし</div>`;
   const adLine = history.map((h) => (h.data.cumulative_ad_line ?? null));
@@ -771,8 +814,8 @@ async function main() {
     <div id="history-strip"></div>
 
     <div class="card">
-      <div class="card-title">今日、市場が買った物語（半自動調査）</div>
-      <div class="sub" style="margin-bottom:var(--s4)">価格・出来高の異変を機械が選びます。上昇理由は断定せず、ボタンから最新情報を調べます。</div>
+      <div class="card-title">機会ウォッチ（価格・出来高からの候補発見）</div>
+      <div class="sub" style="margin-bottom:var(--s4)">地合いの評価とは別に、値動きが目立つ銘柄を抽出します。企業の成長ストーリー・収益性・参入障壁は「ChatGPTで調査」から確認します。抽出だけで買い推奨とは判断しません。</div>
       ${storyCandidatesSection(latest.story_candidates || [], latest.date)}
     </div>
 
@@ -843,6 +886,7 @@ async function main() {
   loadRecentHistory(latest.date, 30).then((history) => {
     document.getElementById("history-strip").innerHTML = historyStrip(history);
     document.getElementById("trend-sparklines").innerHTML = trendSparklinesSection(history);
+    renderInlineHistoryCharts(history);
 
     // history は日付昇順。末尾が本日分のはずなので、その1つ前が「前営業日」。
     // (取得できたファイルのみが入っているので、休場日等は自動的に飛ばされる)
