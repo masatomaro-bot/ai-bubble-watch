@@ -1,0 +1,2253 @@
+{
+  "date": "2026-10-22",
+  "nasdaq": {
+    "distribution_days": 3,
+    "stalling_days": 0,
+    "distribution_dates": [
+      "2026-10-08",
+      "2026-10-14",
+      "2026-10-22"
+    ],
+    "stalling_dates": [],
+    "trend_state": {
+      "state": "correction",
+      "rally_low_date": "2026-07-29",
+      "rally_day1_date": "2026-07-30",
+      "ftd_date": null,
+      "days_since_ftd": null,
+      "distribution_days_recent": null,
+      "note": "直近でフォロースルー・デイが確認できていない"
+    },
+    "price": 26008.86,
+    "sma50": 26615.96,
+    "sma150": 25639.95,
+    "sma200": 24980.14,
+    "above_sma50": false,
+    "above_sma150": true,
+    "above_sma200": true,
+    "sma200_rising": true,
+    "pct_below_52w_high": 5.76
+  },
+  "sp500": {
+    "distribution_days": 4,
+    "stalling_days": 0,
+    "distribution_dates": [
+      "2026-09-28",
+      "2026-10-07",
+      "2026-10-08",
+      "2026-10-14"
+    ],
+    "stalling_dates": [],
+    "trend_state": {
+      "state": "confirmed_uptrend",
+      "rally_low_date": "2026-07-29",
+      "rally_day1_date": "2026-07-30",
+      "ftd_date": "2026-08-04",
+      "days_since_ftd": 56,
+      "distribution_days_recent": 4,
+      "note": ""
+    },
+    "price": 7663.43,
+    "sma50": 7703.15,
+    "sma150": 7428.38,
+    "sma200": 7287.8,
+    "above_sma50": false,
+    "above_sma150": true,
+    "above_sma200": true,
+    "sma200_rising": true,
+    "pct_below_52w_high": 1.99
+  },
+  "overall_trend_state": "correction",
+  "sectors": {
+    "XLK": {
+      "name_jp": "情報技術",
+      "temperature": "中立",
+      "day_change_pct": 1.67,
+      "one_week_pct": -0.99,
+      "one_month_pct": -3.94,
+      "rs_ratio": 101.14,
+      "rs_momentum": 97.33,
+      "quadrant": "鈍化"
+    },
+    "XLF": {
+      "name_jp": "金融",
+      "temperature": "買い集め",
+      "day_change_pct": 0.57,
+      "one_week_pct": 2.79,
+      "one_month_pct": 2.26,
+      "rs_ratio": 98.86,
+      "rs_momentum": 101.68,
+      "quadrant": "改善"
+    },
+    "XLE": {
+      "name_jp": "エネルギー",
+      "temperature": "上昇",
+      "day_change_pct": 0.28,
+      "one_week_pct": 0.78,
+      "one_month_pct": 10.33,
+      "rs_ratio": 101.32,
+      "rs_momentum": 101.25,
+      "quadrant": "主導"
+    },
+    "XLV": {
+      "name_jp": "ヘルスケア",
+      "temperature": "上昇",
+      "day_change_pct": -0.49,
+      "one_week_pct": 2.86,
+      "one_month_pct": 5.33,
+      "rs_ratio": 100.74,
+      "rs_momentum": 102.13,
+      "quadrant": "主導"
+    },
+    "XLI": {
+      "name_jp": "資本財",
+      "temperature": "調整",
+      "day_change_pct": 0.91,
+      "one_week_pct": 0.76,
+      "one_month_pct": -1.15,
+      "rs_ratio": 98.13,
+      "rs_momentum": 99.79,
+      "quadrant": "遅行"
+    },
+    "XLP": {
+      "name_jp": "生活必需品",
+      "temperature": "上昇",
+      "day_change_pct": -0.73,
+      "one_week_pct": 1.22,
+      "one_month_pct": 5.29,
+      "rs_ratio": 99.19,
+      "rs_momentum": 102.47,
+      "quadrant": "改善"
+    },
+    "XLY": {
+      "name_jp": "一般消費財",
+      "temperature": "買い集め",
+      "day_change_pct": 0.03,
+      "one_week_pct": 3.61,
+      "one_month_pct": 2.85,
+      "rs_ratio": 98.45,
+      "rs_momentum": 102.52,
+      "quadrant": "改善"
+    },
+    "XLU": {
+      "name_jp": "公益事業",
+      "temperature": "買い集め",
+      "day_change_pct": 0.29,
+      "one_week_pct": 0.67,
+      "one_month_pct": 3.63,
+      "rs_ratio": 98.35,
+      "rs_momentum": 101.22,
+      "quadrant": "改善"
+    },
+    "XLB": {
+      "name_jp": "素材",
+      "temperature": "上昇",
+      "day_change_pct": 0.18,
+      "one_week_pct": 3.32,
+      "one_month_pct": 1.56,
+      "rs_ratio": 98.9,
+      "rs_momentum": 101.29,
+      "quadrant": "改善"
+    },
+    "XLC": {
+      "name_jp": "通信サービス",
+      "temperature": "調整",
+      "day_change_pct": -1.11,
+      "one_week_pct": -1.67,
+      "one_month_pct": -4.02,
+      "rs_ratio": 98.58,
+      "rs_momentum": 100.39,
+      "quadrant": "改善"
+    },
+    "XLRE": {
+      "name_jp": "不動産",
+      "temperature": "調整",
+      "day_change_pct": -0.76,
+      "one_week_pct": 1.37,
+      "one_month_pct": -1.04,
+      "rs_ratio": 97.66,
+      "rs_momentum": 101.55,
+      "quadrant": "改善"
+    }
+  },
+  "market_regime": {
+    "counts": {
+      "中立": 1,
+      "買い集め": 3,
+      "上昇": 4,
+      "調整": 3
+    },
+    "total": 11,
+    "judgement": "RISK-ON"
+  },
+  "themes": {
+    "SOXX": {
+      "name_jp": "半導体",
+      "monthly_return_pct": -10.9,
+      "one_week_pct": -1.74,
+      "one_month_pct": -10.9,
+      "day_change_pct": 2.07,
+      "rs_ratio": 100.6,
+      "rs_momentum": 97.27,
+      "quadrant": "鈍化"
+    },
+    "XOP": {
+      "name_jp": "エネルギー(探鉱・生産)",
+      "monthly_return_pct": 9.59,
+      "one_week_pct": 0.6,
+      "one_month_pct": 9.59,
+      "day_change_pct": -0.51,
+      "rs_ratio": 101.3,
+      "rs_momentum": 100.93,
+      "quadrant": "主導"
+    },
+    "ICLN": {
+      "name_jp": "クリーンエネルギー",
+      "monthly_return_pct": -7.46,
+      "one_week_pct": -0.84,
+      "one_month_pct": -7.46,
+      "day_change_pct": 1.04,
+      "rs_ratio": 98.12,
+      "rs_momentum": 99.21,
+      "quadrant": "遅行"
+    },
+    "IYT": {
+      "name_jp": "産業・輸送",
+      "monthly_return_pct": -0.24,
+      "one_week_pct": 0.55,
+      "one_month_pct": -0.24,
+      "day_change_pct": 0.13,
+      "rs_ratio": 98.07,
+      "rs_momentum": 100.41,
+      "quadrant": "改善"
+    },
+    "FINX": {
+      "name_jp": "フィンテック",
+      "monthly_return_pct": -4.06,
+      "one_week_pct": 3.49,
+      "one_month_pct": -4.06,
+      "day_change_pct": 1.02,
+      "rs_ratio": 98.85,
+      "rs_momentum": 100.53,
+      "quadrant": "改善"
+    },
+    "KRE": {
+      "name_jp": "地銀",
+      "monthly_return_pct": -0.8,
+      "one_week_pct": 3.03,
+      "one_month_pct": -0.8,
+      "day_change_pct": 0.0,
+      "rs_ratio": 98.26,
+      "rs_momentum": 100.13,
+      "quadrant": "改善"
+    },
+    "ITA": {
+      "name_jp": "宇宙・防衛",
+      "monthly_return_pct": -3.84,
+      "one_week_pct": 0.76,
+      "one_month_pct": -3.84,
+      "day_change_pct": -0.17,
+      "rs_ratio": 97.76,
+      "rs_momentum": 100.29,
+      "quadrant": "改善"
+    },
+    "PICK": {
+      "name_jp": "素材・鉱業",
+      "monthly_return_pct": -8.28,
+      "one_week_pct": -1.71,
+      "one_month_pct": -8.28,
+      "day_change_pct": -0.64,
+      "rs_ratio": 99.19,
+      "rs_momentum": 99.15,
+      "quadrant": "遅行"
+    },
+    "IBB": {
+      "name_jp": "バイオテクノロジー",
+      "monthly_return_pct": 0.35,
+      "one_week_pct": 4.08,
+      "one_month_pct": 0.35,
+      "day_change_pct": 0.5,
+      "rs_ratio": 101.15,
+      "rs_momentum": 100.28,
+      "quadrant": "主導"
+    },
+    "BOTZ": {
+      "name_jp": "AI・ロボティクス",
+      "monthly_return_pct": -6.72,
+      "one_week_pct": -1.52,
+      "one_month_pct": -6.72,
+      "day_change_pct": 0.0,
+      "rs_ratio": 97.85,
+      "rs_momentum": 98.5,
+      "quadrant": "遅行"
+    },
+    "SRVR": {
+      "name_jp": "デジタルインフラ(データセンター)",
+      "monthly_return_pct": -8.61,
+      "one_week_pct": -1.29,
+      "one_month_pct": -8.61,
+      "day_change_pct": -1.43,
+      "rs_ratio": 97.82,
+      "rs_momentum": 99.86,
+      "quadrant": "遅行"
+    },
+    "URA": {
+      "name_jp": "原子力(ウラン)",
+      "monthly_return_pct": -18.72,
+      "one_week_pct": 0.03,
+      "one_month_pct": -18.72,
+      "day_change_pct": 1.05,
+      "rs_ratio": 97.88,
+      "rs_momentum": 98.97,
+      "quadrant": "遅行"
+    }
+  },
+  "breadth_universe_source": "nasdaqtrader",
+  "breadth_near_52w": {
+    "universe_size": 4862,
+    "near_52w_high": 409,
+    "near_52w_low": 747,
+    "near_high_pct": 8.4,
+    "near_low_pct": 15.4
+  },
+  "breadth_extended": {
+    "universe_size": 4862,
+    "new_52w_highs": 138,
+    "new_52w_lows": 365,
+    "advancers": 2238,
+    "decliners": 2277,
+    "unchanged": 347,
+    "up_volume": 5987435525.0,
+    "down_volume": 4313081591.0,
+    "up_volume_pct": 58.1
+  },
+  "broad_universe_technicals": {
+    "universe_size": 4862,
+    "pct_above_50dma": 28.4,
+    "pct_above_200dma": 36.9,
+    "trend_template_pass_count": 446,
+    "trend_template_pass_rate_pct": 9.2
+  },
+  "opportunity_universe": {
+    "method": "broad-close-return-252-percentile-v1",
+    "source": "nasdaqtrader",
+    "ranked_count": 4752,
+    "eligible_count": 163,
+    "excluded_stale_count": 2352,
+    "filters": {
+      "min_price_usd": 5.0,
+      "min_avg_dollar_volume_20d": 1000000.0,
+      "max_abs_day_change_pct": 50.0
+    },
+    "rows": [
+      {
+        "ticker": "DHY",
+        "rs_percentile": 99.9,
+        "day_change_pct": -1.22,
+        "one_month_pct": 867.26,
+        "three_month_pct": 828.57,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "IGR",
+        "rs_percentile": 96.5,
+        "day_change_pct": 0.38,
+        "one_month_pct": -11.2,
+        "three_month_pct": 127.66,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "KF",
+        "rs_percentile": 91.1,
+        "day_change_pct": -4.34,
+        "one_month_pct": -19.13,
+        "three_month_pct": -6.7,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "PBAM",
+        "rs_percentile": 90.3,
+        "day_change_pct": 0.74,
+        "one_month_pct": -0.53,
+        "three_month_pct": 6.82,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "PLBC",
+        "rs_percentile": 89.6,
+        "day_change_pct": 0.7,
+        "one_month_pct": 4.12,
+        "three_month_pct": 3.32,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "WCCB",
+        "rs_percentile": 88.9,
+        "day_change_pct": 1.05,
+        "one_month_pct": 2.38,
+        "three_month_pct": 12.4,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CFBK",
+        "rs_percentile": 87.4,
+        "day_change_pct": 3.04,
+        "one_month_pct": 1.95,
+        "three_month_pct": 1.65,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FVCB",
+        "rs_percentile": 87.2,
+        "day_change_pct": 3.01,
+        "one_month_pct": 2.6,
+        "three_month_pct": -0.49,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "UVSP",
+        "rs_percentile": 86.3,
+        "day_change_pct": 1.32,
+        "one_month_pct": 2.1,
+        "three_month_pct": -4.37,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FNLC",
+        "rs_percentile": 86.1,
+        "day_change_pct": 4.66,
+        "one_month_pct": 6.44,
+        "three_month_pct": 3.67,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BGR",
+        "rs_percentile": 84.6,
+        "day_change_pct": -0.87,
+        "one_month_pct": 5.77,
+        "three_month_pct": 12.18,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "MBWM",
+        "rs_percentile": 82.8,
+        "day_change_pct": 2.91,
+        "one_month_pct": 2.97,
+        "three_month_pct": 3.07,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BRKRP",
+        "rs_percentile": 82.3,
+        "day_change_pct": -2.27,
+        "one_month_pct": -4.25,
+        "three_month_pct": -5.56,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "QNBC",
+        "rs_percentile": 82.1,
+        "day_change_pct": 0.07,
+        "one_month_pct": 0.99,
+        "three_month_pct": 5.88,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CBK",
+        "rs_percentile": 81.0,
+        "day_change_pct": 2.85,
+        "one_month_pct": 2.22,
+        "three_month_pct": -4.11,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ORRF",
+        "rs_percentile": 79.7,
+        "day_change_pct": 3.33,
+        "one_month_pct": 7.99,
+        "three_month_pct": 4.14,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BSTZ",
+        "rs_percentile": 79.5,
+        "day_change_pct": -3.45,
+        "one_month_pct": -9.26,
+        "three_month_pct": -4.14,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ADEA",
+        "rs_percentile": 79.2,
+        "day_change_pct": -5.74,
+        "one_month_pct": -15.11,
+        "three_month_pct": -18.43,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EFSI",
+        "rs_percentile": 78.3,
+        "day_change_pct": 1.33,
+        "one_month_pct": 2.54,
+        "three_month_pct": 15.87,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AVBH",
+        "rs_percentile": 77.1,
+        "day_change_pct": 1.61,
+        "one_month_pct": 1.41,
+        "three_month_pct": -1.87,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BCX",
+        "rs_percentile": 76.6,
+        "day_change_pct": -1.74,
+        "one_month_pct": -3.5,
+        "three_month_pct": 1.11,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "RMT",
+        "rs_percentile": 76.6,
+        "day_change_pct": -1.87,
+        "one_month_pct": -6.66,
+        "three_month_pct": -8.15,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EMO",
+        "rs_percentile": 75.7,
+        "day_change_pct": -0.39,
+        "one_month_pct": -2.74,
+        "three_month_pct": -0.12,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BME",
+        "rs_percentile": 75.5,
+        "day_change_pct": -0.33,
+        "one_month_pct": 2.04,
+        "three_month_pct": 5.54,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BST",
+        "rs_percentile": 71.7,
+        "day_change_pct": -3.52,
+        "one_month_pct": -5.18,
+        "three_month_pct": 3.28,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ADX",
+        "rs_percentile": 71.3,
+        "day_change_pct": -1.7,
+        "one_month_pct": -1.7,
+        "three_month_pct": 0.47,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EVT",
+        "rs_percentile": 71.3,
+        "day_change_pct": -0.51,
+        "one_month_pct": -3.04,
+        "three_month_pct": -1.62,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BMEZ",
+        "rs_percentile": 70.7,
+        "day_change_pct": -0.89,
+        "one_month_pct": 0.48,
+        "three_month_pct": 9.24,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BRK-A",
+        "rs_percentile": 70.6,
+        "day_change_pct": 1.13,
+        "one_month_pct": 7.25,
+        "three_month_pct": 10.01,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CET",
+        "rs_percentile": 70.0,
+        "day_change_pct": -0.46,
+        "one_month_pct": -0.32,
+        "three_month_pct": 7.57,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "HQL",
+        "rs_percentile": 69.3,
+        "day_change_pct": 0.17,
+        "one_month_pct": -8.23,
+        "three_month_pct": -7.19,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ISBA",
+        "rs_percentile": 69.1,
+        "day_change_pct": 4.2,
+        "one_month_pct": 3.81,
+        "three_month_pct": -1.3,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "QQQX",
+        "rs_percentile": 68.7,
+        "day_change_pct": -1.98,
+        "one_month_pct": -1.18,
+        "three_month_pct": 2.44,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BH-A",
+        "rs_percentile": 68.3,
+        "day_change_pct": -6.46,
+        "one_month_pct": 9.61,
+        "three_month_pct": 4.93,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "HQH",
+        "rs_percentile": 68.3,
+        "day_change_pct": 0.59,
+        "one_month_pct": -5.51,
+        "three_month_pct": -5.81,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ASA",
+        "rs_percentile": 68.1,
+        "day_change_pct": -4.87,
+        "one_month_pct": -14.19,
+        "three_month_pct": -4.32,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "IGD",
+        "rs_percentile": 68.1,
+        "day_change_pct": 0.0,
+        "one_month_pct": 0.95,
+        "three_month_pct": -0.62,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "MCHPP",
+        "rs_percentile": 68.0,
+        "day_change_pct": -3.04,
+        "one_month_pct": -0.77,
+        "three_month_pct": -3.76,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "UTF",
+        "rs_percentile": 68.0,
+        "day_change_pct": 0.77,
+        "one_month_pct": 6.02,
+        "three_month_pct": -5.95,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BTO",
+        "rs_percentile": 67.4,
+        "day_change_pct": 1.96,
+        "one_month_pct": 1.88,
+        "three_month_pct": -7.98,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ETG",
+        "rs_percentile": 67.2,
+        "day_change_pct": -1.63,
+        "one_month_pct": -1.29,
+        "three_month_pct": 0.13,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BDJ",
+        "rs_percentile": 66.6,
+        "day_change_pct": -0.52,
+        "one_month_pct": 0.21,
+        "three_month_pct": -0.62,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "GDV",
+        "rs_percentile": 66.5,
+        "day_change_pct": 0.04,
+        "one_month_pct": -1.01,
+        "three_month_pct": -4.26,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "GGN",
+        "rs_percentile": 66.1,
+        "day_change_pct": -2.47,
+        "one_month_pct": -5.86,
+        "three_month_pct": 5.33,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "HUBB",
+        "rs_percentile": 65.7,
+        "day_change_pct": -3.25,
+        "one_month_pct": -3.86,
+        "three_month_pct": -10.47,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CSQ",
+        "rs_percentile": 65.5,
+        "day_change_pct": -1.44,
+        "one_month_pct": -4.24,
+        "three_month_pct": -0.85,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AOD",
+        "rs_percentile": 65.0,
+        "day_change_pct": -1.37,
+        "one_month_pct": -2.32,
+        "three_month_pct": -3.35,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CCD",
+        "rs_percentile": 64.8,
+        "day_change_pct": -2.0,
+        "one_month_pct": -6.66,
+        "three_month_pct": -11.4,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CHW",
+        "rs_percentile": 63.8,
+        "day_change_pct": -1.33,
+        "one_month_pct": -6.55,
+        "three_month_pct": -7.66,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ETW",
+        "rs_percentile": 63.6,
+        "day_change_pct": -0.95,
+        "one_month_pct": -2.28,
+        "three_month_pct": 0.0,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EXG",
+        "rs_percentile": 62.6,
+        "day_change_pct": -1.26,
+        "one_month_pct": -1.78,
+        "three_month_pct": -1.78,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ETV",
+        "rs_percentile": 62.4,
+        "day_change_pct": -1.15,
+        "one_month_pct": -4.95,
+        "three_month_pct": -0.21,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DPG",
+        "rs_percentile": 61.8,
+        "day_change_pct": 0.66,
+        "one_month_pct": 4.92,
+        "three_month_pct": -8.88,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "KOYN",
+        "rs_percentile": 61.7,
+        "day_change_pct": -0.1,
+        "one_month_pct": 0.2,
+        "three_month_pct": 0.79,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "GAM",
+        "rs_percentile": 61.7,
+        "day_change_pct": -1.11,
+        "one_month_pct": -0.83,
+        "three_month_pct": 0.02,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CHI",
+        "rs_percentile": 61.0,
+        "day_change_pct": -1.94,
+        "one_month_pct": -7.55,
+        "three_month_pct": -11.38,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "WENN",
+        "rs_percentile": 60.4,
+        "day_change_pct": -0.1,
+        "one_month_pct": 0.1,
+        "three_month_pct": 0.87,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "TBLD",
+        "rs_percentile": 59.9,
+        "day_change_pct": -0.68,
+        "one_month_pct": -0.73,
+        "three_month_pct": -6.1,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FERA",
+        "rs_percentile": 59.5,
+        "day_change_pct": -0.19,
+        "one_month_pct": 0.38,
+        "three_month_pct": 1.15,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DNP",
+        "rs_percentile": 59.3,
+        "day_change_pct": 1.5,
+        "one_month_pct": 1.6,
+        "three_month_pct": -7.91,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "NBXG",
+        "rs_percentile": 57.5,
+        "day_change_pct": -2.84,
+        "one_month_pct": -5.52,
+        "three_month_pct": -0.88,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EDD",
+        "rs_percentile": 57.3,
+        "day_change_pct": -1.65,
+        "one_month_pct": -5.13,
+        "three_month_pct": -8.53,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AIO",
+        "rs_percentile": 56.7,
+        "day_change_pct": -2.76,
+        "one_month_pct": -8.1,
+        "three_month_pct": -9.33,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AGNCP",
+        "rs_percentile": 56.6,
+        "day_change_pct": 0.0,
+        "one_month_pct": -2.57,
+        "three_month_pct": -1.52,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BOE",
+        "rs_percentile": 56.6,
+        "day_change_pct": -1.04,
+        "one_month_pct": -6.25,
+        "three_month_pct": -4.04,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CHY",
+        "rs_percentile": 56.5,
+        "day_change_pct": -1.49,
+        "one_month_pct": -9.52,
+        "three_month_pct": -11.58,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AGNCO",
+        "rs_percentile": 56.4,
+        "day_change_pct": 0.0,
+        "one_month_pct": -2.3,
+        "three_month_pct": -1.54,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ASBA",
+        "rs_percentile": 55.2,
+        "day_change_pct": -0.29,
+        "one_month_pct": -1.77,
+        "three_month_pct": -0.16,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BUI",
+        "rs_percentile": 54.7,
+        "day_change_pct": 0.62,
+        "one_month_pct": 2.02,
+        "three_month_pct": -7.14,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BEAG",
+        "rs_percentile": 54.5,
+        "day_change_pct": 0.1,
+        "one_month_pct": -1.87,
+        "three_month_pct": -1.41,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BTT",
+        "rs_percentile": 54.4,
+        "day_change_pct": 0.18,
+        "one_month_pct": 1.24,
+        "three_month_pct": -1.74,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CHSCL",
+        "rs_percentile": 53.6,
+        "day_change_pct": -0.5,
+        "one_month_pct": -1.77,
+        "three_month_pct": -2.76,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "APOS",
+        "rs_percentile": 52.7,
+        "day_change_pct": 0.12,
+        "one_month_pct": -0.59,
+        "three_month_pct": -2.52,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "UMBFO",
+        "rs_percentile": 52.6,
+        "day_change_pct": -0.02,
+        "one_month_pct": -0.44,
+        "three_month_pct": -1.97,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BGY",
+        "rs_percentile": 51.7,
+        "day_change_pct": -1.28,
+        "one_month_pct": -5.9,
+        "three_month_pct": -4.58,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EOI",
+        "rs_percentile": 51.6,
+        "day_change_pct": -1.53,
+        "one_month_pct": -2.43,
+        "three_month_pct": -1.78,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EOT",
+        "rs_percentile": 50.6,
+        "day_change_pct": 0.51,
+        "one_month_pct": 0.19,
+        "three_month_pct": -8.38,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BGB",
+        "rs_percentile": 50.5,
+        "day_change_pct": -0.09,
+        "one_month_pct": -1.78,
+        "three_month_pct": -1.61,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AGD",
+        "rs_percentile": 50.2,
+        "day_change_pct": 0.18,
+        "one_month_pct": -4.73,
+        "three_month_pct": -7.01,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ASGI",
+        "rs_percentile": 49.7,
+        "day_change_pct": -0.46,
+        "one_month_pct": -0.16,
+        "three_month_pct": -19.93,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DMB",
+        "rs_percentile": 49.7,
+        "day_change_pct": 1.93,
+        "one_month_pct": 2.56,
+        "three_month_pct": -6.19,
+        "above_sma50": true,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BCAT",
+        "rs_percentile": 49.3,
+        "day_change_pct": -1.35,
+        "one_month_pct": -5.38,
+        "three_month_pct": -14.06,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "HTD",
+        "rs_percentile": 49.1,
+        "day_change_pct": 0.75,
+        "one_month_pct": -0.39,
+        "three_month_pct": -12.04,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "MMD",
+        "rs_percentile": 49.0,
+        "day_change_pct": 0.22,
+        "one_month_pct": -0.36,
+        "three_month_pct": -7.71,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ATHS",
+        "rs_percentile": 48.9,
+        "day_change_pct": 0.04,
+        "one_month_pct": -5.44,
+        "three_month_pct": -6.62,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AFB",
+        "rs_percentile": 48.1,
+        "day_change_pct": 0.71,
+        "one_month_pct": 0.51,
+        "three_month_pct": -9.07,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BMN",
+        "rs_percentile": 48.0,
+        "day_change_pct": 0.29,
+        "one_month_pct": -6.92,
+        "three_month_pct": -10.91,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EFT",
+        "rs_percentile": 48.0,
+        "day_change_pct": -1.42,
+        "one_month_pct": -0.19,
+        "three_month_pct": -2.43,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "IQI",
+        "rs_percentile": 47.9,
+        "day_change_pct": 0.56,
+        "one_month_pct": -3.32,
+        "three_month_pct": -9.25,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EIM",
+        "rs_percentile": 47.6,
+        "day_change_pct": 0.11,
+        "one_month_pct": 0.22,
+        "three_month_pct": -7.08,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "IIM",
+        "rs_percentile": 47.5,
+        "day_change_pct": 0.44,
+        "one_month_pct": -1.31,
+        "three_month_pct": -9.02,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FTHY",
+        "rs_percentile": 47.4,
+        "day_change_pct": -0.55,
+        "one_month_pct": -1.93,
+        "three_month_pct": -6.4,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "LEO",
+        "rs_percentile": 47.4,
+        "day_change_pct": 0.35,
+        "one_month_pct": 0.18,
+        "three_month_pct": -8.65,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ETJ",
+        "rs_percentile": 47.3,
+        "day_change_pct": -1.49,
+        "one_month_pct": -4.11,
+        "three_month_pct": -5.14,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EFR",
+        "rs_percentile": 47.2,
+        "day_change_pct": -0.79,
+        "one_month_pct": -2.24,
+        "three_month_pct": -5.46,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "GUT",
+        "rs_percentile": 47.2,
+        "day_change_pct": 0.96,
+        "one_month_pct": -12.48,
+        "three_month_pct": -16.77,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "MQY",
+        "rs_percentile": 47.1,
+        "day_change_pct": 0.88,
+        "one_month_pct": 1.47,
+        "three_month_pct": -8.16,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BGX",
+        "rs_percentile": 46.7,
+        "day_change_pct": -0.1,
+        "one_month_pct": -0.38,
+        "three_month_pct": -1.78,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DLY",
+        "rs_percentile": 46.7,
+        "day_change_pct": -0.38,
+        "one_month_pct": 0.0,
+        "three_month_pct": -5.01,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BBN",
+        "rs_percentile": 46.5,
+        "day_change_pct": 1.51,
+        "one_month_pct": 0.68,
+        "three_month_pct": -6.17,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ETY",
+        "rs_percentile": 46.5,
+        "day_change_pct": -1.79,
+        "one_month_pct": -2.14,
+        "three_month_pct": -2.9,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EOS",
+        "rs_percentile": 46.3,
+        "day_change_pct": -1.96,
+        "one_month_pct": -4.12,
+        "three_month_pct": -3.53,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "KTF",
+        "rs_percentile": 46.3,
+        "day_change_pct": 0.62,
+        "one_month_pct": -1.69,
+        "three_month_pct": -8.0,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "GUG",
+        "rs_percentile": 46.2,
+        "day_change_pct": 0.36,
+        "one_month_pct": -0.57,
+        "three_month_pct": -9.75,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DBL",
+        "rs_percentile": 46.1,
+        "day_change_pct": 0.58,
+        "one_month_pct": 0.95,
+        "three_month_pct": -1.78,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DSM",
+        "rs_percentile": 46.1,
+        "day_change_pct": 0.57,
+        "one_month_pct": 0.19,
+        "three_month_pct": -9.51,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "GAB",
+        "rs_percentile": 46.0,
+        "day_change_pct": -0.38,
+        "one_month_pct": -1.88,
+        "three_month_pct": -7.12,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FTF",
+        "rs_percentile": 45.9,
+        "day_change_pct": -0.37,
+        "one_month_pct": -0.55,
+        "three_month_pct": -6.76,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EVN",
+        "rs_percentile": 45.6,
+        "day_change_pct": 0.62,
+        "one_month_pct": -1.52,
+        "three_month_pct": -7.76,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "LDP",
+        "rs_percentile": 45.6,
+        "day_change_pct": -0.32,
+        "one_month_pct": -3.11,
+        "three_month_pct": -9.04,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EMD",
+        "rs_percentile": 45.5,
+        "day_change_pct": -0.86,
+        "one_month_pct": -4.65,
+        "three_month_pct": -12.68,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AVK",
+        "rs_percentile": 45.3,
+        "day_change_pct": 0.36,
+        "one_month_pct": -6.84,
+        "three_month_pct": -10.17,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FFC",
+        "rs_percentile": 45.1,
+        "day_change_pct": -0.41,
+        "one_month_pct": -4.8,
+        "three_month_pct": -10.01,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DFP",
+        "rs_percentile": 44.8,
+        "day_change_pct": -0.69,
+        "one_month_pct": -2.1,
+        "three_month_pct": -10.44,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AWP",
+        "rs_percentile": 44.7,
+        "day_change_pct": 0.98,
+        "one_month_pct": -3.93,
+        "three_month_pct": -16.16,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "NDMO",
+        "rs_percentile": 44.6,
+        "day_change_pct": -0.65,
+        "one_month_pct": 3.26,
+        "three_month_pct": -8.47,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BKT",
+        "rs_percentile": 44.5,
+        "day_change_pct": 0.42,
+        "one_month_pct": 0.42,
+        "three_month_pct": -5.48,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AWF",
+        "rs_percentile": 44.3,
+        "day_change_pct": -0.63,
+        "one_month_pct": -2.86,
+        "three_month_pct": -5.56,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "NMZ",
+        "rs_percentile": 44.3,
+        "day_change_pct": 0.78,
+        "one_month_pct": -0.33,
+        "three_month_pct": -11.45,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EAD",
+        "rs_percentile": 44.2,
+        "day_change_pct": -0.67,
+        "one_month_pct": -2.48,
+        "three_month_pct": -6.19,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "GHY",
+        "rs_percentile": 43.7,
+        "day_change_pct": -0.28,
+        "one_month_pct": -2.63,
+        "three_month_pct": -8.3,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "AEFC",
+        "rs_percentile": 43.5,
+        "day_change_pct": 0.2,
+        "one_month_pct": -3.35,
+        "three_month_pct": -4.36,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BTZ",
+        "rs_percentile": 43.4,
+        "day_change_pct": -0.32,
+        "one_month_pct": 0.32,
+        "three_month_pct": -5.21,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BHK",
+        "rs_percentile": 43.2,
+        "day_change_pct": 0.36,
+        "one_month_pct": 0.84,
+        "three_month_pct": -5.84,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DTK",
+        "rs_percentile": 43.2,
+        "day_change_pct": 0.0,
+        "one_month_pct": -0.28,
+        "three_month_pct": -9.85,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "RNP",
+        "rs_percentile": 43.2,
+        "day_change_pct": 0.55,
+        "one_month_pct": -3.46,
+        "three_month_pct": -11.33,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "XELLL",
+        "rs_percentile": 43.0,
+        "day_change_pct": 2.04,
+        "one_month_pct": -3.46,
+        "three_month_pct": -8.06,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DUKB",
+        "rs_percentile": 42.9,
+        "day_change_pct": 0.49,
+        "one_month_pct": 1.47,
+        "three_month_pct": -8.53,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BGT",
+        "rs_percentile": 42.8,
+        "day_change_pct": -0.8,
+        "one_month_pct": -6.3,
+        "three_month_pct": -8.2,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BIT",
+        "rs_percentile": 42.8,
+        "day_change_pct": 0.27,
+        "one_month_pct": -0.98,
+        "three_month_pct": -8.22,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DSU",
+        "rs_percentile": 42.1,
+        "day_change_pct": -0.81,
+        "one_month_pct": -4.13,
+        "three_month_pct": -8.33,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ACGLN",
+        "rs_percentile": 42.0,
+        "day_change_pct": 0.0,
+        "one_month_pct": -2.29,
+        "three_month_pct": -8.79,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BGH",
+        "rs_percentile": 41.9,
+        "day_change_pct": -0.87,
+        "one_month_pct": -6.4,
+        "three_month_pct": -10.72,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EVV",
+        "rs_percentile": 41.9,
+        "day_change_pct": 0.48,
+        "one_month_pct": -1.3,
+        "three_month_pct": -7.72,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BLW",
+        "rs_percentile": 41.8,
+        "day_change_pct": -0.52,
+        "one_month_pct": -1.54,
+        "three_month_pct": -8.66,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FAX",
+        "rs_percentile": 41.7,
+        "day_change_pct": -0.31,
+        "one_month_pct": -5.47,
+        "three_month_pct": -10.38,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "JPC",
+        "rs_percentile": 41.4,
+        "day_change_pct": -1.62,
+        "one_month_pct": -2.19,
+        "three_month_pct": -13.0,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ARDC",
+        "rs_percentile": 41.3,
+        "day_change_pct": -0.8,
+        "one_month_pct": -4.62,
+        "three_month_pct": -9.94,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CRBD",
+        "rs_percentile": 41.3,
+        "day_change_pct": -0.89,
+        "one_month_pct": -2.84,
+        "three_month_pct": -7.47,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "DSL",
+        "rs_percentile": 41.3,
+        "day_change_pct": -0.81,
+        "one_month_pct": -2.01,
+        "three_month_pct": -8.69,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FPF",
+        "rs_percentile": 41.2,
+        "day_change_pct": -0.7,
+        "one_month_pct": -5.0,
+        "three_month_pct": -11.83,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "SOJD",
+        "rs_percentile": 40.6,
+        "day_change_pct": 0.17,
+        "one_month_pct": -1.53,
+        "three_month_pct": -8.52,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "HBANP",
+        "rs_percentile": 40.3,
+        "day_change_pct": -0.03,
+        "one_month_pct": -9.04,
+        "three_month_pct": -7.41,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ECAT",
+        "rs_percentile": 39.9,
+        "day_change_pct": -0.45,
+        "one_month_pct": -7.22,
+        "three_month_pct": -12.55,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "TCPA",
+        "rs_percentile": 39.7,
+        "day_change_pct": 1.01,
+        "one_month_pct": -4.97,
+        "three_month_pct": -12.28,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "TMUSI",
+        "rs_percentile": 39.5,
+        "day_change_pct": 3.61,
+        "one_month_pct": -3.33,
+        "three_month_pct": -8.37,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "GBAB",
+        "rs_percentile": 39.4,
+        "day_change_pct": 0.89,
+        "one_month_pct": -2.42,
+        "three_month_pct": -9.08,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CMSD",
+        "rs_percentile": 39.0,
+        "day_change_pct": -0.05,
+        "one_month_pct": -3.64,
+        "three_month_pct": -11.11,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FRA",
+        "rs_percentile": 39.0,
+        "day_change_pct": -0.89,
+        "one_month_pct": -5.49,
+        "three_month_pct": -7.67,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "BRW",
+        "rs_percentile": 38.7,
+        "day_change_pct": 0.68,
+        "one_month_pct": -3.92,
+        "three_month_pct": -10.76,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "ISD",
+        "rs_percentile": 38.4,
+        "day_change_pct": -0.52,
+        "one_month_pct": -1.55,
+        "three_month_pct": -8.85,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "FSCO",
+        "rs_percentile": 37.4,
+        "day_change_pct": 0.39,
+        "one_month_pct": -2.66,
+        "three_month_pct": 4.48,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "HPF",
+        "rs_percentile": 37.4,
+        "day_change_pct": -0.62,
+        "one_month_pct": -6.19,
+        "three_month_pct": -18.26,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "PDI",
+        "rs_percentile": 37.2,
+        "day_change_pct": 1.2,
+        "one_month_pct": 3.17,
+        "three_month_pct": -9.95,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "JRI",
+        "rs_percentile": 37.1,
+        "day_change_pct": 0.56,
+        "one_month_pct": -5.07,
+        "three_month_pct": -17.27,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "HPS",
+        "rs_percentile": 36.0,
+        "day_change_pct": -0.51,
+        "one_month_pct": -5.68,
+        "three_month_pct": -18.17,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CLM",
+        "rs_percentile": 35.8,
+        "day_change_pct": -2.09,
+        "one_month_pct": -4.24,
+        "three_month_pct": -16.21,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "CRF",
+        "rs_percentile": 35.5,
+        "day_change_pct": -1.34,
+        "one_month_pct": -3.61,
+        "three_month_pct": -16.12,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "EIC",
+        "rs_percentile": 33.8,
+        "day_change_pct": -1.01,
+        "one_month_pct": -7.43,
+        "three_month_pct": -11.07,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "IFN",
+        "rs_percentile": 31.7,
+        "day_change_pct": -0.1,
+        "one_month_pct": -4.65,
+        "three_month_pct": -8.96,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "GOF",
+        "rs_percentile": 29.3,
+        "day_change_pct": -0.23,
+        "one_month_pct": 1.41,
+        "three_month_pct": -17.37,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "OXLC",
+        "rs_percentile": 21.3,
+        "day_change_pct": -2.23,
+        "one_month_pct": -20.45,
+        "three_month_pct": -17.06,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      },
+      {
+        "ticker": "LU",
+        "rs_percentile": 12.9,
+        "day_change_pct": 0.95,
+        "one_month_pct": -31.15,
+        "three_month_pct": -42.47,
+        "above_sma50": false,
+        "observed_date": "2026-10-22"
+      }
+    ]
+  },
+  "market_leaders": [
+    {
+      "ticker": "AMTD",
+      "rs_percentile": 100.0,
+      "day_change_pct": 23.12,
+      "one_month_pct": 4185.11,
+      "three_month_pct": 3811.54,
+      "above_sma50": true
+    },
+    {
+      "ticker": "AXTI",
+      "rs_percentile": 99.9,
+      "day_change_pct": 3.84,
+      "one_month_pct": -23.79,
+      "three_month_pct": 25.51,
+      "above_sma50": false
+    },
+    {
+      "ticker": "MRNA",
+      "rs_percentile": 99.9,
+      "day_change_pct": 1.54,
+      "one_month_pct": 34.65,
+      "three_month_pct": 354.61,
+      "above_sma50": true
+    },
+    {
+      "ticker": "SNDK",
+      "rs_percentile": 99.9,
+      "day_change_pct": 0.94,
+      "one_month_pct": -26.96,
+      "three_month_pct": -4.06,
+      "above_sma50": false
+    },
+    {
+      "ticker": "DHY",
+      "rs_percentile": 99.9,
+      "day_change_pct": -1.22,
+      "one_month_pct": 867.26,
+      "three_month_pct": 828.57,
+      "above_sma50": true
+    },
+    {
+      "ticker": "TJGC",
+      "rs_percentile": 99.8,
+      "day_change_pct": 0.0,
+      "one_month_pct": 88.7,
+      "three_month_pct": 514.45,
+      "above_sma50": true
+    },
+    {
+      "ticker": "ANL",
+      "rs_percentile": 99.7,
+      "day_change_pct": 5.83,
+      "one_month_pct": -32.17,
+      "three_month_pct": -9.92,
+      "above_sma50": false
+    },
+    {
+      "ticker": "ERAS",
+      "rs_percentile": 99.7,
+      "day_change_pct": -0.89,
+      "one_month_pct": -6.82,
+      "three_month_pct": -24.18,
+      "above_sma50": false
+    },
+    {
+      "ticker": "IOVA",
+      "rs_percentile": 99.7,
+      "day_change_pct": -1.62,
+      "one_month_pct": 37.41,
+      "three_month_pct": 192.99,
+      "above_sma50": true
+    },
+    {
+      "ticker": "SLS",
+      "rs_percentile": 99.7,
+      "day_change_pct": 1.34,
+      "one_month_pct": 1.0,
+      "three_month_pct": 7.24,
+      "above_sma50": false
+    },
+    {
+      "ticker": "BUUU",
+      "rs_percentile": 99.6,
+      "day_change_pct": -1.5,
+      "one_month_pct": -12.53,
+      "three_month_pct": 110.75,
+      "above_sma50": true
+    },
+    {
+      "ticker": "CDNA",
+      "rs_percentile": 99.6,
+      "day_change_pct": 2.23,
+      "one_month_pct": 25.23,
+      "three_month_pct": 90.47,
+      "above_sma50": true
+    },
+    {
+      "ticker": "CLYM",
+      "rs_percentile": 99.6,
+      "day_change_pct": 0.65,
+      "one_month_pct": -23.5,
+      "three_month_pct": -15.34,
+      "above_sma50": false
+    },
+    {
+      "ticker": "LITE",
+      "rs_percentile": 99.6,
+      "day_change_pct": 3.43,
+      "one_month_pct": -10.04,
+      "three_month_pct": 11.5,
+      "above_sma50": false
+    },
+    {
+      "ticker": "TXG",
+      "rs_percentile": 99.6,
+      "day_change_pct": 5.78,
+      "one_month_pct": -6.33,
+      "three_month_pct": 63.37,
+      "above_sma50": true
+    },
+    {
+      "ticker": "KOD",
+      "rs_percentile": 99.5,
+      "day_change_pct": -5.65,
+      "one_month_pct": 159.53,
+      "three_month_pct": 111.83,
+      "above_sma50": true
+    },
+    {
+      "ticker": "MU",
+      "rs_percentile": 99.5,
+      "day_change_pct": 1.96,
+      "one_month_pct": -16.65,
+      "three_month_pct": -0.79,
+      "above_sma50": false
+    },
+    {
+      "ticker": "MXL",
+      "rs_percentile": 99.5,
+      "day_change_pct": 3.1,
+      "one_month_pct": -13.31,
+      "three_month_pct": 5.87,
+      "above_sma50": false
+    },
+    {
+      "ticker": "TWST",
+      "rs_percentile": 99.5,
+      "day_change_pct": 4.51,
+      "one_month_pct": -9.4,
+      "three_month_pct": 65.2,
+      "above_sma50": false
+    },
+    {
+      "ticker": "SYRE",
+      "rs_percentile": 99.4,
+      "day_change_pct": 1.7,
+      "one_month_pct": 1.07,
+      "three_month_pct": -8.99,
+      "above_sma50": true
+    }
+  ],
+  "trend_template_leaders": [
+    {
+      "ticker": "AMTD",
+      "rs_percentile": 100.0,
+      "day_change_pct": 23.12,
+      "one_month_pct": 4185.11,
+      "three_month_pct": 3811.54,
+      "above_sma50": true
+    },
+    {
+      "ticker": "MRNA",
+      "rs_percentile": 99.9,
+      "day_change_pct": 1.54,
+      "one_month_pct": 34.65,
+      "three_month_pct": 354.61,
+      "above_sma50": true
+    },
+    {
+      "ticker": "DHY",
+      "rs_percentile": 99.9,
+      "day_change_pct": -1.22,
+      "one_month_pct": 867.26,
+      "three_month_pct": 828.57,
+      "above_sma50": true
+    },
+    {
+      "ticker": "TJGC",
+      "rs_percentile": 99.8,
+      "day_change_pct": 0.0,
+      "one_month_pct": 88.7,
+      "three_month_pct": 514.45,
+      "above_sma50": true
+    },
+    {
+      "ticker": "IOVA",
+      "rs_percentile": 99.7,
+      "day_change_pct": -1.62,
+      "one_month_pct": 37.41,
+      "three_month_pct": 192.99,
+      "above_sma50": true
+    },
+    {
+      "ticker": "BUUU",
+      "rs_percentile": 99.6,
+      "day_change_pct": -1.5,
+      "one_month_pct": -12.53,
+      "three_month_pct": 110.75,
+      "above_sma50": true
+    },
+    {
+      "ticker": "CDNA",
+      "rs_percentile": 99.6,
+      "day_change_pct": 2.23,
+      "one_month_pct": 25.23,
+      "three_month_pct": 90.47,
+      "above_sma50": true
+    },
+    {
+      "ticker": "TXG",
+      "rs_percentile": 99.6,
+      "day_change_pct": 5.78,
+      "one_month_pct": -6.33,
+      "three_month_pct": 63.37,
+      "above_sma50": true
+    },
+    {
+      "ticker": "KOD",
+      "rs_percentile": 99.5,
+      "day_change_pct": -5.65,
+      "one_month_pct": 159.53,
+      "three_month_pct": 111.83,
+      "above_sma50": true
+    },
+    {
+      "ticker": "SYRE",
+      "rs_percentile": 99.4,
+      "day_change_pct": 1.7,
+      "one_month_pct": 1.07,
+      "three_month_pct": -8.99,
+      "above_sma50": true
+    },
+    {
+      "ticker": "VNCE",
+      "rs_percentile": 99.4,
+      "day_change_pct": 0.77,
+      "one_month_pct": 15.98,
+      "three_month_pct": 97.98,
+      "above_sma50": true
+    },
+    {
+      "ticker": "RCEL",
+      "rs_percentile": 99.2,
+      "day_change_pct": 10.8,
+      "one_month_pct": 33.07,
+      "three_month_pct": 231.67,
+      "above_sma50": true
+    },
+    {
+      "ticker": "ASX",
+      "rs_percentile": 99.0,
+      "day_change_pct": 4.02,
+      "one_month_pct": -6.17,
+      "three_month_pct": 15.12,
+      "above_sma50": true
+    },
+    {
+      "ticker": "GTE",
+      "rs_percentile": 98.8,
+      "day_change_pct": 2.39,
+      "one_month_pct": 18.28,
+      "three_month_pct": 57.77,
+      "above_sma50": true
+    },
+    {
+      "ticker": "FET",
+      "rs_percentile": 98.7,
+      "day_change_pct": 3.0,
+      "one_month_pct": 7.14,
+      "three_month_pct": 49.9,
+      "above_sma50": true
+    },
+    {
+      "ticker": "NEWP",
+      "rs_percentile": 98.7,
+      "day_change_pct": -1.38,
+      "one_month_pct": -6.8,
+      "three_month_pct": 43.11,
+      "above_sma50": true
+    },
+    {
+      "ticker": "SSL",
+      "rs_percentile": 98.7,
+      "day_change_pct": 1.63,
+      "one_month_pct": 17.4,
+      "three_month_pct": 36.86,
+      "above_sma50": true
+    },
+    {
+      "ticker": "ECO",
+      "rs_percentile": 98.6,
+      "day_change_pct": 3.45,
+      "one_month_pct": 17.66,
+      "three_month_pct": 57.62,
+      "above_sma50": true
+    },
+    {
+      "ticker": "ILMN",
+      "rs_percentile": 98.5,
+      "day_change_pct": 5.57,
+      "one_month_pct": 14.31,
+      "three_month_pct": 45.74,
+      "above_sma50": true
+    },
+    {
+      "ticker": "MRVL",
+      "rs_percentile": 98.5,
+      "day_change_pct": 1.81,
+      "one_month_pct": -6.71,
+      "three_month_pct": 26.02,
+      "above_sma50": true
+    }
+  ],
+  "story_candidates": [
+    {
+      "ticker": "EFSI",
+      "score": 10.57,
+      "day_change_pct": 1.33,
+      "market_excess_pct": 2.54,
+      "volume_ratio_20d": 3.87,
+      "one_week_pct": 1.66,
+      "one_month_pct": 2.54,
+      "rs_percentile": 78.3,
+      "selection_reason": "市場比+2%以上・出来高20日平均比1.5倍以上",
+      "cause_status": "未確認"
+    },
+    {
+      "ticker": "ISBA",
+      "score": 9.53,
+      "day_change_pct": 4.2,
+      "market_excess_pct": 5.41,
+      "volume_ratio_20d": 1.69,
+      "one_week_pct": 5.37,
+      "one_month_pct": 3.81,
+      "rs_percentile": 69.1,
+      "selection_reason": "市場比+2%以上・出来高20日平均比1.5倍以上",
+      "cause_status": "未確認"
+    },
+    {
+      "ticker": "CFBK",
+      "score": 9.06,
+      "day_change_pct": 3.04,
+      "market_excess_pct": 4.25,
+      "volume_ratio_20d": 2.21,
+      "one_week_pct": 3.01,
+      "one_month_pct": 1.95,
+      "rs_percentile": 87.4,
+      "selection_reason": "市場比+2%以上・出来高20日平均比1.5倍以上",
+      "cause_status": "未確認"
+    },
+    {
+      "ticker": "FVCB",
+      "score": 8.59,
+      "day_change_pct": 3.01,
+      "market_excess_pct": 4.22,
+      "volume_ratio_20d": 1.95,
+      "one_week_pct": 3.48,
+      "one_month_pct": 2.6,
+      "rs_percentile": 87.2,
+      "selection_reason": "市場比+2%以上・出来高20日平均比1.5倍以上",
+      "cause_status": "未確認"
+    },
+    {
+      "ticker": "XELLL",
+      "score": 8.36,
+      "day_change_pct": 2.04,
+      "market_excess_pct": 3.25,
+      "volume_ratio_20d": 2.55,
+      "one_week_pct": -0.28,
+      "one_month_pct": -3.46,
+      "rs_percentile": 43.0,
+      "selection_reason": "市場比+2%以上・出来高20日平均比1.5倍以上",
+      "cause_status": "未確認"
+    }
+  ],
+  "stress_gauges": {
+    "vix": {
+      "level": 19.03,
+      "change_10d": 4.19
+    },
+    "credit_hyg_ief": {
+      "ratio": 0.8532,
+      "change_10d_pct": -1.07
+    },
+    "breadth_rsp_spy": {
+      "ratio": 0.2802,
+      "change_10d_pct": 2.36
+    },
+    "risk_appetite_iwm_spy": {
+      "ratio": 0.3576,
+      "change_10d_pct": -0.28
+    },
+    "semis_soxx_spy": {
+      "ratio": 0.6602,
+      "change_10d_pct": -9.3
+    }
+  },
+  "warning_flags": [
+    {
+      "id": "breadth_thrust_divergence",
+      "label": "指数は高値圏なのに参加銘柄が少ない",
+      "active": true,
+      "detail": "50日線上比率 28.4%"
+    },
+    {
+      "id": "new_lows_exceed_highs",
+      "label": "新安値銘柄数が新高値銘柄数を上回っている",
+      "active": true,
+      "detail": "新高値138 / 新安値365"
+    },
+    {
+      "id": "elevated_distribution",
+      "label": "売り抜け日数が多い(直近25営業日)",
+      "active": false,
+      "detail": "NASDAQ 3 / S&P500 4"
+    },
+    {
+      "id": "leader_breakdown",
+      "label": "Market Leadersの過半数が50日線を割っている",
+      "active": true,
+      "detail": "50%が50日線割れ(20銘柄中)"
+    },
+    {
+      "id": "defensive_rotation",
+      "label": "ディフェンシブ優位・グロース劣位のローテーション",
+      "active": true,
+      "detail": "生活必需品/ヘルスケア/公益: ['改善', '主導', '改善'] / 情報技術/一般消費財: ['鈍化', '改善']"
+    }
+  ],
+  "cumulative_ad_line": -22587.0
+}
