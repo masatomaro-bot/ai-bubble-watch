@@ -28,18 +28,83 @@ YEARS_BACK = 5
 CHART_DAYS = 260  # 原油ローソク足の表示日数(約1年)
 
 
+FETCH_ERRORS: dict = {}  # 系列ごとの最後の取得エラー(画面とJSONに残して原因を追えるようにする)
+
+
+def _get(url: str, timeout: int = 60, tries: int = 3) -> str:
+    import time
+    last = None
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/csv,application/json,*/*"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.read().decode("utf-8")
+        except Exception as e:  # noqa: BLE001
+            last = e
+            if i < tries - 1:
+                time.sleep(3 * (i + 1))
+    raise last
+
+
 def fetch_fred(series: str) -> pd.Series | None:
+    """FREDの公開CSV。2026-10-25の初回実行(GitHub Actions)では取得できなかったため、
+    リトライを入れ、失敗理由を FETCH_ERRORS に残す。"""
     try:
-        req = urllib.request.Request(FRED_CSV.format(series=series), headers={"User-Agent": USER_AGENT})
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read().decode("utf-8")
+        raw = _get(FRED_CSV.format(series=series))
+        if not raw.lstrip().lower().startswith(("observation_date", "date")):
+            raise ValueError(f"CSVではない応答: {raw[:80]!r}")
         df = pd.read_csv(io.StringIO(raw))
-        date_col = df.columns[0]
         s = pd.to_numeric(df[df.columns[1]], errors="coerce")
-        s.index = pd.to_datetime(df[date_col])
+        s.index = pd.to_datetime(df[df.columns[0]])
         return s.dropna()
     except Exception as e:  # noqa: BLE001
+        FETCH_ERRORS[f"FRED:{series}"] = f"{type(e).__name__}: {e}"[:200]
         print(f"[warn] FRED取得失敗 ({series}): {e}", file=sys.stderr)
+        return None
+
+
+# ---- FREDが使えないときの代替(いずれも公的機関の公開API、キー不要) ----
+NYFED_EFFR = "https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json?startDate={start}&endDate={end}"
+BLS_V1 = "https://api.bls.gov/publicAPI/v1/timeseries/data/{series}"
+
+
+def fetch_nyfed_target_range() -> tuple[pd.Series, pd.Series] | None:
+    """NY連銀のEFFR公表データに含まれる誘導目標レンジ(下限/上限)。"""
+    import json
+    try:
+        end = pd.Timestamp.today().normalize()
+        start = end - pd.DateOffset(years=YEARS_BACK)
+        raw = _get(NYFED_EFFR.format(start=start.strftime("%Y-%m-%d"), end=end.strftime("%Y-%m-%d")))
+        rows = json.loads(raw).get("refRates", [])
+        if not rows:
+            raise ValueError("refRatesが空")
+        idx = pd.to_datetime([r["effectiveDate"] for r in rows])
+        lo = pd.Series([float(r["targetRateFrom"]) for r in rows], index=idx).sort_index()
+        up = pd.Series([float(r["targetRateTo"]) for r in rows], index=idx).sort_index()
+        return lo, up
+    except Exception as e:  # noqa: BLE001
+        FETCH_ERRORS["NYFED:EFFR"] = f"{type(e).__name__}: {e}"[:200]
+        print(f"[warn] NY連銀EFFR取得失敗: {e}", file=sys.stderr)
+        return None
+
+
+def fetch_bls(series: str) -> pd.Series | None:
+    """BLSの公開API(v1、キー不要・直近数年分)。CPI総合 CUUR0000SA0、コア CUUR0000SA0L1E。"""
+    import json
+    try:
+        data = json.loads(_get(BLS_V1.format(series=series)))
+        items = data["Results"]["series"][0]["data"]
+        pts = {}
+        for it in items:
+            if not str(it.get("period", "")).startswith("M") or it["period"] == "M13":
+                continue
+            pts[pd.Timestamp(f"{it['year']}-{it['period'][1:]}-01")] = float(it["value"])
+        if not pts:
+            raise ValueError("データなし")
+        return pd.Series(pts).sort_index()
+    except Exception as e:  # noqa: BLE001
+        FETCH_ERRORS[f"BLS:{series}"] = f"{type(e).__name__}: {e}"[:200]
+        print(f"[warn] BLS取得失敗 ({series}): {e}", file=sys.stderr)
         return None
 
 
@@ -59,6 +124,12 @@ def _points(s: pd.Series | None, since: pd.Timestamp) -> dict | None:
 def build_policy_rate(fetch=None) -> dict | None:
     fetch = fetch or fetch_fred
     upper, lower = fetch("DFEDTARU"), fetch("DFEDTARL")
+    source = "FRED (DFEDTARU, DFEDTARL, FEDTARMDLR)"
+    if (upper is None or lower is None) and fetch is fetch_fred:
+        alt = fetch_nyfed_target_range()
+        if alt is not None:
+            lower, upper = alt
+            source = "NY連銀(EFFR公表の誘導目標レンジ)、長期見通しはFRED"
     if upper is None or lower is None:
         return None
     since = upper.index.max() - pd.DateOffset(years=YEARS_BACK)
@@ -76,15 +147,19 @@ def build_policy_rate(fetch=None) -> dict | None:
         "latest_lower": round(float(lower.iloc[-1]), 2),
         "as_of": upper.index[-1].strftime("%Y-%m-%d"),
         "longer_run_median": longer_run,
-        "source": "FRED (DFEDTARU, DFEDTARL, FEDTARMDLR)",
+        "source": source,
     }
 
 
 def build_inflation(fetch=None) -> dict | None:
     fetch = fetch or fetch_fred
     out = {}
+    bls = {"cpi": "CUUR0000SA0", "core_cpi": "CUUR0000SA0L1E"}
     for key, series in (("cpi", "CPIAUCSL"), ("core_cpi", "CPILFESL"), ("core_pce", "PCEPILFE")):
-        yoy = yoy_pct(fetch(series))
+        level = fetch(series)
+        if level is None and fetch is fetch_fred and key in bls:
+            level = fetch_bls(bls[key])  # 季節調整なしの指数だが前年同月比なら比較できる
+        yoy = yoy_pct(level)
         if yoy is None:
             out[key] = None
             continue
@@ -93,7 +168,7 @@ def build_inflation(fetch=None) -> dict | None:
     if not any(out.values()):
         return None
     out["target_pct"] = 2.0  # FRBの物価目標(PCEインフレ率で年2%)。公表されている目標値
-    out["source"] = "FRED (CPIAUCSL, CPILFESL, PCEPILFE)、前年同月比は自前計算"
+    out["source"] = "FRED (CPIAUCSL, CPILFESL, PCEPILFE)、取得できない場合はBLS。前年同月比は自前計算"
     return out
 
 
@@ -139,8 +214,11 @@ def build_oil(download) -> dict | None:
 
 
 def build_macro(download) -> dict:
-    return {
+    FETCH_ERRORS.clear()
+    out = {
         "policy_rate": build_policy_rate(),
         "inflation": build_inflation(),
         "oil": build_oil(download),
     }
+    out["fetch_errors"] = dict(FETCH_ERRORS)
+    return out

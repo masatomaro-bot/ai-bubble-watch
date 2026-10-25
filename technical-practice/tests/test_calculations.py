@@ -1001,3 +1001,30 @@ def test_macro_builders_with_fake_fred():
     inf = macro.build_inflation(fetch=fake.get)
     assert inf["target_pct"] == 2.0 and inf["core_pce"]["latest"] > 0
     assert macro.build_policy_rate(fetch=lambda s: None) is None
+
+
+def test_macro_fallback_parsers(monkeypatch):
+    import json as _json
+    import macro
+    nyfed = {"refRates": [
+        {"effectiveDate": "2026-10-22", "targetRateFrom": 3.75, "targetRateTo": 4.00},
+        {"effectiveDate": "2026-10-01", "targetRateFrom": 4.00, "targetRateTo": 4.25},
+    ]}
+    bls = {"Results": {"series": [{"data": [
+        {"year": "2026", "period": "M09", "value": "330.1"},
+        {"year": "2025", "period": "M09", "value": "320.0"},
+        {"year": "2025", "period": "M13", "value": "999"},
+    ]}]}}
+    monkeypatch.setattr(macro, "_get", lambda url, **k: _json.dumps(nyfed if "newyorkfed" in url else bls))
+    lo, up = macro.fetch_nyfed_target_range()
+    assert up.index.is_monotonic_increasing and up.iloc[-1] == 4.0 and lo.iloc[0] == 4.0
+    s = macro.fetch_bls("CUUR0000SA0")
+    assert len(s) == 2 and s.iloc[-1] == 330.1
+
+
+def test_fetch_fred_records_error_on_html(monkeypatch):
+    import macro
+    macro.FETCH_ERRORS.clear()
+    monkeypatch.setattr(macro, "_get", lambda url, **k: "<html>blocked</html>")
+    assert macro.fetch_fred("DFEDTARU") is None
+    assert "FRED:DFEDTARU" in macro.FETCH_ERRORS
