@@ -3,12 +3,12 @@
 'use strict';
 const R=typeof module!=='undefined'&&module.exports?require('./opportunity-rules.js'):root.OpportunityRules;
 const P=typeof module!=='undefined'&&module.exports?require('./issuer-profiles.js'):root.IssuerProfiles;
-const METHOD='broad-close-return-252-percentile-v1';
+const METHODS=new Set(['broad-close-return-252-percentile-v1','broad-close-return-252-percentile-v2']);
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
 function universe(snapshot){
  const u=snapshot?.opportunity_universe;
  if(u!=null){
-  if(u.method!==METHOD||!Array.isArray(u.rows))return {map:new Map(),bad:new Set(),scope:'unsupported',key:null};
+  if(!METHODS.has(u.method)||!Array.isArray(u.rows))return {map:new Map(),bad:new Set(),scope:'unsupported',key:null};
   const result=R.rows({universe:u.rows},['universe']);
   for(const [ticker,row]of result.map)if(row.observed_date!==snapshot.date){result.map.delete(ticker);result.bad.add(ticker);}
   return {...result,scope:'broad',key:`${u.method}:${u.source}`,rankedCount:u.ranked_count};

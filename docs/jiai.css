@@ -1,0 +1,68 @@
+/* 地合い回復ラダー・指数の階層・テーマ代表銘柄・新しい機会ウォッチ (2026-10-25) */
+
+/* 回復ラダー */
+.ladder-head{display:flex;flex-direction:column;gap:4px;margin-bottom:var(--s4);}
+.ladder{display:flex;flex-direction:column;gap:6px;}
+.ladder-row{padding-left:var(--indent);}
+.ladder-step{display:flex;align-items:flex-start;gap:12px;border:1px solid;border-left-width:5px;border-radius:var(--r-md);padding:9px 12px;}
+.ladder-row.is-next .ladder-step{box-shadow:0 0 0 2px var(--pri);}
+.ladder-num{flex-shrink:0;width:24px;height:24px;border-radius:999px;background:var(--surf);border:1px solid var(--bdr);font:700 12px/22px var(--mono);text-align:center;}
+.ladder-text{flex:1;min-width:0;}
+.ladder-label{font-size:13.5px;font-weight:700;}
+.ladder-next{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--pri);border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:1px;}
+.ladder-value{font:12px var(--mono);margin-top:2px;overflow-wrap:anywhere;}
+.ladder-target{font-size:11px;color:var(--muted);margin-top:2px;}
+.ladder-status{flex-shrink:0;font-size:12px;font-weight:800;}
+.ladder-hist{margin-top:var(--s4);}
+.ladder-hbars{display:flex;align-items:flex-end;gap:3px;height:46px;border-bottom:1px solid var(--div);}
+.ladder-hbar{flex:1;min-width:4px;display:flex;align-items:flex-end;height:100%;}
+.ladder-hbar span{display:block;width:100%;border-radius:2px 2px 0 0;}
+@media(max-width:600px){.ladder-row{padding-left:calc(var(--indent) / 2);}.ladder-step{padding:8px 9px;gap:8px}}
+
+/* 指数の階層 */
+.stage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s3);flex-wrap:wrap;}
+.stage-sub{font-size:15px;font-weight:700;color:var(--pri);}
+.stage-svg{display:block;width:100%;max-width:480px;height:auto;margin:var(--s3) auto var(--s2);}
+.candle-svg{display:block;width:100%;height:auto;margin-top:var(--s2);}
+.stage-checks{margin-top:var(--s3);}
+.stage-checks td{padding:5px 0;font-size:12px;}
+
+/* テーマ代表銘柄 */
+.tl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--s3);}
+.tl-card{border:1px solid var(--div);border-radius:var(--r-md);padding:var(--s3) var(--s4);background:var(--off);}
+.tl-theme{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:6px;font-size:13px;}
+.tl-q{font-size:11px;font-weight:700;margin-left:auto;}
+.tl-stock{background:var(--surf);border-radius:6px;padding:8px 10px;margin-top:6px;}
+.tl-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.tl-ticker{font:700 14px var(--mono);text-decoration:none;}
+.tl-stats{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--muted);}
+.tl-stat b{font-family:var(--mono);font-weight:700;}
+.tl-biz{font-size:12px;margin-top:4px;line-height:1.6;}
+
+/* 機会ウォッチ(作り直し版) */
+.ol-mode{border-left:5px solid var(--pri);}
+.ol-mode-err{border-left-color:var(--err);}
+.ol-mode-warn{border-left-color:var(--warn);}
+.ol-mode-ok{border-left-color:var(--ok);}
+.ol-controls{display:flex;gap:var(--s4);flex-wrap:wrap;align-items:center;font-size:12px;}
+.ol-controls select{margin-left:6px;font-size:12px;padding:3px 6px;border:1px solid var(--bdr);border-radius:6px;background:var(--surf);color:var(--tx);}
+.ol-controls input{margin-right:4px;vertical-align:-2px;}
+.ol-table-wrap{overflow-x:auto;}
+.ol-table,.nv-signals{min-width:560px;}
+.ol-table th.num,.nv-signals th.num{text-align:right;}
+.ol-table td{vertical-align:top;padding-right:8px;}
+.nv-signals td{vertical-align:top;padding-right:10px;font-size:12px;}
+.ol-ticker{font-weight:700;text-decoration:none;}
+.ol-tag{display:inline-block;font-size:10px;font-weight:700;color:var(--pri);background:var(--pri-h);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:1px;}
+.ol-tag.muted{color:var(--muted);background:var(--off);}
+.ol-copy{font-size:11px;padding:3px 8px;border:1px solid var(--bdr);border-radius:6px;background:var(--surf);color:var(--pri);cursor:pointer;white-space:nowrap;}
+.nv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s3);}
+.nv-card{border:1px solid var(--div);border-radius:var(--r-md);padding:var(--s3) var(--s4);background:var(--off);display:flex;flex-direction:column;gap:6px;}
+.nv-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.nv-head .badge{margin-left:auto;}
+.nv-dots{display:flex;gap:4px;flex-wrap:wrap;}
+.nv-dot{font:700 11px var(--mono);padding:2px 7px;border-radius:999px;border:1px solid var(--bdr);color:var(--faint);background:var(--surf);}
+.nv-dot.on{background:var(--ok);border-color:var(--ok);color:#fff;}
+.nv-biz{font-size:12px;line-height:1.6;}
+.op-legacy{margin-top:var(--s2);}
+.op-legacy>summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--muted);padding:var(--s3) 0;}

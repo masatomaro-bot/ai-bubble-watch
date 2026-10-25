@@ -948,3 +948,13 @@ def test_nasdaqtrader_parser_drops_funds_preferreds_and_notes():
         "File Creation Time: 1025202600:00|||||||",
     ])
     assert _parse_nasdaq_listed_txt(raw, "ACT Symbol", "ETF", "Test Issue") == ["FRT", "CAT"]
+
+
+def test_compute_rs_line_detects_new_high():
+    idx = pd.bdate_range("2024-01-01", periods=300)
+    bench = pd.Series(np.linspace(100, 110, 300), index=idx)
+    strong = pd.Series(np.linspace(50, 100, 300), index=idx)
+    out = mc.compute_rs_line(strong, bench)
+    assert out["rs_line_new_high_52w"] is True and out["rs_line_pct_below_high"] == 0.0
+    weak = pd.Series(np.linspace(100, 60, 300), index=idx)
+    assert mc.compute_rs_line(weak, bench)["rs_line_new_high_52w"] is False

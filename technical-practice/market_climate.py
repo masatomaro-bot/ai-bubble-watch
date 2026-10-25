@@ -1055,6 +1055,29 @@ def _has_close_on(df: pd.DataFrame, date_str: str) -> bool:
     return not rows.empty
 
 
+# 「次のNVDA」機会ウォッチの候補(2026-09-27の基準状態)。S6(株価が物語を
+# 先取りする)の補助として、RSライン(終値÷NASDAQ総合)を計算する。S6の点灯
+# 自体は本人がTradingViewで判定するので、ここでは数値を出すだけ。
+NEXT_NVDA_TICKERS = ["ARM", "GOOGL", "NET", "ALAB"]
+
+
+def compute_rs_line(close: pd.Series, benchmark: pd.Series) -> dict | None:
+    """RSライン = 終値÷指数。52週の最高値を更新しているか、1か月の変化率を返す。"""
+    c, b = close.dropna(), benchmark.dropna()
+    idx = c.index.intersection(b.index)
+    if len(idx) < 60:
+        return None
+    rs = (c.loc[idx] / b.loc[idx]).tail(252)
+    last = rs.iloc[-1]
+    high = rs.max()
+    return {
+        "rs_line_new_high_52w": bool(last >= high),
+        "rs_line_pct_below_high": round(float(100 * (1 - last / high)), 1),
+        "rs_line_1m_pct": round(float(100 * (last / rs.iloc[-22] - 1)), 1) if len(rs) > 22 else None,
+        "as_of": idx[-1].strftime("%Y-%m-%d"),
+    }
+
+
 def select_market_leaders(price_frames: dict, percentiles: dict, top_n: int = MARKET_LEADER_TOP_N) -> list[dict]:
     """RS百分位の高い順に、品質フィルタ(最低株価・最低売買代金・前日比の
     異常値除外)を通過した銘柄をtop_n件選ぶ。フィルタで弾かれた分は
@@ -1443,6 +1466,7 @@ def run(
     # ブレッドス(市場の幅) + Market Leader(個別RSランキング)
     breadth_tickers, breadth_source = get_breadth_universe(breadth_universe, max_breadth_tickers)
     breadth_alignment: dict = {}
+    price_frames: dict = {}
     breadth_near_52w = {}
     breadth_extended = {}
     broad_universe_technicals = {}
@@ -1488,6 +1512,16 @@ def run(
                 price_frames, template_percentiles, TREND_TEMPLATE_LEADER_TOP_N
             )
 
+    rs_line_watch = {}
+    if nasdaq_df is not None and not nasdaq_df.empty:
+        for t in NEXT_NVDA_TICKERS:
+            frame = price_frames.get(t) if breadth_tickers else None
+            if frame is None:
+                continue
+            line = compute_rs_line(frame["Close"], nasdaq_df["Close"])
+            if line:
+                rs_line_watch[t] = line
+
     warning_flags = compute_warning_flags(
         nasdaq_stage, sp500_stage,
         nasdaq_dist.distribution_days, sp500_dist.distribution_days,
@@ -1526,6 +1560,7 @@ def run(
         "market_leaders": leaders,
         "trend_template_leaders": trend_template_leaders,
         "story_candidates": story_candidates,
+        "rs_line_watch": rs_line_watch,
         "stress_gauges": stress_gauges,
         "warning_flags": warning_flags,
     }
