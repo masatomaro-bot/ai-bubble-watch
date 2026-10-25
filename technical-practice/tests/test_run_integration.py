@@ -52,6 +52,8 @@ def mocked_network(monkeypatch):
     monkeypatch.setattr(mc, "get_breadth_universe", _fake_get_breadth_universe)
     import macro
     monkeypatch.setattr(macro, "fetch_fred", lambda series: None)
+    monkeypatch.setattr(macro, "fetch_nyfed_target_range", lambda: None)
+    monkeypatch.setattr(macro, "fetch_bls", lambda series: None)
 
 
 def test_run_end_to_end_with_mocked_network(mocked_network):
@@ -151,6 +153,8 @@ def test_run_sectors_and_themes_survive_trailing_nan_close(monkeypatch):
     monkeypatch.setattr(mc, "get_breadth_universe", _fake_get_breadth_universe)
     import macro
     monkeypatch.setattr(macro, "fetch_fred", lambda series: None)
+    monkeypatch.setattr(macro, "fetch_nyfed_target_range", lambda: None)
+    monkeypatch.setattr(macro, "fetch_bls", lambda series: None)
 
     result = mc.run(breadth_universe="broad", max_breadth_tickers=None)
 

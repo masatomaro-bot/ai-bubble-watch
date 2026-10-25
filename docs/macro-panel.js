@@ -111,6 +111,7 @@ function render(latest) {
       <div class="macro-cell">${inflationBlock(m.inflation)}</div>
     </div>
     ${linkage(m)}
+    ${m.fetch_errors && Object.keys(m.fetch_errors).length ? `<details class="guide" style="margin-top:var(--s3)"><summary>取得できなかったデータ(${Object.keys(m.fetch_errors).length}件)</summary><div class="guide-body">${Object.entries(m.fetch_errors).map(([k, v]) => `<div class="mono" style="font-size:11px">${esc(k)}：${esc(v)}</div>`).join('')}</div></details>` : ''}
     <div class="sub" style="margin-top:var(--s2)">出典：FRED(政策金利・FOMC見通し・CPI・PCE)、Yahoo Finance(原油先物)。前年同月比と実質金利は自前計算。原油の目安線は計算値で、適正価格の予想ではありません。</div>
   </div>`;
 }
