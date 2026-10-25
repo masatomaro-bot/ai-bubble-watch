@@ -53,6 +53,8 @@ jobs:
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          # 外部環境チャート用(任意)。FREDの無料APIキー。未設定ならインフレ・中立金利の線は出ない
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           BREADTH_UNIVERSE: ${{ inputs.breadth_universe || 'broad' }}
           MAX_BREADTH_TICKERS: ${{ inputs.max_breadth_tickers }}
         run: python market_climate.py

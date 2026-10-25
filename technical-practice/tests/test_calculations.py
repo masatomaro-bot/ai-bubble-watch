@@ -1028,3 +1028,36 @@ def test_fetch_fred_records_error_on_html(monkeypatch):
     monkeypatch.setattr(macro, "_get", lambda url, **k: "<html>blocked</html>")
     assert macro.fetch_fred("DFEDTARU") is None
     assert "FRED:DFEDTARU" in macro.FETCH_ERRORS
+
+
+def test_fred_api_key_path_and_circuit_breaker(monkeypatch):
+    import json as _json
+    import macro
+    calls = []
+    monkeypatch.setenv("FRED_API_KEY", "SECRETKEY")
+    monkeypatch.setattr(macro, "_get", lambda url, **k: (calls.append(url), _json.dumps({"observations": [
+        {"date": "2026-08-01", "value": "130.4"}, {"date": "2026-09-01", "value": "."}]}))[1])
+    s = macro.fetch_fred("PCEPILFE")
+    assert len(s) == 1 and "api.stlouisfed.org" in calls[0]
+    # キーなし: 公開CSVが一度タイムアウトしたら以後は試さない
+    monkeypatch.delenv("FRED_API_KEY")
+    macro._FRED_CSV_DEAD = False
+    macro.FETCH_ERRORS.clear()
+    n = {"c": 0}
+    def boom(url, **k):
+        n["c"] += 1
+        raise TimeoutError("timed out")
+    monkeypatch.setattr(macro, "_get", boom)
+    assert macro.fetch_fred("A") is None and macro.fetch_fred("B") is None
+    assert n["c"] == 1 and "省略" in macro.FETCH_ERRORS["FRED:B"]
+
+
+def test_fred_error_message_hides_api_key(monkeypatch):
+    import macro
+    monkeypatch.setenv("FRED_API_KEY", "SECRETKEY")
+    def bad(url, **k):
+        raise ValueError("bad url " + url)
+    monkeypatch.setattr(macro, "_get", bad)
+    macro.FETCH_ERRORS.clear()
+    macro.fetch_fred("X")
+    assert "SECRETKEY" not in macro.FETCH_ERRORS["FRED:X"]
