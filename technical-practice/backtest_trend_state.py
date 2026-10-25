@@ -36,10 +36,11 @@ import pandas as pd
 
 from market_climate import compute_trend_state, download_history
 
-# compute_trend_state は内部で直近65営業日程度しか見ないため、각 日について
-# 全履歴を毎回渡す必要はない。直近WINDOW_SIZE件だけを渡すことで、日ごとの
-# バックテストが O(n) で済むようにする(全履歴を毎回渡すとO(n^2)になり遅い)。
-WINDOW_SIZE = 150
+# compute_trend_state は2026-10-25から「渡された期間を古い順に追う状態機械」に
+# なった。始点は調整扱いから入り、FTD・高値更新を経て収束するので、窓が短すぎると
+# 始点の影響が残る。日足1年強(約400営業日)を渡せば実運用(market_climate.pyは
+# 2年分を取得)と近い結果になる。全履歴を毎回渡すとO(n^2)で遅いため窓で区切る。
+WINDOW_SIZE = 400
 VALID_STATES = ("confirmed_uptrend", "uptrend_under_pressure", "correction")
 
 

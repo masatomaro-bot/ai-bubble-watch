@@ -118,12 +118,17 @@ tr:last-child td{border-bottom:none;}
 .stat{min-width:0}
 </style>
 <link rel="stylesheet" href="opportunity.css">
+<link rel="stylesheet" href="jiai.css">
+<script src="jiai-ladder.js" defer></script>
+<script src="theme-leaders.js" defer></script>
+<script src="next-nvda-data.js" defer></script>
 <script src="opportunity-rules.js" defer></script>
 <script src="issuer-profiles.js" defer></script>
 <script src="opportunity-discovery.js" defer></script>
 <script src="opportunity-stories-data.js" defer></script>
 <script src="opportunity-stories.js" defer></script>
 <script src="opportunity.js" defer></script>
+<script src="opportunity-lanes.js" defer></script>
 </head>
 <body>
 
@@ -148,7 +153,13 @@ tr:last-child td{border-bottom:none;}
 
   <nav class="watch-nav" aria-label="観測画面"><button type="button" data-view="climate" aria-pressed="true">地合いウォッチ</button><button type="button" data-view="opportunity" aria-pressed="false">機会ウォッチ</button></nav>
   <nav class="op-actions research-links" aria-label="市場の調査リンク"><a class="op-btn" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPTを開く ↗</a><a class="op-btn" href="https://www.tradingview.com/symbols/SPX/" target="_blank" rel="noopener noreferrer">S&amp;P 500のチャート ↗</a></nav>
-  <section id="opportunity" hidden aria-label="機会ウォッチ"></section>
+  <div id="opportunity-wrap" hidden>
+    <div id="op-lanes"></div>
+    <details class="op-legacy">
+      <summary>保存済みの監視メモ・企業ストーリー(旧画面)</summary>
+      <section id="opportunity" aria-label="機会ウォッチ(旧画面)"></section>
+    </details>
+  </div>
   <div id="content"><div class="loading">データを読み込み中...</div></div>
 </div>
 
@@ -201,6 +212,7 @@ function trendCard(name, idx) {
         <div class="stat"><div class="label">FTD確認日</div><div class="value" style="font-size:14px">${t.ftd_date || "未確認"}</div></div>
       </div>
       ${t.note ? `<div class="sub">${esc(t.note)}</div>` : ""}
+      ${t.correction_since ? `<div class="sub">調整入り: ${esc(t.correction_since)}${t.rally_low_date ? ` ／ 安値: ${esc(t.rally_low_date)}` : ""}${t.rally_day1_date ? ` ／ 反発初日: ${esc(t.rally_day1_date)}` : ""}</div>` : ""}
     </div>`;
 }
 
@@ -234,34 +246,18 @@ function leadersTable(leaders) {
   return rows?`<table><thead><tr><th>銘柄</th><th style="text-align:right">RS</th><th style="text-align:right">1D</th><th style="text-align:right">1M</th><th style="text-align:right">3M</th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="sub">該当銘柄なし</div>';
 }
 
-function storyPrompt(row,date){
-  return `${row.ticker}が${date}に${fmtPct(row.day_change_pct)}上昇し、S&P500を${fmtPct(row.market_excess_pct)}上回りました。出来高は20日平均の${row.volume_ratio_20d}倍、1週間${fmtPct(row.one_week_pct)}、1か月${fmtPct(row.one_month_pct)}です。最新の企業IR、SEC、決算、信頼できる報道、アナリスト変更を検索し、上昇原因を特定してください。出来事→市場の解釈→売上・利益への影響の3層で説明し、一時的需給か6〜12か月続くストーリーかを判定してください。原因を確認できない場合は推測で断定しないでください。`;
-}
-
-function storyCandidatesSection(rows,date){
-  if(!rows?.length){
-    const fallbackPrompt=`${date}の米国株市場で、出来高を伴って市場平均より強く上昇した主要銘柄を最新情報から調べてください。候補を最大5銘柄に絞り、各銘柄について、出来事→市場の解釈→売上・利益への影響の3層で説明してください。一時的な需給か6〜12か月続くストーリーかを判定し、原因を確認できない場合は推測で断定しないでください。`;
-    return `<div class="sub" style="margin-bottom:var(--s3)">本日は「市場比＋2%以上」かつ「出来高20日平均比1.5倍以上」を満たす自動候補がありません。条件外の動きも含めてChatGPTで確認できます。</div>
-      <a class="btn-link" target="_blank" rel="noopener noreferrer" href="https://chatgpt.com/?q=${encodeURIComponent(fallbackPrompt)}">ChatGPTで今日の市場を確認 ↗</a>`;
-  }
-  return `<div class="story-grid">${rows.map(row=>`<article class="story-card">
-    <div class="story-head"><span class="story-ticker">${esc(row.ticker)}</span><span class="badge muted">原因未確認</span></div>
-    <div class="story-metrics">
-      <div class="story-metric"><span>1D</span><strong style="color:${pctColor(row.day_change_pct)}">${fmtPct(row.day_change_pct)}</strong></div>
-      <div class="story-metric"><span>市場超過</span><strong style="color:${pctColor(row.market_excess_pct)}">${fmtPct(row.market_excess_pct)}</strong></div>
-      <div class="story-metric"><span>出来高／20日平均</span><strong>${esc(row.volume_ratio_20d)}倍</strong></div>
-      <div class="story-metric"><span>1W ／ 1M</span><strong>${fmtPct(row.one_week_pct)} ／ ${fmtPct(row.one_month_pct)}</strong></div>
-    </div>
-    <p class="story-note">機械選出：${esc(row.selection_reason)}。価格だけでは上昇理由は分かりません。</p>
-    <a class="btn-link" target="_blank" rel="noopener noreferrer" href="https://chatgpt.com/?q=${encodeURIComponent(storyPrompt(row,date))}">ChatGPTで物語を分析 ↗</a>
-  </article>`).join("")}</div>`;
+function breadthAlignmentNote(d) {
+  const a = d.breadth_alignment;
+  if (!a || !a.as_of) return `<div class="sub" style="margin-bottom:var(--s3)">断面日のそろえ・普通株フィルタは次回の日次更新から適用されます。</div>`;
+  const lag = a.as_of !== d.date;
+  return `<div class="sub" style="margin-bottom:var(--s3)">${lag ? `<b style="color:var(--warn)">ブレッドスは${esc(a.as_of)}の断面</b>(${esc(d.date)}の終値がそろっていた銘柄が${esc(a.coverage_pct)}%未満相当だったため一日前でそろえた)` : `ブレッドスは${esc(a.as_of)}の断面`}。取得${esc(a.universe_total)}銘柄中${esc(a.used)}銘柄(普通株のみ。ファンド・優先株・上場債券などは除外)。</div>`;
 }
 
 function breadthSection(d) {
   const ext = d.breadth_extended || {};
   const near = d.breadth_near_52w || {};
   const but = d.broad_universe_technicals || {};
-  return `
+  return `${breadthAlignmentNote(d)}
     <div class="stat-row">
       <div class="stat"><div class="label">母集団 (${esc(d.breadth_universe_source || "-")})</div><div class="value">${ext.universe_size ?? "-"}</div></div>
       <div class="stat"><div class="label">新52週高値</div><div class="value" style="color:var(--ok)">${ext.new_52w_highs ?? "-"}</div><div class="mini-trend" data-mini-trend="new_highs"></div></div>
@@ -787,11 +783,17 @@ async function main() {
       <div class="card-title">本日の地合い(O'Neil/IBD式フォロースルー・デイ判定)</div>
       <div class="hero-state">${esc(overallInfo.label)}</div>
       <span class="badge ${overallInfo.cls}">${esc(latest.overall_trend_state)}</span>
-      <span class="badge ${regimeInfo.cls}" style="margin-left:var(--s2)" title="セクター体温の多数決による参考指標(オニミネ流の近似)">
-        参考: セクター多数決 ${esc(regimeInfo.label)}
-      </span>
+      <div class="sub" style="margin-top:var(--s2)">NASDAQ: ${esc((TREND_LABELS[latest.nasdaq?.trend_state?.state] || TREND_LABELS["不明"]).label)} ／ S&amp;P500: ${esc((TREND_LABELS[latest.sp500?.trend_state?.state] || TREND_LABELS["不明"]).label)}。片方でも上昇確認なら「圧力下」、両方とも調整なら「調整局面」。</div>
       ${marketStateGuide(latest)}
     </div>
+
+    <div class="card">
+      <div class="card-title">地合い回復ラダー(どうなれば地合いが良くなるか)</div>
+      <div id="ladder-panel">${window.JiaiLadder ? JiaiLadder.ladderPanel(latest, null) : '<div class="sub">読み込み中...</div>'}</div>
+    </div>
+
+    <div class="card-title" style="margin:var(--s2) 0 var(--s3)">指数の階層(ステージ分析：いまどの段階にいるか)</div>
+    ${window.JiaiLadder ? JiaiLadder.stagePanel(latest) : ""}
 
     <div class="card">
       <div class="card-title">警戒チェックリスト(崩れの前兆として知られる乖離パターン)</div>
@@ -814,12 +816,6 @@ async function main() {
     <div id="history-strip"></div>
 
     <div class="card">
-      <div class="card-title">機会ウォッチ（価格・出来高からの候補発見）</div>
-      <div class="sub" style="margin-bottom:var(--s4)">地合いの評価とは別に、値動きが目立つ銘柄を抽出します。企業の成長ストーリー・収益性・参入障壁は「ChatGPTで調査」から確認します。抽出だけで買い推奨とは判断しません。</div>
-      ${storyCandidatesSection(latest.story_candidates || [], latest.date)}
-    </div>
-
-    <div class="card">
       <div class="card-title">推移(指数が高値圏でも先に痩せていないか)</div>
       <div id="trend-sparklines"><div class="sub">読み込み中...</div></div>
       ${trendChartGuide()}
@@ -835,7 +831,7 @@ async function main() {
           <span><span class="dot" style="background:var(--faint)"></span>中立</span>
           <span><span class="dot" style="background:var(--err)"></span>調整</span>
         </div>
-        <div class="sub" style="margin-top:var(--s3)">体温は50日・200日線と市場比の状態、1D／1W／1Mは実際の騰落率です。短期反発と継続的な資金流入を分けて見ます。</div>
+        <div class="sub" style="margin-top:var(--s3)">体温は50日・200日線と市場比の状態、1D／1W／1Mは実際の騰落率です。短期反発と継続的な資金流入を分けて見ます。参考：体温の多数決は ${esc(regimeInfo.label)}(地合いの本判定ではありません)。</div>
         <div style="margin-top:var(--s4)">${sectorTable(latest.sectors || {})}</div>
         ${sectorGuide()}
       </div>
@@ -845,6 +841,11 @@ async function main() {
         <div class="card-title" style="margin-top:var(--s4)">象限の変化</div>
         <div id="theme-rotation-changes"><div class="sub">読み込み中...</div></div>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">テーマ代表銘柄(何で稼いでいる会社か)</div>
+      ${window.ThemeLeaders ? ThemeLeaders.render(latest) : ""}
     </div>
 
     <div class="card">
@@ -885,6 +886,11 @@ async function main() {
 
   loadRecentHistory(latest.date, 30).then((history) => {
     document.getElementById("history-strip").innerHTML = historyStrip(history);
+    window.watchHistory = history;
+    if (window.JiaiLadder) {
+      document.getElementById("ladder-panel").innerHTML = JiaiLadder.ladderPanel(latest, history);
+      document.getElementById("ladder-history").innerHTML = JiaiLadder.ladderHistory(history);
+    }
     document.getElementById("trend-sparklines").innerHTML = trendSparklinesSection(history);
     renderInlineHistoryCharts(history);
 

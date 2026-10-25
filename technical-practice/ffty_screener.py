@@ -27,6 +27,8 @@ capforceetf.com への実アクセスでの動作確認はできていない。G
 from __future__ import annotations
 
 import datetime as dt
+import json
+import os
 import re
 import sys
 
@@ -292,12 +294,33 @@ def run() -> list[list]:
     return rows
 
 
-if __name__ == "__main__":
-    import os
+FFTY_JSON_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "data", "ffty_latest.json"
+)
 
+
+def write_ffty_json(result_rows: list[list], path: str = FFTY_JSON_PATH) -> None:
+    """機会ウォッチ(GitHub Pages)が読むためのJSONを書き出す(2026-10-25追加)。
+    これまでFFTYの結果はGoogle Sheetsにしか出ておらず、画面から使えなかった。
+    行が0件(取得失敗)のときは前回分を残すため書き出さない。"""
+    if not result_rows:
+        return
+    rows = [dict(zip(SHEET_HEADER, r)) for r in result_rows]
+    payload = {"date": result_rows[0][0], "source": FFTY_HOLDINGS_URL, "rows": rows}
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=1, default=str)
+
+
+if __name__ == "__main__":
     result_rows = run()
     for r in result_rows:
         print(r)
+
+    try:
+        write_ffty_json(result_rows)
+    except Exception as e:  # noqa: BLE001
+        print(f"[warn] FFTY JSON書き出しスキップ: {e}", file=sys.stderr)
 
     try:
         from sheets_writer import append_rows, ensure_worksheet

@@ -210,18 +210,29 @@ def compute_distribution_and_stalling_days(
 #     一定数を超えると「圧力下の上昇トレンド」に格下げされる
 #
 # 以下は自前の簡略化(オニミネや教科書の完全な再現ではない):
-#   - 「安値」の検出は直近ウィンドウ内の終値最小値という単純な定義とし、複数回の
-#     反発失敗〜再安値パターンは限られた回数だけ再探索する(MAX_RETRY_ON_UNDERCUT)
-#   - FTD成立を待つ期間はDay 4〜Day 10とする(流派によりDay 25まで許容する説もある)
+#   - 全期間を古い順に1日ずつ進める状態機械。「安値」は調整入り以降の終値最安値
+#   - FTD成立を待つ期間はDay 4〜Day 25(流派によりDay 10程度までとする説もある)
 #   - 「反発初日」の検出は安値の後の最初の陽線という単純な定義とする
+#   - 上昇トレンドから調整への移行条件は自前の近似(CORRECTION_DISTRIBUTION_THRESHOLD参照)
 
 FTD_GAIN_THRESHOLD = 0.0125       # フォロースルー・デイの上昇率しきい値 (+1.25%)
 FTD_WINDOW_MIN_DAY = 4             # FTDが成立しうる最短日(反発Day4から)
-FTD_WINDOW_MAX_DAY = 10            # FTDを探す最長日(反発Day10まで)
-RALLY_LOW_LOOKBACK_DAYS = 40       # 直近安値を探す遡り日数
-RALLY_ATTEMPT_MAX_SEARCH_DAYS = 15 # 安値から反発初日(陽線)を探す最長日数
+# FTDを探す最長日。2026-10-25に10→25へ変更。
+# 旧実装(Day10まで)では、ナスダックは2026-07-29安値→07-30反発初日のあと、
+# Day4(08-04、+2.6%)とDay5以降の大幅高がいずれも前日より出来高減だったため
+# FTD不成立のまま「判定保留」で止まり、以降も調整扱いが続いていた。
+# TradingViewの^IXIC日足で確認すると、安値を割らずにDay21(2026-08-27)に
+# +1.57%・出来高増の日がある。O'Neil/IBDの解説ではDay4〜7の成立が多いが
+# それ以降のFTDも認めており(遅いFTDは信頼度が下がるとされる)、上限は流派で
+# 異なる。ここでは25を自前の上限として採用する。
+FTD_WINDOW_MAX_DAY = 25
 DISTRIBUTION_PRESSURE_THRESHOLD = 5  # 直近25営業日の売り抜け日数がこれ以上で「圧力下」
-MAX_RETRY_ON_UNDERCUT = 2          # 反発失敗(安値割れ)時に安値を探し直す最大回数
+# 上昇トレンドから調整入りとみなす条件(自前の近似。IBDの判定は裁量を含み
+# 機械的な公開定義はない):
+#   (a) FTDの元になった反発安値を終値で下回る、または
+#   (b) 売り抜け日数がこれ以上 かつ 終値が50日線の下
+CORRECTION_DISTRIBUTION_THRESHOLD = 6
+TREND_STATE_MIN_HISTORY = 60       # 状態を出すのに最低限必要な営業日数
 
 
 @dataclass
@@ -232,132 +243,249 @@ class TrendStateResult:
     ftd_date: str | None = None
     days_since_ftd: int | None = None
     distribution_days_recent: int | None = None
+    rally_day_count: int | None = None  # 調整中: 現在の反発試行が何日目か(未開始ならNone)
+    correction_since: str | None = None  # 調整中: 調整入りした日
     note: str = ""
 
 
-def _find_rally_low_and_day1(close: pd.Series, pct: pd.Series, search_start_idx: int, n: int):
-    """search_start_idx以降のウィンドウ内で直近安値と、その後最初の陽線
-    (反発初日)のインデックスを探す。反発の兆しがまだなければ day1=None。"""
-    window_end = min(search_start_idx + RALLY_LOW_LOOKBACK_DAYS, n)
-    if search_start_idx >= window_end:
-        return None, None
-    window = close.iloc[search_start_idx:window_end]
-    low_idx = search_start_idx + int(np.asarray(window.values).argmin())
-
-    for j in range(low_idx + 1, min(low_idx + 1 + RALLY_ATTEMPT_MAX_SEARCH_DAYS, n)):
-        if pct.iloc[j] > 0:
-            return low_idx, j
-    return low_idx, None
+def _distribution_count_at(
+    close: pd.Series, volume: pd.Series, i: int, lookback: int = DIST_LOOKBACK_DAYS, start: int | None = None
+) -> int:
+    """i日目時点の直近lookback営業日の売り抜け日数(compute_distribution_and_stalling_days
+    と同じ定義: -0.2%以下かつ前日比出来高増、その後+5%上昇したものは除外)。
+    start: この日より前は数えない(FTD・上昇再開の日でカウントをリセットする)。"""
+    lo = max(1, i - lookback + 1)
+    if start is not None:
+        lo = max(lo, start + 1)
+    latest = close.iloc[i]
+    count = 0
+    for j in range(lo, i + 1):
+        pct = close.iloc[j] / close.iloc[j - 1] - 1
+        if pct <= DIST_DOWN_THRESHOLD and volume.iloc[j] > volume.iloc[j - 1]:
+            if latest < close.iloc[j] * (1 + DIST_EXPIRY_RALLY_PCT):
+                count += 1
+    return count
 
 
 def compute_trend_state(df: pd.DataFrame) -> TrendStateResult:
-    """df: yfinanceの日足データ(列: Close, Volume)。2年分程度を想定。"""
+    """O'Neil/IBD式の3状態を、取得した全期間を古い順に1日ずつ進める状態機械で判定する。
+
+    2026-10-25に全面改修。旧実装は毎回「直近65営業日の窓」の中だけで安値・反発・
+    FTDを探し直していたため、(1)FTDから日数が経つと元の安値が窓の外に出て判定の
+    根拠が消える、(2)Day10までにFTDが出ないと以降ずっと判定保留(=調整扱い)のまま、
+    という問題があった。状態機械にすると、確認済みの上昇トレンドは調整条件を
+    満たすまで維持され、調整中は安値更新・反発試行・FTDを順に追える。
+
+    df: 日足(列: Close, Volume)。1〜2年分を想定。
+    """
     close = df["Close"].dropna()
     volume = df["Volume"].dropna()
     common_idx = close.index.intersection(volume.index)
-    close = close.loc[common_idx]
-    volume = volume.loc[common_idx]
+    close = close.loc[common_idx].astype(float)
+    volume = volume.loc[common_idx].astype(float)
     n = len(close)
+    if n < TREND_STATE_MIN_HISTORY:
+        return TrendStateResult(state="不明", note=f"データ不足(必要{TREND_STATE_MIN_HISTORY}営業日、実際{n}営業日)")
 
-    min_len = RALLY_LOW_LOOKBACK_DAYS + FTD_WINDOW_MAX_DAY
-    if n < min_len:
-        return TrendStateResult(state="不明", note=f"データ不足(必要{min_len}営業日、実際{n}営業日)")
+    sma50 = close.rolling(50).mean()
+    fmt = lambda i: close.index[i].strftime("%Y-%m-%d") if i is not None else None  # noqa: E731
 
-    pct = close.pct_change()
+    # 調整中の追跡変数
+    state = "correction"
+    correction_start = 0
+    low_idx = 0          # 現在の安値(調整入り以降の終値最安値)
+    day1_idx = None      # その安値の後の最初の陽線
+    # 上昇中の追跡変数
+    ftd_idx = None
+    ftd_low_idx = None   # FTDの元になった反発安値
+    dist_now = 0
+    uptrend_high = None  # 上昇トレンド中の最高終値
+    prior_high = None    # 調整入り直前までの最高終値(高値更新による上昇再開の判定用)
+    resumed_idx = None   # 高値更新で上昇再開とみなした日
+    count_from = None    # 売り抜け日数を数え始める日(FTD/上昇再開の日)
 
-    search_start = max(0, n - RALLY_LOW_LOOKBACK_DAYS - FTD_WINDOW_MAX_DAY - RALLY_ATTEMPT_MAX_SEARCH_DAYS)
-
-    low_idx = day1_idx = ftd_idx = None
-    for _attempt in range(MAX_RETRY_ON_UNDERCUT + 1):
-        low_idx, day1_idx = _find_rally_low_and_day1(close, pct, search_start, n)
-        if day1_idx is None:
-            break
-
-        rally_low = close.iloc[low_idx]
-        undercut_idx = None
-        ftd_idx = None
-        window_days = range(day1_idx, min(day1_idx + FTD_WINDOW_MAX_DAY, n))
-        for day_num, j in enumerate(window_days, start=1):
-            if close.iloc[j] < rally_low:
-                undercut_idx = j
-                break
-            if day_num >= FTD_WINDOW_MIN_DAY:
-                vol_up = volume.iloc[j] > volume.iloc[j - 1]
-                if pct.iloc[j] >= FTD_GAIN_THRESHOLD and vol_up:
-                    ftd_idx = j
-                    break
-
-        if ftd_idx is not None:
-            break
-        if undercut_idx is not None:
-            search_start = undercut_idx + 1
+    for i in range(1, n):
+        c = close.iloc[i]
+        pct = c / close.iloc[i - 1] - 1
+        if state == "correction":
+            # FTDが出ないまま調整入り前の高値を終値で更新した場合は、上昇再開
+            # (ただしFTDによる確認ではないので「圧力下」)とみなす。自前の補正。
+            # 2026-10-25の検証で、小さな値幅で高値を更新し続ける相場(+1.25%の
+            # 大陽線が出ない)では、FTD条件だけだと高値更新中も「調整」のまま
+            # 残ることを確認したため。
+            if prior_high is not None and c > prior_high:
+                state = "uptrend_under_pressure"
+                ftd_idx, ftd_low_idx, resumed_idx = None, low_idx, i
+                uptrend_high, count_from = c, i
+                continue
+            if c < close.iloc[low_idx]:
+                low_idx, day1_idx = i, None  # 安値更新 → 反発試行はやり直し
+                continue
+            if day1_idx is None:
+                if pct > 0:
+                    day1_idx = i
+                continue
+            day_num = i - day1_idx + 1
+            if day_num > FTD_WINDOW_MAX_DAY:
+                # 期限切れ: ここを新しい起点に、押し目の安値と次の反発を待つ
+                low_idx, day1_idx = i, None
+                continue
+            if (
+                day_num >= FTD_WINDOW_MIN_DAY
+                and pct >= FTD_GAIN_THRESHOLD
+                and volume.iloc[i] > volume.iloc[i - 1]
+            ):
+                state = "confirmed_uptrend"
+                ftd_idx, ftd_low_idx, resumed_idx = i, low_idx, None
+                uptrend_high, count_from = c, i
             continue
-        break  # ウィンドウ内でFTDも失敗も確定しなかった(直近すぎて判定保留)
 
-    if ftd_idx is None:
+        # 上昇トレンド(確認済み/圧力下)
+        uptrend_high = max(uptrend_high, c) if uptrend_high is not None else c
+        dist_now = _distribution_count_at(close, volume, i, start=count_from)
+        below50 = pd.notna(sma50.iloc[i]) and c < sma50.iloc[i]
+        if c < close.iloc[ftd_low_idx] or (dist_now >= CORRECTION_DISTRIBUTION_THRESHOLD and below50):
+            state = "correction"
+            correction_start = low_idx = i
+            day1_idx = None
+            prior_high = uptrend_high
+            ftd_idx = ftd_low_idx = resumed_idx = None
+            continue
+        state = "uptrend_under_pressure" if dist_now >= DISTRIBUTION_PRESSURE_THRESHOLD else "confirmed_uptrend"
+
+    if state == "correction":
+        day_count = (n - 1 - day1_idx + 1) if day1_idx is not None else None
+        if day1_idx is None:
+            note = "安値更新中、または反発の初日待ち"
+        elif day_count is not None and day_count < FTD_WINDOW_MIN_DAY:
+            note = f"反発試行Day{day_count}(FTDはDay{FTD_WINDOW_MIN_DAY}以降)"
+        else:
+            note = f"反発試行Day{day_count}、フォロースルー・デイ待ち"
         return TrendStateResult(
             state="correction",
-            rally_low_date=close.index[low_idx].strftime("%Y-%m-%d") if low_idx is not None else None,
-            rally_day1_date=close.index[day1_idx].strftime("%Y-%m-%d") if day1_idx is not None else None,
-            note="直近でフォロースルー・デイが確認できていない",
+            rally_low_date=fmt(low_idx),
+            rally_day1_date=fmt(day1_idx),
+            rally_day_count=day_count,
+            correction_since=fmt(correction_start),
+            distribution_days_recent=_distribution_count_at(close, volume, n - 1),
+            note=note,
         )
 
-    dist_result = compute_distribution_and_stalling_days(df.loc[common_idx])
-    distribution_days_recent = dist_result.distribution_days
-    state = (
-        "uptrend_under_pressure"
-        if distribution_days_recent >= DISTRIBUTION_PRESSURE_THRESHOLD
-        else "confirmed_uptrend"
-    )
-
+    note = ""
+    if resumed_idx is not None:
+        note = f"{fmt(resumed_idx)}に調整前の高値を更新して上昇再開(FTDによる確認ではない)"
     return TrendStateResult(
         state=state,
-        rally_low_date=close.index[low_idx].strftime("%Y-%m-%d"),
-        rally_day1_date=close.index[day1_idx].strftime("%Y-%m-%d"),
-        ftd_date=close.index[ftd_idx].strftime("%Y-%m-%d"),
-        days_since_ftd=n - 1 - ftd_idx,
-        distribution_days_recent=distribution_days_recent,
+        rally_low_date=fmt(ftd_low_idx),
+        rally_day1_date=None,
+        ftd_date=fmt(ftd_idx),
+        days_since_ftd=(n - 1 - ftd_idx) if ftd_idx is not None else None,
+        distribution_days_recent=_distribution_count_at(close, volume, n - 1, start=count_from),
+        note=note,
     )
 
 
 def combine_trend_states(nasdaq_state: str, sp500_state: str) -> str:
-    """NASDAQ・S&P500いずれか弱い方に合わせる単純な統合ルール(自前設計)。"""
+    """NASDAQ・S&P500の状態を1つにまとめる(2026-10-25変更)。
+
+    旧ルールは「弱い方に合わせる」だったが、IBDの慣行では主要指数のどちらかで
+    FTDが出れば上昇トレンドの確認とする。一方、片方が調整のままなら全面的な
+    確認とは言いにくいので、その場合は「圧力下」に留める(自前の折衷)。
+      両方 確認            -> confirmed_uptrend
+      どちらかが圧力下     -> uptrend_under_pressure
+      片方 確認/圧力下・片方 調整 -> uptrend_under_pressure
+      両方 調整            -> correction
+    """
     states = {nasdaq_state, sp500_state}
-    if "correction" in states:
-        return "correction"
-    if "uptrend_under_pressure" in states:
-        return "uptrend_under_pressure"
+    if "不明" in states:
+        return "不明"
     if states == {"confirmed_uptrend"}:
         return "confirmed_uptrend"
-    return "不明"
+    if states == {"correction"}:
+        return "correction"
+    return "uptrend_under_pressure"
 
 
 # ----------------------------------------------------------------------------
 # 2. 指数ステージ状態
 # ----------------------------------------------------------------------------
 
+INDEX_CHART_DAYS = 120  # 画面の階層パネルに描くローソク足の日数
+
+
+def classify_weinstein_stage(price, sma50, sma150, sma200, sma200_rising) -> dict:
+    """ステージ分析(ワインスタインが体系化し、ミネルヴィニが使う4段階)の機械判定。
+
+    判定は移動平均の並びだけで行う自前の近似(ステージの境目は本来チャートの
+    形を見て判断するもので、公開された機械的定義はない):
+      Stage 2(上昇): 終値が150日・200日線の上、150日線>200日線、200日線が1か月前より上
+      Stage 4(下落): 終値が150日・200日線の下、150日線<200日線
+      Stage 3(天井圏): 上の2つに当たらず、150日線>200日線(上昇の並びは残るが崩れかけ)
+      Stage 1(底固め): 上の3つに当たらず、150日線<=200日線(下落の並びは残るが下げ止まりつつある)
+    Stage 2の中は、終値が50日線の上なら「本流」、下なら「押し目」と分ける。
+    """
+    vals = (price, sma50, sma150, sma200)
+    if any(v is None or pd.isna(v) for v in vals):
+        return {"stage": None, "stage_label": "不明", "stage_sub": None}
+    above = price > sma150 and price > sma200
+    below = price < sma150 and price < sma200
+    up_struct = sma150 > sma200
+    if above and up_struct and sma200_rising:
+        sub = "本流" if price > sma50 else "押し目"
+        return {"stage": 2, "stage_label": "Stage 2 上昇", "stage_sub": sub}
+    if below and not up_struct:
+        return {"stage": 4, "stage_label": "Stage 4 下落", "stage_sub": None}
+    if up_struct:
+        return {"stage": 3, "stage_label": "Stage 3 天井圏", "stage_sub": None}
+    return {"stage": 1, "stage_label": "Stage 1 底固め", "stage_sub": None}
+
+
 def compute_index_stage(df: pd.DataFrame) -> dict:
-    close = df["Close"]
-    sma50 = close.rolling(50).mean().iloc[-1]
-    sma150 = close.rolling(150).mean().iloc[-1]
-    sma200 = close.rolling(200).mean().iloc[-1]
+    close = df["Close"].dropna()
+    sma50_s = close.rolling(50).mean()
+    sma150_s = close.rolling(150).mean()
+    sma200_s = close.rolling(200).mean()
+    sma50 = sma50_s.iloc[-1]
+    sma150 = sma150_s.iloc[-1]
+    sma200 = sma200_s.iloc[-1]
     price = close.iloc[-1]
-    sma200_1m_ago = close.rolling(200).mean().iloc[-22] if len(close) >= 222 else np.nan
-    high_52w = close.dropna().tail(252).max()
+    sma200_1m_ago = sma200_s.iloc[-22] if len(close) >= 222 else np.nan
+    high_52w = close.tail(252).max()
+    low_52w = close.tail(252).min()
     pct_below_52w_high = (
         round(float(100 * (high_52w - price) / high_52w), 2) if pd.notna(high_52w) and high_52w else None
     )
+    sma200_rising = bool(sma200 > sma200_1m_ago) if pd.notna(sma200_1m_ago) else None
+    r2 = lambda v: round(float(v), 2) if pd.notna(v) else None  # noqa: E731
+
+    chart = None
+    tail = df.loc[close.index].tail(INDEX_CHART_DAYS)
+    if {"Open", "High", "Low"}.issubset(tail.columns):
+        chart = {
+            "dates": [d.strftime("%Y-%m-%d") for d in tail.index],
+            "o": [r2(v) for v in tail["Open"]],
+            "h": [r2(v) for v in tail["High"]],
+            "l": [r2(v) for v in tail["Low"]],
+            "c": [r2(v) for v in tail["Close"]],
+            "sma50": [r2(v) for v in sma50_s.loc[tail.index]],
+            "sma150": [r2(v) for v in sma150_s.loc[tail.index]],
+            "sma200": [r2(v) for v in sma200_s.loc[tail.index]],
+        }
 
     return {
         "price": round(float(price), 2),
-        "sma50": round(float(sma50), 2) if pd.notna(sma50) else None,
-        "sma150": round(float(sma150), 2) if pd.notna(sma150) else None,
-        "sma200": round(float(sma200), 2) if pd.notna(sma200) else None,
+        "sma50": r2(sma50),
+        "sma150": r2(sma150),
+        "sma200": r2(sma200),
         "above_sma50": bool(price > sma50) if pd.notna(sma50) else None,
         "above_sma150": bool(price > sma150) if pd.notna(sma150) else None,
         "above_sma200": bool(price > sma200) if pd.notna(sma200) else None,
-        "sma200_rising": bool(sma200 > sma200_1m_ago) if pd.notna(sma200_1m_ago) else None,
+        "sma200_rising": sma200_rising,
         "pct_below_52w_high": pct_below_52w_high,
+        "pct_above_52w_low": round(float(100 * (price / low_52w - 1)), 2) if pd.notna(low_52w) and low_52w else None,
+        "pct_vs_sma200": round(float(100 * (price / sma200 - 1)), 2) if pd.notna(sma200) and sma200 else None,
+        **classify_weinstein_stage(price, sma50, sma150, sma200, sma200_rising),
+        "chart": chart,
     }
 
 
@@ -851,6 +979,105 @@ MARKET_LEADER_MIN_AVG_DOLLAR_VOLUME = 1_000_000.0  # 直近20営業日平均の�
 MARKET_LEADER_MAX_ABS_DAY_CHANGE_PCT = 50.0  # これを超える前日比は分割未調整等のデータ異常とみなす
 
 
+# 2026-10-25追加: 株式併合・合併・ティッカー再利用などの企業行動による価格の
+# 不連続(1日で3倍以上/3分の1以下)がある銘柄は、RSの1年騰落率が実態を表さない。
+# 2026-10-22にはAMTD(1か月+4185%)、DHY(+867%)がRS最上位に入っていた。
+# 1日で+200%を超える本物の急騰(バイオの治験結果など)も除外されるが、
+# リーダー候補としてはチャートの土台がないので実害は小さいと判断した(自前の閾値)。
+DISCONTINUITY_RATIO = 3.0
+DISCONTINUITY_LOOKBACK_DAYS = 252
+
+
+def has_price_discontinuity(close: pd.Series, lookback: int = DISCONTINUITY_LOOKBACK_DAYS) -> bool:
+    c = close.dropna().tail(lookback + 1)
+    if len(c) < 2:
+        return False
+    ratio = (c / c.shift(1)).dropna()
+    return bool(((ratio >= DISCONTINUITY_RATIO) | (ratio <= 1 / DISCONTINUITY_RATIO)).any())
+
+
+# 2026-10-25追加: 広域ユニバースの「同じ日の断面」をそろえる。
+# 2026-10-13〜10-22の履歴JSONでは、品質条件を通った銘柄の約半数(2238〜2879件)で
+# 最終終値の日付が対象取引日と一致していなかった(opportunity_universe.
+# excluded_stale_count)。Yahoo側で当日バーが一部の銘柄だけ未反映の時間帯に
+# 取得していると考えられ、そのままでは新高値/新安値・値上がり/値下がり・
+# 50日線上比率が「今日の銘柄」と「前日の銘柄」の混合になる。
+# 対象日に終値がある銘柄がこの割合以上ならその日で、未満なら一つ前の取引日で
+# 全銘柄の断面をそろえる(何日の断面かは画面に表示する)。
+BREADTH_MIN_COVERAGE = 0.90
+
+
+def align_price_frames(price_frames: dict, target_date: str, min_coverage: float = BREADTH_MIN_COVERAGE):
+    """戻り値: (そろえた{ticker: df}, メタ情報dict)。
+
+    target_dateから最大5取引日さかのぼり、最初に「終値がある銘柄の割合」が
+    min_coverage以上になった日を断面日にする。各銘柄はその日までに切り詰め、
+    その日の終値がない銘柄は除外する。"""
+    last_dates: dict = {}
+    for t, df in price_frames.items():
+        close = df["Close"].dropna() if df is not None and not df.empty else None
+        if close is None or close.empty:
+            continue
+        last_dates[t] = close.index[-1].date().isoformat()
+    total = len(last_dates)
+    meta = {"target_date": target_date, "as_of": None, "coverage_pct": None, "universe_total": total, "used": 0}
+    if not total:
+        return {}, meta
+
+    candidate_dates = sorted({d for d in last_dates.values() if d <= target_date}, reverse=True)[:5]
+    chosen = None
+    for d in candidate_dates:
+        have = sum(1 for t, df in price_frames.items() if t in last_dates and _has_close_on(df, d))
+        if have / total >= min_coverage:
+            chosen = d
+            break
+    if chosen is None:
+        chosen = candidate_dates[0] if candidate_dates else target_date
+
+    aligned = {}
+    for t, df in price_frames.items():
+        if t not in last_dates or not _has_close_on(df, chosen):
+            continue
+        aligned[t] = df.loc[: pd.Timestamp(chosen)]
+    meta.update({
+        "as_of": chosen,
+        "used": len(aligned),
+        "coverage_pct": round(100 * len(aligned) / total, 1),
+    })
+    return aligned, meta
+
+
+def _has_close_on(df: pd.DataFrame, date_str: str) -> bool:
+    try:
+        rows = df.loc[date_str:date_str, "Close"].dropna()
+    except Exception:  # noqa: BLE001
+        return False
+    return not rows.empty
+
+
+# 「次のNVDA」機会ウォッチの候補(2026-09-27の基準状態)。S6(株価が物語を
+# 先取りする)の補助として、RSライン(終値÷NASDAQ総合)を計算する。S6の点灯
+# 自体は本人がTradingViewで判定するので、ここでは数値を出すだけ。
+NEXT_NVDA_TICKERS = ["ARM", "GOOGL", "NET", "ALAB"]
+
+
+def compute_rs_line(close: pd.Series, benchmark: pd.Series) -> dict | None:
+    """RSライン = 終値÷指数。52週の最高値を更新しているか、1か月の変化率を返す。"""
+    c, b = close.dropna(), benchmark.dropna()
+    idx = c.index.intersection(b.index)
+    if len(idx) < 60:
+        return None
+    rs = (c.loc[idx] / b.loc[idx]).tail(252)
+    last = rs.iloc[-1]
+    high = rs.max()
+    return {
+        "rs_line_new_high_52w": bool(last >= high),
+        "rs_line_pct_below_high": round(float(100 * (1 - last / high)), 1),
+        "rs_line_1m_pct": round(float(100 * (last / rs.iloc[-22] - 1)), 1) if len(rs) > 22 else None,
+        "as_of": idx[-1].strftime("%Y-%m-%d"),
+    }
+
+
 def select_market_leaders(price_frames: dict, percentiles: dict, top_n: int = MARKET_LEADER_TOP_N) -> list[dict]:
     """RS百分位の高い順に、品質フィルタ(最低株価・最低売買代金・前日比の
     異常値除外)を通過した銘柄をtop_n件選ぶ。フィルタで弾かれた分は
@@ -874,6 +1101,8 @@ def select_market_leaders(price_frames: dict, percentiles: dict, top_n: int = MA
         day_change = round(100 * (close.iloc[-1] / close.iloc[-2] - 1), 2)
         if abs(day_change) > MARKET_LEADER_MAX_ABS_DAY_CHANGE_PCT:
             continue
+        if has_price_discontinuity(close):
+            continue
         one_month = round(100 * (close.iloc[-1] / close.iloc[-22] - 1), 2) if len(close) > 22 else None
         three_month = round(100 * (close.iloc[-1] / close.iloc[-63] - 1), 2) if len(close) > 63 else None
         sma50 = close.rolling(50).mean().iloc[-1] if len(close) >= 50 else None
@@ -885,8 +1114,46 @@ def select_market_leaders(price_frames: dict, percentiles: dict, top_n: int = MA
             "one_month_pct": one_month,
             "three_month_pct": three_month,
             "above_sma50": above_sma50,
+            **base_shape_metrics(df),
+            "avg_dollar_volume_20d": round(float(avg_dollar_volume)),
         })
     return leaders
+
+
+def base_shape_metrics(df: pd.DataFrame) -> dict:
+    """機会ウォッチのリーダー候補用の補助値(2026-10-25追加)。VCPかどうかの判定は
+    本人がチャートで行うので、ここでは「土台が締まってきているか」の目安だけ出す。
+      price: 終値
+      pct_below_52w_high: 52週高値(終値)からの下落率
+      range_contraction: 直近10日の平均値幅÷直近50日の平均値幅(1未満=値幅が縮小)
+      volume_dryup: 直近10日の平均出来高÷直近50日の平均出来高(1未満=出来高が細る)
+      sma_stack: 50日>150日>200日線の並び(上昇の並び)かどうか
+    閾値はここでは決めない(画面側で並べ替え・目安表示に使う)。"""
+    close = df["Close"].dropna()
+    out = {"price": round(float(close.iloc[-1]), 2) if len(close) else None}
+    if len(close) >= 252:
+        high = close.tail(252).max()
+        out["pct_below_52w_high"] = round(float(100 * (1 - close.iloc[-1] / high)), 1)
+    else:
+        out["pct_below_52w_high"] = None
+    if {"High", "Low"}.issubset(df.columns) and len(df) >= 50:
+        rng = ((df["High"] - df["Low"]) / df["Close"]).dropna()
+        r10, r50 = rng.tail(10).mean(), rng.tail(50).mean()
+        out["range_contraction"] = round(float(r10 / r50), 2) if r50 and pd.notna(r50) else None
+    else:
+        out["range_contraction"] = None
+    vol = df["Volume"].dropna() if "Volume" in df else pd.Series(dtype=float)
+    if len(vol) >= 50:
+        v50 = vol.tail(50).mean()
+        out["volume_dryup"] = round(float(vol.tail(10).mean() / v50), 2) if v50 else None
+    else:
+        out["volume_dryup"] = None
+    if len(close) >= 200:
+        s50, s150, s200 = (close.rolling(w).mean().iloc[-1] for w in (50, 150, 200))
+        out["sma_stack"] = bool(s50 > s150 > s200)
+    else:
+        out["sma_stack"] = None
+    return out
 
 
 def select_story_candidates(
@@ -922,6 +1189,8 @@ def select_story_candidates(
             continue
         day_change = 100 * (close.iloc[-1] / close.iloc[-2] - 1)
         if abs(day_change) > MARKET_LEADER_MAX_ABS_DAY_CHANGE_PCT:
+            continue
+        if has_price_discontinuity(close):
             continue
         relative_day = day_change - benchmark_day
         previous_volume = volume.iloc[-21:-1].mean()
@@ -965,7 +1234,7 @@ def build_opportunity_universe(price_frames: dict, percentiles: dict, date: str,
         if observed == date:
             current.append({**row, "observed_date": observed})
     return {
-        "method": "broad-close-return-252-percentile-v1",
+        "method": "broad-close-return-252-percentile-v2",
         "source": source,
         "ranked_count": len(percentiles),
         "eligible_count": len(current),
@@ -974,6 +1243,8 @@ def build_opportunity_universe(price_frames: dict, percentiles: dict, date: str,
             "min_price_usd": MARKET_LEADER_MIN_PRICE,
             "min_avg_dollar_volume_20d": MARKET_LEADER_MIN_AVG_DOLLAR_VOLUME,
             "max_abs_day_change_pct": MARKET_LEADER_MAX_ABS_DAY_CHANGE_PCT,
+            "discontinuity_ratio": DISCONTINUITY_RATIO,
+            "common_stock_only": True,
         },
         "rows": current,
     }
@@ -1099,7 +1370,9 @@ def run(
     # 売り抜け日数・ステージ状態・FTD判定はいずれも同じ指数データ(1年分)で
     # 計算できるため、ダウンロードは1回にまとめる。市場ストレス指標
     # (VIX・HYG/IEF等)も同じ「軽量な少数ティッカー」の性質なのでまとめて取得する。
-    idx_hist = download_history([NASDAQ_TICKER, SP500_TICKER] + STRESS_GAUGE_TICKERS, period="1y")
+    # 2026-10-25: 1y→2y。トレンド判定(状態機械)の収束と、52週安値・200日線の
+    # 1か月前比較に十分な日数を確保するため。
+    idx_hist = download_history([NASDAQ_TICKER, SP500_TICKER] + STRESS_GAUGE_TICKERS, period="2y")
     nasdaq_df, sp500_df = idx_hist.get(NASDAQ_TICKER), idx_hist.get(SP500_TICKER)
     stress_gauges = compute_stress_gauges(idx_hist)
 
@@ -1119,6 +1392,11 @@ def run(
 
     nasdaq_stage = compute_index_stage(nasdaq_df)
     sp500_stage = compute_index_stage(sp500_df)
+
+    rsp_df = idx_hist.get("RSP")
+    equal_weight_stage = (
+        {"ticker": "RSP", **compute_index_stage(rsp_df)} if rsp_df is not None and not rsp_df.empty else None
+    )
 
     nasdaq_trend = compute_trend_state(nasdaq_df)
     sp500_trend = compute_trend_state(sp500_df)
@@ -1187,6 +1465,8 @@ def run(
 
     # ブレッドス(市場の幅) + Market Leader(個別RSランキング)
     breadth_tickers, breadth_source = get_breadth_universe(breadth_universe, max_breadth_tickers)
+    breadth_alignment: dict = {}
+    price_frames: dict = {}
     breadth_near_52w = {}
     breadth_extended = {}
     broad_universe_technicals = {}
@@ -1202,7 +1482,9 @@ def run(
         # "1y"だと実際の営業日数が252を僅かに下回ることがあり、その場合
         # percentilesが全銘柄で計算されず market_leaders が空になる不具合が
         # 実機検証(2026-09-13)で確認されたための修正。
-        price_frames = download_history_chunked(breadth_tickers, period="2y")
+        raw_frames = download_history_chunked(breadth_tickers, period="2y")
+        price_frames, breadth_alignment = align_price_frames(raw_frames, today)
+        breadth_date = breadth_alignment.get("as_of") or today
         breadth_near_52w = compute_breadth_near_52w(price_frames)
         breadth_extended = compute_breadth_extended(price_frames)
 
@@ -1212,10 +1494,11 @@ def run(
         broad_universe_technicals = compute_broad_universe_technicals(price_frames, percentiles)
 
         if percentiles:
-            opportunity_universe = build_opportunity_universe(price_frames, percentiles, today, breadth_source)
+            opportunity_universe = build_opportunity_universe(price_frames, percentiles, breadth_date, breadth_source)
             leaders = select_market_leaders(price_frames, percentiles, MARKET_LEADER_TOP_N)
             story_candidates = select_story_candidates(
-                price_frames, percentiles, sp500_df["Close"], today, STORY_CANDIDATE_TOP_N
+                price_frames, percentiles, sp500_df["Close"].loc[: pd.Timestamp(breadth_date)], breadth_date,
+                STORY_CANDIDATE_TOP_N,
             ) if sp500_df is not None and not sp500_df.empty else []
 
             # トレンドテンプレート8条件(RS含む)に合格した銘柄だけのRS上位表。
@@ -1228,6 +1511,16 @@ def run(
             trend_template_leaders = select_market_leaders(
                 price_frames, template_percentiles, TREND_TEMPLATE_LEADER_TOP_N
             )
+
+    rs_line_watch = {}
+    if nasdaq_df is not None and not nasdaq_df.empty:
+        for t in NEXT_NVDA_TICKERS:
+            frame = price_frames.get(t) if breadth_tickers else None
+            if frame is None:
+                continue
+            line = compute_rs_line(frame["Close"], nasdaq_df["Close"])
+            if line:
+                rs_line_watch[t] = line
 
     warning_flags = compute_warning_flags(
         nasdaq_stage, sp500_stage,
@@ -1257,7 +1550,9 @@ def run(
         "sectors": sector_results,
         "market_regime": market_regime,
         "themes": theme_results,
+        "equal_weight": equal_weight_stage,
         "breadth_universe_source": breadth_source,
+        "breadth_alignment": breadth_alignment,
         "breadth_near_52w": breadth_near_52w,
         "breadth_extended": breadth_extended,
         "broad_universe_technicals": broad_universe_technicals,
@@ -1265,6 +1560,7 @@ def run(
         "market_leaders": leaders,
         "trend_template_leaders": trend_template_leaders,
         "story_candidates": story_candidates,
+        "rs_line_watch": rs_line_watch,
         "stress_gauges": stress_gauges,
         "warning_flags": warning_flags,
     }
