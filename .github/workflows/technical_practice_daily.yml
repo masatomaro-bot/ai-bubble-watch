@@ -73,7 +73,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/data/history
+          git add docs/data/history docs/data/ffty_latest.json 2>/dev/null || git add docs/data/history
           if git diff --cached --quiet; then
             echo "[info] 履歴JSONに変更なし、コミットをスキップ"
           else

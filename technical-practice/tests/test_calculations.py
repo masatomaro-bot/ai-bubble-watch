@@ -590,11 +590,72 @@ def test_trend_state_insufficient_data_returns_unknown():
     assert result.state == "不明"
 
 
-def test_combine_trend_states_worst_of_two():
+def test_combine_trend_states_ibd_style():
     assert combine_trend_states("confirmed_uptrend", "confirmed_uptrend") == "confirmed_uptrend"
     assert combine_trend_states("confirmed_uptrend", "uptrend_under_pressure") == "uptrend_under_pressure"
-    assert combine_trend_states("uptrend_under_pressure", "correction") == "correction"
-    assert combine_trend_states("confirmed_uptrend", "correction") == "correction"
+    # 片方でもFTD(上昇確認)があれば調整一色にはしない(IBDの慣行に寄せた折衷)
+    assert combine_trend_states("confirmed_uptrend", "correction") == "uptrend_under_pressure"
+    assert combine_trend_states("uptrend_under_pressure", "correction") == "uptrend_under_pressure"
+    assert combine_trend_states("correction", "correction") == "correction"
+    assert combine_trend_states("不明", "correction") == "不明"
+
+
+def _late_ftd_scenario(ftd_day_num: int):
+    """安値(day59)→反発初日(day60)→小動き→day_num=ftd_day_numでFTD、という系列。"""
+    closes = [150 - i * (50 / 59) for i in range(60)]
+    volumes = [1_000_000.0] * 60
+    price = 101.0
+    closes.append(price)
+    volumes.append(1_000_000.0)
+    for _ in range(ftd_day_num - 2):
+        price *= 1.001
+        closes.append(price)
+        volumes.append(900_000.0)
+    closes.append(price * 1.02)
+    volumes.append(1_500_000.0)
+    for _ in range(10):
+        closes.append(closes[-1] * 1.001)
+        volumes.append(800_000.0)
+    return make_price_df(closes, volumes=volumes)
+
+
+def test_trend_state_accepts_late_ftd_within_window():
+    # Day21のFTD(2026-08のナスダックと同じ型)は旧実装(Day10上限)では見逃していた
+    result = compute_trend_state(_late_ftd_scenario(21))
+    assert result.state == "confirmed_uptrend"
+    assert result.ftd_date is not None
+
+
+def test_trend_state_rejects_ftd_after_window():
+    result = compute_trend_state(_late_ftd_scenario(mc.FTD_WINDOW_MAX_DAY + 3))
+    assert result.state == "correction"
+
+
+def test_trend_state_correction_after_undercutting_rally_low():
+    df = _build_ftd_scenario(inject_distribution_after_ftd=False)
+    closes = list(df["Close"]) + [90.0, 89.0]
+    result = compute_trend_state(make_price_df(closes))
+    assert result.state == "correction"
+    assert result.correction_since is not None
+
+
+def test_trend_state_resumes_on_new_high_without_ftd():
+    # 上昇トレンド→安値割れで調整→+1.25%の大陽線なしで小刻みに高値更新
+    df = _build_ftd_scenario(inject_distribution_after_ftd=False)
+    closes = list(df["Close"])
+    volumes = list(df["Volume"])
+    peak = max(closes)
+    closes += [95.0]  # 反発安値(100)割れ -> 調整
+    volumes += [500_000.0]
+    price = 95.0
+    while price <= peak * 1.01:
+        price *= 1.004
+        closes.append(price)
+        volumes.append(500_000.0)  # 出来高は増やさない(FTD条件を満たさない)
+    result = compute_trend_state(make_price_df(closes, volumes=volumes))
+    assert result.state in ("confirmed_uptrend", "uptrend_under_pressure")
+    assert result.ftd_date is None
+    assert "上昇再開" in result.note
 
 
 def test_compute_broad_universe_technicals_counts_above_ma_and_template():
@@ -830,3 +891,60 @@ def test_story_candidates_require_market_excess_and_volume_surge():
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
+
+
+# ----------------------------------------------------------------------------
+# 2026-10-25追加: 断面そろえ・企業行動の除外・ステージ判定・普通株フィルタ
+# ----------------------------------------------------------------------------
+
+def test_align_price_frames_uses_previous_day_when_today_coverage_is_low():
+    full = make_price_df([100 + i for i in range(30)])
+    stale = full.iloc[:-1]
+    frames = {"A": full, "B": stale, "C": stale, "D": stale}
+    target = full.index[-1].date().isoformat()
+    aligned, meta = mc.align_price_frames(frames, target, min_coverage=0.9)
+    assert meta["as_of"] == full.index[-2].date().isoformat()
+    assert meta["used"] == 4
+    assert all(df.index[-1] == full.index[-2] for df in aligned.values())
+
+
+def test_align_price_frames_keeps_today_and_drops_stale_when_coverage_high():
+    full = make_price_df([100 + i for i in range(30)])
+    frames = {f"T{i}": full for i in range(19)}
+    frames["OLD"] = full.iloc[:-1]
+    target = full.index[-1].date().isoformat()
+    aligned, meta = mc.align_price_frames(frames, target, min_coverage=0.9)
+    assert meta["as_of"] == target
+    assert "OLD" not in aligned and meta["used"] == 19 and meta["coverage_pct"] == 95.0
+
+
+def test_price_discontinuity_detects_reverse_split_like_jump():
+    closes = [1.0] * 100 + [10.0] * 10
+    assert mc.has_price_discontinuity(pd.Series(closes))
+    assert not mc.has_price_discontinuity(pd.Series(list(np.linspace(10, 30, 110))))
+
+
+def test_classify_weinstein_stage_cases():
+    assert mc.classify_weinstein_stage(110, 105, 100, 95, True)["stage"] == 2
+    assert mc.classify_weinstein_stage(110, 105, 100, 95, True)["stage_sub"] == "本流"
+    assert mc.classify_weinstein_stage(102, 105, 100, 95, True)["stage_sub"] == "押し目"
+    assert mc.classify_weinstein_stage(80, 85, 90, 95, False)["stage"] == 4
+    assert mc.classify_weinstein_stage(94, 98, 100, 95, False)["stage"] == 3
+    assert mc.classify_weinstein_stage(98, 95, 92, 95, False)["stage"] == 1
+    assert mc.classify_weinstein_stage(None, 1, 1, 1, True)["stage"] is None
+
+
+def test_nasdaqtrader_parser_drops_funds_preferreds_and_notes():
+    from universe import _parse_nasdaq_listed_txt
+
+    raw = "\n".join([
+        "ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol",
+        "DHY|Credit Suisse High Yield Bond Fund|A|DHY|N|100|N|DHY",
+        "BST|BlackRock Science and Technology Trust|N|BST|N|100|N|BST",
+        "FRT|Federal Realty Investment Trust Common Stock|N|FRT|N|100|N|FRT",
+        "CAT|Caterpillar, Inc. Common Stock|N|CAT|N|100|N|CAT",
+        "XELLL|Xcel Energy Inc. 6.25% Junior Subordinated Notes|Q|XELLL|N|100|N|XELLL",
+        "SPY|SPDR S&P 500 ETF Trust|P|SPY|Y|100|N|SPY",
+        "File Creation Time: 1025202600:00|||||||",
+    ])
+    assert _parse_nasdaq_listed_txt(raw, "ACT Symbol", "ETF", "Test Issue") == ["FRT", "CAT"]

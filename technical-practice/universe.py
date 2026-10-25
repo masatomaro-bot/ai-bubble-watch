@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import csv
 import io
+import re
 import sys
 import time
 import urllib.request
@@ -169,9 +170,75 @@ def _fetch_url(url: str, timeout: int = 30) -> str:
     raise last_error
 
 
+# ----------------------------------------------------------------------------
+# 普通株以外の証券の除外 (2026-10-25追加)
+# ----------------------------------------------------------------------------
+# nasdaqtraderの一覧はETF列で上場投資信託(ETF)だけは除外できるが、
+# クローズドエンド・ファンド(CEF)・優先株・ユニット・ワラント・権利・
+# 社債型の上場債券(baby bond)はETF="N"のまま混ざる。2026-10-22の実データで
+# DHY・IGR・BGR・BST・BME(CEF)、BRKRP(優先株)、XELLL(上場債券)が
+# Market Leaders/機会ウォッチの上位を占め、ブレッドス(新高値/新安値・
+# 50日線上比率)の母集団にも数百件規模で入っていると考えられた。
+# 一覧ファイルには証券の種類を示す専用列がないため、「Security Name」の
+# 表記規則(発行体が付ける名称)で判定する。名称の付け方は発行体次第なので
+# 完全な判定ではなく、取りこぼし・誤除外がありうる(誤除外を避けるため、
+# 一般事業会社にも現れる語「Trust」単独では除外しない)。
+_NON_COMMON_NAME_PATTERNS = [
+    r"\bfund\b",
+    r"\bfd\b",
+    r"closed[- ]end",
+    r"\bmunicipal\b",
+    r"\bmuni\b",
+    r"\betn\b",
+    r"exchange[- ]traded",
+    r"\bpreferred\b",
+    r"\bpfd\b",
+    r"depositary shares?",  # 優先株のADS (「American Depositary Shares」は下で救済)
+    r"\bwarrants?\b",
+    r"\brights?\b",
+    r"\bunits?\b",
+    r"\bnotes?\b",
+    r"\bdebentures?\b",
+    r"\bsubordinated\b",
+    r"\bbonds? due\b",
+    r"\bacquisition corp",  # SPAC
+    r"\bblank check\b",
+]
+# 「Trust」を名乗るCEFは運用会社名+運用対象を表す語の組み合わせが典型
+# (例: BlackRock Science and Technology Trust)。REIT・銀行の「Trust」は残す。
+_CEF_TRUST_HINTS = [
+    r"\bincome\b", r"\byield\b", r"\bbond\b", r"\bcredit\b", r"\bstrategic\b",
+    r"\bopportunit", r"\bdividend\b", r"\btotal return\b", r"\bpremium\b",
+    r"science", r"\btechnology\b", r"health sciences", r"\bresources\b",
+    r"\butilit", r"\binfrastructure\b", r"\bglobal\b", r"\benhanced\b",
+    r"\bequity\b", r"\bcapital allocation\b", r"\bmortgage\b",
+]
+_TRUST_KEEP_HINTS = [r"\brealty\b", r"real estate investment", r"\breit\b", r"\bbank", r"\bbancorp\b", r"\bproperties\b"]
+_ADS_COMMON = r"american depositary shares?|\bads\b|\badr\b"
+
+
+def is_non_common_security(name: str) -> bool:
+    """Security Nameから、普通株(ADR含む)以外と判断できるものをTrueにする。"""
+    text = (name or "").lower()
+    if not text:
+        return False
+    for pat in _NON_COMMON_NAME_PATTERNS:
+        if re.search(pat, text):
+            if pat.startswith("depositary") and re.search(_ADS_COMMON, text) and "preferred" not in text:
+                continue
+            return True
+    if re.search(r"\btrust\b", text):
+        if any(re.search(p, text) for p in _TRUST_KEEP_HINTS):
+            return False
+        if any(re.search(p, text) for p in _CEF_TRUST_HINTS):
+            return True
+    return False
+
+
 # nasdaqtrader.comのシンボル一覧は "|" 区切り、末尾に
-# "File Creation Time: ..." という注記行が付く。ETF・テスト銘柄はブレッドス
-# 計算の母集団としてはノイズになるため除外する。
+# "File Creation Time: ..." という注記行が付く。ETF・テスト銘柄・普通株以外
+# (上の is_non_common_security)はブレッドス計算の母集団としてはノイズになる
+# ため除外する。
 def _parse_nasdaq_listed_txt(raw_text: str, symbol_col: str, is_etf_col: str | None, is_test_col: str | None) -> list[str]:
     lines = [ln for ln in raw_text.splitlines() if ln.strip() and not ln.startswith("File Creation Time")]
     if not lines:
@@ -188,6 +255,8 @@ def _parse_nasdaq_listed_txt(raw_text: str, symbol_col: str, is_etf_col: str | N
         if is_etf_col and (row.get(is_etf_col) or "").strip().upper() == "Y":
             continue
         if is_test_col and (row.get(is_test_col) or "").strip().upper() == "Y":
+            continue
+        if is_non_common_security(row.get("Security Name") or ""):
             continue
         if not symbol.replace(".", "").replace("-", "").isalnum():
             continue

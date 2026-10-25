@@ -87,9 +87,18 @@ def test_run_end_to_end_with_mocked_network(mocked_network):
     assert result["breadth_extended"]["universe_size"] == 20
     assert len(result["sectors"]) == len(mc.SECTOR_ETFS)
     assert len(result["themes"]) == len(mc.THEME_ETFS)
-    assert result["opportunity_universe"]["method"] == "broad-close-return-252-percentile-v1"
+    assert result["opportunity_universe"]["method"] == "broad-close-return-252-percentile-v2"
     assert result["opportunity_universe"]["ranked_count"] == 20
     assert all(r["observed_date"] == result["date"] for r in result["opportunity_universe"]["rows"])
+    # 2026-10-25追加分の配線
+    assert result["breadth_alignment"]["as_of"] == result["date"]
+    assert result["breadth_alignment"]["coverage_pct"] == 100.0
+    for key in ("nasdaq", "sp500"):
+        assert result[key]["stage"] in {1, 2, 3, 4, None}
+        assert len(result[key]["chart"]["c"]) == mc.INDEX_CHART_DAYS
+    assert result["equal_weight"]["ticker"] == "RSP"
+    for row in result["opportunity_universe"]["rows"]:
+        assert {"price", "pct_below_52w_high", "range_contraction", "volume_dryup", "sma_stack"} <= set(row)
     assert isinstance(result["market_leaders"], list)
     assert len(result["market_leaders"]) <= mc.MARKET_LEADER_TOP_N
 
