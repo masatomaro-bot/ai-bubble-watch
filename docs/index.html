@@ -122,6 +122,7 @@ tr:last-child td{border-bottom:none;}
 <script src="jiai-ladder.js" defer></script>
 <script src="theme-leaders.js" defer></script>
 <script src="next-nvda-data.js" defer></script>
+<script src="macro-panel.js" defer></script>
 <script src="opportunity-rules.js" defer></script>
 <script src="issuer-profiles.js" defer></script>
 <script src="opportunity-discovery.js" defer></script>
@@ -779,6 +780,8 @@ async function main() {
   const overallInfo = TREND_LABELS[latest.overall_trend_state] || TREND_LABELS["不明"];
 
   content.innerHTML = `
+    ${window.MacroPanel ? MacroPanel.render(latest) : ""}
+
     <div class="card">
       <div class="card-title">本日の地合い(O'Neil/IBD式フォロースルー・デイ判定)</div>
       <div class="hero-state">${esc(overallInfo.label)}</div>

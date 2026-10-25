@@ -103,3 +103,27 @@ test('old-format data shows a waiting message instead of junk candidates', () =>
   assert.match(html, /次回の日次更新/);
   assert.doesNotMatch(html, /DHY/);
 });
+
+const M = require('../docs/macro-panel.js');
+
+test('macro panel: reference lines come from published values, failures degrade gracefully', () => {
+  const macro = {
+    policy_rate: { upper: { dates: ['2026-10-23'], values: [5.5] }, lower: { dates: ['2026-10-23'], values: [5.25] }, latest_upper: 5.5, latest_lower: 5.25, as_of: '2026-10-23', longer_run_median: { value: 3.2, as_of: '2026-09-16' } },
+    inflation: { core_pce: { dates: ['2026-08-01'], values: [2.9], latest: 2.9, as_of: '2026-08' }, cpi: null, core_cpi: null, target_pct: 2.0 },
+    oil: null,
+  };
+  const html = M.render({ macro });
+  assert.match(html, /中立の目安 3\.2%/);
+  assert.match(html, /目標 2/);
+  assert.match(html, /引き締め的/);
+  assert.match(html, /原油のデータを取得できませんでした/);
+  assert.match(M.linkage(macro), /実質政策金利.*\+2\.48%/);
+  assert.match(M.render({}), /次回の日次更新/);
+});
+
+test('weekly stage-3 block shows checks and degrades on old data', () => {
+  assert.match(L.weeklyBlock({}), /次回の日次更新/);
+  const html = L.weeklyBlock({ weekly: { level: 'watch', label: '30週線に接近', weekly_close: 25955, ma30w: 25849, pct_vs_ma30w: 0.41, ma30w_change_4w_pct: 2.59, weeks_since_high: 2, checks: { below_ma30w: false, ma30w_not_rising: false, no_new_high_8w: false, near_ma30w: true }, chart: null } });
+  assert.match(html, /30週線に接近/);
+  assert.match(html, /点灯/);
+});

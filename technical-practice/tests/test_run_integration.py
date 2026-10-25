@@ -50,6 +50,8 @@ def _fake_get_breadth_universe(universe, max_tickers=None):
 def mocked_network(monkeypatch):
     monkeypatch.setattr(mc, "download_history", _fake_download_history)
     monkeypatch.setattr(mc, "get_breadth_universe", _fake_get_breadth_universe)
+    import macro
+    monkeypatch.setattr(macro, "fetch_fred", lambda series: None)
 
 
 def test_run_end_to_end_with_mocked_network(mocked_network):
@@ -97,6 +99,9 @@ def test_run_end_to_end_with_mocked_network(mocked_network):
         assert result[key]["stage"] in {1, 2, 3, 4, None}
         assert len(result[key]["chart"]["c"]) == mc.INDEX_CHART_DAYS
     assert result["equal_weight"]["ticker"] == "RSP"
+    assert result["nasdaq"]["weekly"]["level"] in {"none", "watch", "warning"}
+    assert result["macro"]["policy_rate"] is None  # FREDはモックで取得失敗扱い
+    assert result["macro"]["oil"]["brent"]["chart"]["c"]
     for row in result["opportunity_universe"]["rows"]:
         assert {"price", "pct_below_52w_high", "range_contraction", "volume_dryup", "sma_stack"} <= set(row)
     assert isinstance(result["market_leaders"], list)
@@ -144,6 +149,8 @@ def test_run_sectors_and_themes_survive_trailing_nan_close(monkeypatch):
     # JSON.parse()を壊さないこと)を確認する回帰テスト。
     monkeypatch.setattr(mc, "download_history", _fake_download_history_with_trailing_nan)
     monkeypatch.setattr(mc, "get_breadth_universe", _fake_get_breadth_universe)
+    import macro
+    monkeypatch.setattr(macro, "fetch_fred", lambda series: None)
 
     result = mc.run(breadth_universe="broad", max_breadth_tickers=None)
 
