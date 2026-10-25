@@ -46,11 +46,37 @@ def _get(url: str, timeout: int = 60, tries: int = 3) -> str:
     raise last
 
 
+FRED_API = "https://api.stlouisfed.org/fred/series/observations?series_id={series}&api_key={key}&file_type=json"
+_FRED_CSV_DEAD = False  # 公開CSVが一度タイムアウトしたら、その実行では以後試さない
+
+
 def fetch_fred(series: str) -> pd.Series | None:
-    """FREDの公開CSV。2026-10-25の初回実行(GitHub Actions)では取得できなかったため、
-    リトライを入れ、失敗理由を FETCH_ERRORS に残す。"""
+    """FREDの値を取る。
+    2026-10-25の実行で、公開CSV(fred.stlouisfed.org)はGitHub Actionsからだと
+    全系列が読み取りタイムアウトになった(ブロックされている可能性が高い)。
+    1回あたり最大60秒×3回待つため、地合いジョブ全体が約25分延びた。
+      1) 環境変数 FRED_API_KEY があれば公式API(api.stlouisfed.org)を使う(無料キー)
+      2) なければ公開CSVを短いタイムアウトで1回だけ試し、タイムアウトしたら以後の系列は飛ばす
+    """
+    import json
+    import os
+    global _FRED_CSV_DEAD
+    key = os.environ.get("FRED_API_KEY", "").strip()
     try:
-        raw = _get(FRED_CSV.format(series=series))
+        if key:
+            obs = json.loads(_get(FRED_API.format(series=series, key=key), timeout=30, tries=2))["observations"]
+            s = pd.Series(
+                pd.to_numeric([o["value"] for o in obs], errors="coerce"),
+                index=pd.to_datetime([o["date"] for o in obs]),
+            )
+            return s.dropna()
+        if _FRED_CSV_DEAD:
+            raise TimeoutError("公開CSVはこの実行で既にタイムアウトしたため省略(FRED_API_KEY未設定)")
+        try:
+            raw = _get(FRED_CSV.format(series=series), timeout=15, tries=1)
+        except TimeoutError:
+            _FRED_CSV_DEAD = True
+            raise
         if not raw.lstrip().lower().startswith(("observation_date", "date")):
             raise ValueError(f"CSVではない応答: {raw[:80]!r}")
         df = pd.read_csv(io.StringIO(raw))
@@ -58,7 +84,11 @@ def fetch_fred(series: str) -> pd.Series | None:
         s.index = pd.to_datetime(df[df.columns[0]])
         return s.dropna()
     except Exception as e:  # noqa: BLE001
-        FETCH_ERRORS[f"FRED:{series}"] = f"{type(e).__name__}: {e}"[:200]
+        msg = f"{type(e).__name__}: {e}"
+        k = __import__("os").environ.get("FRED_API_KEY", "").strip()
+        if k:
+            msg = msg.replace(k, "***")  # キーを記録・画面に出さない
+        FETCH_ERRORS[f"FRED:{series}"] = msg[:200]
         print(f"[warn] FRED取得失敗 ({series}): {e}", file=sys.stderr)
         return None
 
@@ -92,7 +122,7 @@ def fetch_bls(series: str) -> pd.Series | None:
     """BLSの公開API(v1、キー不要・直近数年分)。CPI総合 CUUR0000SA0、コア CUUR0000SA0L1E。"""
     import json
     try:
-        data = json.loads(_get(BLS_V1.format(series=series)))
+        data = json.loads(_get(BLS_V1.format(series=series), timeout=20, tries=1))
         items = data["Results"]["series"][0]["data"]
         pts = {}
         for it in items:
@@ -214,7 +244,9 @@ def build_oil(download) -> dict | None:
 
 
 def build_macro(download) -> dict:
+    global _FRED_CSV_DEAD
     FETCH_ERRORS.clear()
+    _FRED_CSV_DEAD = False
     out = {
         "policy_rate": build_policy_rate(),
         "inflation": build_inflation(),
