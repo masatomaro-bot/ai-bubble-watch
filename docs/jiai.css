@@ -66,3 +66,18 @@
 .nv-biz{font-size:12px;line-height:1.6;}
 .op-legacy{margin-top:var(--s2);}
 .op-legacy>summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--muted);padding:var(--s3) 0;}
+
+/* 外部環境(FRB金利・原油・インフレ) */
+.macro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4);}
+@media(max-width:1000px){.macro-grid{grid-template-columns:1fr;}}
+.macro-cell{min-width:0;border:1px solid var(--div);border-radius:var(--r-md);padding:var(--s3) var(--s4);background:var(--off);}
+.macro-head{margin-bottom:6px;}
+.macro-label{font-size:12px;font-weight:700;color:var(--muted);}
+.macro-value{font:800 22px var(--mono);letter-spacing:-0.01em;}
+.macro-read{font-size:12px;font-weight:700;color:var(--tx);margin-top:4px;}
+.macro-link{margin-top:var(--s4);font-size:12.5px;line-height:1.7;border-left:3px solid var(--pri);background:#f4fafb;padding:10px 12px;border-radius:0 6px 6px 0;}
+
+/* 週足のStage 3警戒 */
+.stage-sec{font-size:12px;font-weight:700;color:var(--muted);margin-top:var(--s4);padding-top:var(--s3);border-top:1px solid var(--off);}
+.weekly-head{display:flex;flex-direction:column;gap:4px;margin:6px 0 2px;}
+.weekly-badge{align-self:flex-start;font-size:12.5px;font-weight:800;border:1px solid;border-radius:999px;padding:3px 12px;}

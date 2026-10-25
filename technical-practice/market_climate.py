@@ -440,6 +440,71 @@ def classify_weinstein_stage(price, sma50, sma150, sma200, sma200_rising) -> dic
     return {"stage": 1, "stage_label": "Stage 1 底固め", "stage_sub": None}
 
 
+# 週足の30週線によるStage 3警戒(2026-10-25追加)。
+# ワインスタインのステージ分析は本来、週足と30週移動平均で判断する。天井(Stage 3)
+# では30週線の上昇が止まって平らになり、価格がその上下を行き来する。日足の
+# 移動平均の並び(classify_weinstein_stage)は崩れるのが遅いので、こちらで早めに拾う。
+#   公表されている考え方に沿う条件: 週足終値が30週線の下 / 30週線が4週前より下
+#   自前の仮置き: 高値更新のない週が8週以上 / 30週線との距離が1%以内(接近)
+WEEKLY_MA_WEEKS = 30
+WEEKLY_CHART_WEEKS = 60
+STAGE3_NO_NEW_HIGH_WEEKS = 8
+STAGE3_NEAR_MA_PCT = 1.0
+
+
+def compute_weekly_stage3(df: pd.DataFrame) -> dict | None:
+    d = df.dropna(subset=["Close"])
+    if not {"Open", "High", "Low"}.issubset(d.columns) or len(d) < WEEKLY_MA_WEEKS * 5 + 25:
+        return None
+    w = d.resample("W-FRI").agg({"Open": "first", "High": "max", "Low": "min", "Close": "last"}).dropna()
+    ma = w["Close"].rolling(WEEKLY_MA_WEEKS).mean()
+    if len(w) < WEEKLY_MA_WEEKS + 5 or pd.isna(ma.iloc[-5]):
+        return None
+    close = w["Close"]
+    last, m = float(close.iloc[-1]), float(ma.iloc[-1])
+    ma_change_4w = float(100 * (ma.iloc[-1] / ma.iloc[-5] - 1))
+    hi_pos = int(close.tail(52).values.argmax())
+    weeks_since_high = len(close.tail(52)) - 1 - hi_pos
+    pct_vs_ma = 100 * (last / m - 1)
+    below_ma = last < m
+    ma_not_rising = ma_change_4w <= 0
+    stalled = weeks_since_high >= STAGE3_NO_NEW_HIGH_WEEKS
+    near_ma = abs(pct_vs_ma) <= STAGE3_NEAR_MA_PCT
+    if below_ma:
+        level, label = "warning", "Stage 3警戒(週足で30週線割れ)"
+    elif ma_not_rising or (stalled and near_ma):
+        level, label = "watch", "Stage 3の兆し"
+    elif near_ma or stalled:
+        level, label = "watch", "30週線に接近" if near_ma else "高値更新が止まっている"
+    else:
+        level, label = "none", "兆候なし"
+    r2 = lambda v: round(float(v), 2) if pd.notna(v) else None  # noqa: E731
+    tail = w.tail(WEEKLY_CHART_WEEKS)
+    return {
+        "level": level,
+        "label": label,
+        "weekly_close": r2(last),
+        "ma30w": r2(m),
+        "pct_vs_ma30w": round(pct_vs_ma, 2),
+        "ma30w_change_4w_pct": round(ma_change_4w, 2),
+        "weeks_since_high": weeks_since_high,
+        "checks": {
+            "below_ma30w": below_ma,
+            "ma30w_not_rising": ma_not_rising,
+            "no_new_high_8w": stalled,
+            "near_ma30w": near_ma,
+        },
+        "chart": {
+            "dates": [x.strftime("%Y-%m-%d") for x in tail.index],
+            "o": [r2(v) for v in tail["Open"]],
+            "h": [r2(v) for v in tail["High"]],
+            "l": [r2(v) for v in tail["Low"]],
+            "c": [r2(v) for v in tail["Close"]],
+            "ma30w": [r2(v) for v in ma.loc[tail.index]],
+        },
+    }
+
+
 def compute_index_stage(df: pd.DataFrame) -> dict:
     close = df["Close"].dropna()
     sma50_s = close.rolling(50).mean()
@@ -486,6 +551,7 @@ def compute_index_stage(df: pd.DataFrame) -> dict:
         "pct_vs_sma200": round(float(100 * (price / sma200 - 1)), 2) if pd.notna(sma200) and sma200 else None,
         **classify_weinstein_stage(price, sma50, sma150, sma200, sma200_rising),
         "chart": chart,
+        "weekly": compute_weekly_stage3(df),
     }
 
 
@@ -1512,6 +1578,13 @@ def run(
                 price_frames, template_percentiles, TREND_TEMPLATE_LEADER_TOP_N
             )
 
+    try:
+        from macro import build_macro
+        macro = build_macro(download_history)
+    except Exception as e:  # noqa: BLE001
+        print(f"[warn] マクロ指標の取得をスキップ: {e}", file=sys.stderr)
+        macro = None
+
     rs_line_watch = {}
     if nasdaq_df is not None and not nasdaq_df.empty:
         for t in NEXT_NVDA_TICKERS:
@@ -1561,6 +1634,7 @@ def run(
         "trend_template_leaders": trend_template_leaders,
         "story_candidates": story_candidates,
         "rs_line_watch": rs_line_watch,
+        "macro": macro,
         "stress_gauges": stress_gauges,
         "warning_flags": warning_flags,
     }

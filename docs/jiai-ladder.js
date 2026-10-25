@@ -194,35 +194,112 @@ function stageStairs(stage, sub) {
   </svg>`;
 }
 
-function candleSvg(ch) {
-  if (!ch || !Array.isArray(ch.c) || ch.c.length < 10) return '<div class="sub">ローソク足は次回の日次更新から表示されます。</div>';
-  const n = ch.c.length, W = 640, H = 230, padL = 4, padR = 48, padT = 8, padB = 18;
-  const vals = [...ch.h, ...ch.l, ...(ch.sma50 || []), ...(ch.sma150 || []), ...(ch.sma200 || [])].filter((v) => v !== null && v !== undefined);
-  const lo = Math.min(...vals), hi = Math.max(...vals), rng = hi - lo || 1;
+// 汎用のローソク足/折れ線チャート。lines: 重ねる系列、refs: 水平の目安線。
+//   lines: [{key, color, dash, label}]  refs: [{value, label, color, dash}]
+function priceChart(ch, opts) {
+  const o = opts || {};
+  const lines = o.lines || [];
+  const refs = (o.refs || []).filter((r) => r && r.value !== null && r.value !== undefined && Number.isFinite(Number(r.value)));
+  const candle = Array.isArray(ch?.o) && Array.isArray(ch?.h);
+  const main = candle ? ch.c : (ch?.values || null);
+  if (!ch || !Array.isArray(main) || main.length < 5) return `<div class="sub">${esc(o.empty || 'チャートは次回の日次更新から表示されます。')}</div>`;
+  const n = main.length, W = o.width || 640, H = o.height || 230, padL = 4, padR = 54, padT = 10, padB = 18;
+  const vals = [...(candle ? [...ch.h, ...ch.l] : main), ...lines.flatMap((l) => ch[l.key] || []), ...refs.map((r) => Number(r.value))]
+    .filter((v) => v !== null && v !== undefined && Number.isFinite(Number(v)));
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (o.zeroBase && lo > 0) lo = 0;
+  const pad = (hi - lo) * 0.04 || 1; lo -= pad; hi += pad;
+  const rng = hi - lo || 1;
   const x = (i) => padL + ((W - padL - padR) * (i + 0.5)) / n;
   const y = (v) => padT + (H - padT - padB) * (1 - (v - lo) / rng);
-  const bw = Math.max(1.5, ((W - padL - padR) / n) * 0.6);
-  const candles = ch.c.map((c, i) => {
-    const o = ch.o[i], h = ch.h[i], l = ch.l[i];
-    if ([o, h, l, c].some((v) => v === null || v === undefined)) return '';
-    const up = c >= o, col = up ? 'var(--ok)' : 'var(--err)';
-    const top = y(Math.max(o, c)), bot = y(Math.min(o, c));
-    return `<line x1="${x(i).toFixed(1)}" x2="${x(i).toFixed(1)}" y1="${y(h).toFixed(1)}" y2="${y(l).toFixed(1)}" stroke="${col}" stroke-width="1"/>` +
-      `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, bot - top).toFixed(1)}" fill="${up ? 'var(--surf)' : col}" stroke="${col}" stroke-width="1"/>`;
-  }).join('');
-  const line = (arr, color, dash) => {
+  const bw = Math.max(1.2, ((W - padL - padR) / n) * 0.6);
+  const poly = (arr, color, dash, width, step) => {
     if (!arr) return '';
-    const segs = []; let cur = [];
-    arr.forEach((v, i) => { if (v === null || v === undefined) { if (cur.length) segs.push(cur); cur = []; } else cur.push(`${x(i).toFixed(1)},${y(v).toFixed(1)}`); });
+    const segs = []; let cur = []; let prevY = null;
+    arr.forEach((v, i) => {
+      if (v === null || v === undefined) { if (cur.length) segs.push(cur); cur = []; prevY = null; return; }
+      const yy = y(v).toFixed(1);
+      if (step && prevY !== null && prevY !== yy) cur.push(`${x(i).toFixed(1)},${prevY}`);
+      cur.push(`${x(i).toFixed(1)},${yy}`); prevY = yy;
+    });
     if (cur.length) segs.push(cur);
-    return segs.map((s) => `<polyline points="${s.join(' ')}" fill="none" stroke="${color}" stroke-width="1.6"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`).join('');
+    return segs.map((sg) => `<polyline points="${sg.join(' ')}" fill="none" stroke="${color}" stroke-width="${width || 1.6}" stroke-linejoin="round"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`).join('');
   };
-  const ticks = [hi, (hi + lo) / 2, lo].map((v) => `<text x="${W - padR + 4}" y="${(y(v) + 4).toFixed(1)}" font-size="10" fill="var(--muted)">${Math.round(v).toLocaleString('en-US')}</text>`).join('');
-  const dl = (i) => `<text x="${x(i).toFixed(1)}" y="${H - 4}" font-size="10" text-anchor="middle" fill="var(--muted)">${esc(ch.dates[i].slice(5))}</text>`;
-  return `<svg class="candle-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="日足ローソクと移動平均">
-    ${candles}${line(ch.sma50, 'var(--pri)')}${line(ch.sma150, 'var(--gold)')}${line(ch.sma200, 'var(--warn)', '5 3')}${ticks}${dl(0)}${dl(Math.floor(n / 2))}${dl(n - 1)}
-  </svg>
-  <div class="legend" style="margin-top:4px"><span><span class="dot" style="background:var(--pri)"></span>50日線</span><span><span class="dot" style="background:var(--gold)"></span>150日線</span><span><span class="dot" style="background:var(--warn)"></span>200日線(破線)</span><span>直近${n}営業日</span></div>`;
+  let body = '';
+  if (candle) {
+    body = ch.c.map((c, i) => {
+      const op = ch.o[i], h = ch.h[i], l = ch.l[i];
+      if ([op, h, l, c].some((v) => v === null || v === undefined)) return '';
+      const up = c >= op, col = up ? 'var(--ok)' : 'var(--err)';
+      const top = y(Math.max(op, c)), bot = y(Math.min(op, c));
+      return `<line x1="${x(i).toFixed(1)}" x2="${x(i).toFixed(1)}" y1="${y(h).toFixed(1)}" y2="${y(l).toFixed(1)}" stroke="${col}" stroke-width="1"/>` +
+        `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, bot - top).toFixed(1)}" fill="${up ? 'var(--surf)' : col}" stroke="${col}" stroke-width="1"/>`;
+    }).join('');
+  } else {
+    body = poly(main, o.mainColor || 'var(--pri)', null, 2.2, o.step);
+  }
+  const overlay = lines.map((l) => poly(ch[l.key], l.color, l.dash, l.width, l.step)).join('');
+  const refSvg = refs.map((r) => {
+    const yy = y(Number(r.value)).toFixed(1);
+    return `<line x1="${padL}" x2="${W - padR}" y1="${yy}" y2="${yy}" stroke="${r.color || 'var(--gold)'}" stroke-width="1.4" stroke-dasharray="${r.dash || '6 4'}"/>` +
+      `<text x="${W - padR + 4}" y="${(Number(yy) + 4).toFixed(1)}" font-size="10.5" font-weight="700" fill="${r.color || 'var(--gold)'}">${esc(r.short || '')}</text>`;
+  }).join('');
+  const fmt = o.fmt || ((v) => Math.round(v).toLocaleString('en-US'));
+  const ticks = [hi - pad, (hi + lo) / 2, lo + pad].map((v) => `<text x="${W - padR + 4}" y="${(y(v) + 4).toFixed(1)}" font-size="10" fill="var(--muted)">${esc(fmt(v))}</text>`).join('');
+  const dates = ch.dates || [];
+  const dl = (i) => (dates[i] ? `<text x="${x(i).toFixed(1)}" y="${H - 4}" font-size="10" text-anchor="middle" fill="var(--muted)">${esc(o.dateFmt ? o.dateFmt(dates[i]) : dates[i].slice(5))}</text>` : '');
+  const legend = [
+    ...lines.map((l) => `<span><span class="dot" style="background:${l.color}"></span>${esc(l.label)}</span>`),
+    ...refs.map((r) => `<span><span class="dot" style="background:${r.color || 'var(--gold)'}"></span>${esc(r.label)}</span>`),
+    o.note ? `<span>${esc(o.note)}</span>` : '',
+  ].join('');
+  return `<svg class="candle-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria || 'チャート')}">
+    ${refSvg}${body}${overlay}${ticks}${dl(0)}${dl(Math.floor(n / 2))}${dl(n - 1)}
+  </svg>${legend ? `<div class="legend" style="margin-top:4px">${legend}</div>` : ''}`;
+}
+
+function candleSvg(ch) {
+  return priceChart(ch, {
+    empty: 'ローソク足は次回の日次更新から表示されます。',
+    aria: '日足ローソクと移動平均',
+    lines: [
+      { key: 'sma50', color: 'var(--pri)', label: '50日線' },
+      { key: 'sma150', color: 'var(--gold)', label: '150日線' },
+      { key: 'sma200', color: 'var(--warn)', dash: '5 3', label: '200日線(破線)' },
+    ],
+    note: ch && ch.c ? `直近${ch.c.length}営業日` : '',
+  });
+}
+
+const WEEKLY_LEVEL = {
+  warning: { color: 'var(--err)', bg: 'var(--err-h)' },
+  watch: { color: 'var(--gold)', bg: 'var(--gold-h)' },
+  none: { color: 'var(--ok)', bg: 'var(--ok-h)' },
+};
+
+function weeklyBlock(i) {
+  const w = i && i.weekly;
+  if (!w) return '<div class="weekly-block"><div class="sub">週足(30週線)のStage 3警戒は次回の日次更新から表示されます。</div></div>';
+  const lv = WEEKLY_LEVEL[w.level] || WEEKLY_LEVEL.none;
+  const ck = w.checks || {};
+  const mark = (b) => (b ? '<b style="color:var(--err);font-size:14px">点灯</b>' : '<span class="sub">-</span>');
+  const rows = [
+    ['週足終値が30週線の下', ck.below_ma30w],
+    ['30週線が4週前より上がっていない(平ら〜下向き)', ck.ma30w_not_rising],
+    ['高値更新のない週が8週以上(仮置き)', ck.no_new_high_8w],
+    ['30週線との距離が1%以内(仮置き)', ck.near_ma30w],
+  ];
+  return `<div class="weekly-block">
+    <div class="weekly-head"><span class="weekly-badge" style="color:${lv.color};background:${lv.bg};border-color:${lv.color}">週足：${esc(w.label)}</span>
+      <span class="sub">週足終値 ${esc(w.weekly_close)} ／ 30週線 ${esc(w.ma30w)}(${signed(num(w.pct_vs_ma30w), '%')}) ／ 30週線の4週変化 ${signed(num(w.ma30w_change_4w_pct), '%')} ／ 高値から${esc(w.weeks_since_high)}週</span></div>
+    ${priceChart(w.chart, {
+      aria: '週足ローソクと30週線', height: 200,
+      lines: [{ key: 'ma30w', color: 'var(--pri)', width: 2, label: '30週線' }],
+      note: w.chart ? `直近${w.chart.c.length}週` : '',
+      dateFmt: (d) => d.slice(2, 7).replace('-', '/'),
+    })}
+    <table class="stage-checks"><tbody>${rows.map(([t, b]) => `<tr><td>${esc(t)}</td><td class="num">${mark(b)}</td></tr>`).join('')}</tbody></table>
+  </div>`;
 }
 
 function stageChecks(i) {
@@ -248,13 +325,17 @@ function stageCard(name, i, tvSymbol) {
       <div>
         <div class="card-title" style="margin-bottom:6px">${esc(name)}</div>
         <div class="hero-state" style="margin-bottom:2px">${esc(st.stage_label)}${st.stage_sub ? `<span class="stage-sub">・${esc(st.stage_sub)}</span>` : ''}</div>
+        ${i.weekly && i.weekly.level !== 'none' ? `<span class="weekly-badge" style="color:${(WEEKLY_LEVEL[i.weekly.level] || WEEKLY_LEVEL.none).color};background:${(WEEKLY_LEVEL[i.weekly.level] || WEEKLY_LEVEL.none).bg};border-color:${(WEEKLY_LEVEL[i.weekly.level] || WEEKLY_LEVEL.none).color};display:inline-block;margin:4px 0">週足：${esc(i.weekly.label)}</span>` : ''}
         <div class="sub">${esc(STAGE_DESC[st.stage] || '判定材料が不足しています。')}</div>
       </div>
       ${tvSymbol ? `<a class="btn-link" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSymbol)}" target="_blank" rel="noopener">TradingView ↗</a>` : ''}
     </div>
     ${stageStairs(st.stage, st.stage_sub)}
+    <div class="stage-sec">日足(50・150・200日線の並び)</div>
     ${candleSvg(i.chart)}
     ${stageChecks(i)}
+    <div class="stage-sec">週足(30週線)：Stage 3の早期警戒</div>
+    ${weeklyBlock(i)}
   </div>`;
 }
 
@@ -267,10 +348,11 @@ function stagePanel(latest) {
     ${ew ? `<div class="grid2">${stageCard('S&P500均等加重(RSP)— 中小型も含めた「平均的な銘柄」', ew, 'AMEX:RSP')}<div class="card"><div class="card-title">階層の読み方</div>
       <div class="sub" style="font-size:12.5px;line-height:1.7">ステージ分析はワインスタインが体系化し、ミネルヴィニが買いの前提に使う考え方です。判定は移動平均の並びだけで機械的に行う近似で、本来はチャートの形を見て決めます。<br>
       ・指数がStage 2でも、均等加重(RSP)が弱ければ「一部の大型株だけの相場」。<br>
-      ・Stage 2の「押し目」は50日線割れ。上昇の並びが保たれていれば調整の範囲内ですが、200日線を割って150日線が下を向き始めるとStage 3への移行を疑います。</div></div></div>` : ''}`;
+      ・Stage 2の「押し目」は50日線割れ。上昇の並びが保たれていれば調整の範囲内です。<br>
+      ・日足の並びは崩れるのが遅いので、天井(Stage 3)の入口は週足で見ます。ワインスタインの見方では、30週線の上昇が止まって平らになり、週足が30週線の上下を行き来し始めたらStage 3です。各カード下段の「週足：…」がその警戒表示です。</div></div></div>` : ''}`;
 }
 
-const api = { evaluateGates, summarize, ladderPanel, ladderHistory, classifyStage, stageOf, stagePanel, candleSvg, GATES };
+const api = { evaluateGates, summarize, ladderPanel, ladderHistory, classifyStage, stageOf, stagePanel, candleSvg, priceChart, weeklyBlock, GATES };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else root.JiaiLadder = api;
 })(typeof window !== 'undefined' ? window : globalThis);

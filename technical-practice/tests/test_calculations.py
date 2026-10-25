@@ -958,3 +958,46 @@ def test_compute_rs_line_detects_new_high():
     assert out["rs_line_new_high_52w"] is True and out["rs_line_pct_below_high"] == 0.0
     weak = pd.Series(np.linspace(100, 60, 300), index=idx)
     assert mc.compute_rs_line(weak, bench)["rs_line_new_high_52w"] is False
+
+
+def _daily_ohlc(closes):
+    idx = pd.bdate_range("2023-01-02", periods=len(closes))
+    c = pd.Series(closes, index=idx, dtype=float)
+    return pd.DataFrame({"Open": c, "High": c * 1.005, "Low": c * 0.995, "Close": c, "Volume": 1e6}, index=idx)
+
+
+def test_weekly_stage3_none_in_steady_uptrend():
+    out = mc.compute_weekly_stage3(_daily_ohlc(np.linspace(100, 200, 400)))
+    assert out["level"] == "none" and out["checks"]["below_ma30w"] is False
+    assert len(out["chart"]["c"]) == mc.WEEKLY_CHART_WEEKS
+
+
+def test_weekly_stage3_warns_after_breaking_30w_ma():
+    closes = list(np.linspace(100, 200, 300)) + list(np.linspace(200, 150, 100))
+    out = mc.compute_weekly_stage3(_daily_ohlc(closes))
+    assert out["level"] == "warning" and out["checks"]["below_ma30w"] is True
+
+
+def test_weekly_stage3_flags_stalling_top():
+    closes = list(np.linspace(100, 200, 300)) + [200 + 3 * np.sin(i / 3) for i in range(160)]
+    out = mc.compute_weekly_stage3(_daily_ohlc(closes))
+    assert out["level"] in ("watch", "warning")
+    assert out["weeks_since_high"] >= 1
+
+
+def test_macro_builders_with_fake_fred():
+    import macro
+    idx = pd.date_range("2019-01-01", periods=90, freq="MS")
+    fake = {
+        "DFEDTARU": pd.Series(5.5, index=pd.date_range("2020-01-01", periods=2000, freq="D")),
+        "DFEDTARL": pd.Series(5.25, index=pd.date_range("2020-01-01", periods=2000, freq="D")),
+        "FEDTARMDLR": pd.Series([3.0, 3.2], index=pd.to_datetime(["2026-06-17", "2026-09-16"])),
+        "CPIAUCSL": pd.Series(np.linspace(250, 330, 90), index=idx),
+        "CPILFESL": pd.Series(np.linspace(260, 335, 90), index=idx),
+        "PCEPILFE": pd.Series(np.linspace(110, 131, 90), index=idx),
+    }
+    pr = macro.build_policy_rate(fetch=fake.get)
+    assert pr["latest_upper"] == 5.5 and pr["longer_run_median"]["value"] == 3.2
+    inf = macro.build_inflation(fetch=fake.get)
+    assert inf["target_pct"] == 2.0 and inf["core_pce"]["latest"] > 0
+    assert macro.build_policy_rate(fetch=lambda s: None) is None
