@@ -76,6 +76,76 @@
     </div>`;
   }
 
+  // 来年度の予想EPS × 過去のPER帯 ＝ 株価の枠（週足ローソク＋10週・40週線）
+  const BAND_COLOR = { '最低': 'var(--faint)', '下位10%': 'var(--ok)', '中央': 'var(--muted)', '上位10%': 'var(--warn)', '最高': 'var(--err)' };
+  function frameZone(h) {
+    const f = h.frame, p = Number(h.price);
+    const bs = f.bands;
+    for (let i = bs.length - 1; i >= 0; i--) if (p >= bs[i].lo) {
+      if (p <= bs[i].hi) return `${bs[i].name}の帯の中`;
+      return i === bs.length - 1 ? '最高の帯より上' : `${bs[i].name}と${bs[i + 1].name}の間`;
+    }
+    return '最低の帯より下';
+  }
+  function frameChart(h) {
+    const f = h.frame, w = h.weekly || [];
+    if (!f || !w.length) return '';
+    const W = 640, H = 300, m = { t: 10, r: 112, b: 24, l: 44 };
+    const bars = w.map(([d, o, hi, lo, c, a10, a40]) => ({ t: Date.parse(d), o, hi, lo, c, a10, a40 }));
+    const price = bars.map((b) => [b.hi, b.lo]).flat();
+    const pmin = Math.min(...price), pmax = Math.max(...price);
+    // 表示範囲：値動きの範囲＋その近くの帯（遠すぎる帯は端に「↑」で示す）
+    let ymin = pmin * 0.85, ymax = pmax * 1.15;
+    for (const b of f.bands) { if (b.hi >= ymin * 0.9 && b.lo <= ymax * 1.25) { ymin = Math.min(ymin, b.lo * 0.97); ymax = Math.max(ymax, b.hi * 1.03); } }
+    // 値動きの上下で一番近い帯は、離れていても必ず表示する（どこまで距離があるかを見るため）
+    const upN = f.bands.filter((b) => b.lo > pmax).sort((a, b) => a.lo - b.lo)[0];
+    const dnN = f.bands.filter((b) => b.hi < pmin).sort((a, b) => b.hi - a.hi)[0];
+    if (upN) ymax = Math.max(ymax, upN.hi * 1.03);
+    if (dnN) ymin = Math.min(ymin, dnN.lo * 0.97);
+    const lmin = Math.log(ymin), lmax = Math.log(ymax);
+    const y = (v) => H - m.b - (Math.log(v) - lmin) / (lmax - lmin) * (H - m.t - m.b);
+    const n = bars.length, bw = (W - m.l - m.r) / n;
+    const x = (i) => m.l + bw * (i + 0.5);
+    const clamp = (v) => Math.max(m.t, Math.min(H - m.b, v));
+    const ticks = [];
+    for (const base of [1, 1.5, 2, 3, 5, 7]) for (let e = -1; e <= 4; e++) { const v = base * 10 ** e; if (v >= ymin && v <= ymax) ticks.push(v); }
+    ticks.sort((a, b) => a - b);
+    const quarters = [];
+    bars.forEach((b, i) => { const dt = new Date(b.t); if (dt.getUTCDate() <= 7 && [0, 3, 6, 9].includes(dt.getUTCMonth())) quarters.push([i, `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}`]); });
+    const line = (key) => { let d = ''; bars.forEach((b, i) => { if (b[key] == null) return; d += `${d ? 'L' : 'M'}${x(i).toFixed(1)},${y(b[key]).toFixed(1)}`; }); return d; };
+    const bandsIn = f.bands.filter((b) => b.hi >= ymin && b.lo <= ymax);
+    const above = f.bands.filter((b) => b.lo > ymax), below = f.bands.filter((b) => b.hi < ymin);
+    const labs = bandsIn.map((b) => ({ ...b, ly: (clamp(y(b.lo)) + clamp(y(b.hi))) / 2 })).sort((a, b) => b.ly - a.ly);
+    for (let i = 1; i < labs.length; i++) if (labs[i - 1].ly - labs[i].ly < 22) labs[i].ly = labs[i - 1].ly - 22;
+    const fmt = (v) => (v >= 100 ? Math.round(v) : v.toFixed(1));
+    const last = bars[n - 1];
+    return `<svg class="pf-chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(h.ticker)} の株価と予想PERの枠">
+      ${bandsIn.map((b) => `<rect x="${m.l}" width="${W - m.l - m.r}" y="${clamp(y(b.hi))}" height="${Math.max(2, clamp(y(b.lo)) - clamp(y(b.hi)))}" fill="${BAND_COLOR[b.name]}" opacity=".18"/>`).join('')}
+      ${ticks.map((v) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" class="pf-gl"/><text x="${m.l - 5}" y="${y(v)}" dy="0.32em" text-anchor="end" class="pf-tick">${v}</text>`).join('')}
+      ${quarters.map(([i, lab]) => `<text x="${x(i)}" y="${H - 6}" text-anchor="middle" class="pf-tick">${lab}</text>`).join('')}
+      ${bars.map((b, i) => { const up = b.c >= b.o, col = up ? 'var(--ok)' : 'var(--err)'; const top = y(Math.max(b.o, b.c)), bot = y(Math.min(b.o, b.c)); return `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b.hi)}" y2="${y(b.lo)}" stroke="${col}" stroke-width="1"/><rect x="${x(i) - bw * 0.35}" width="${bw * 0.7}" y="${top}" height="${Math.max(1, bot - top)}" fill="${col}"/>`; }).join('')}
+      <path d="${line('a10')}" fill="none" stroke="var(--pri)" stroke-width="1.3"/>
+      <path d="${line('a40')}" fill="none" stroke="#8e24aa" stroke-width="1.3"/>
+      <line x1="${m.l}" x2="${W - m.r}" y1="${y(last.c)}" y2="${y(last.c)}" stroke="var(--tx)" stroke-dasharray="2 3"/>
+      ${labs.map((b) => `<text x="${W - m.r + 5}" y="${b.ly - 5}" fill="${BAND_COLOR[b.name]}" class="pf-tick pf-bl">${b.name} ${b.mult}倍</text><text x="${W - m.r + 5}" y="${b.ly + 7}" fill="${BAND_COLOR[b.name]}" class="pf-tick">${fmt(b.lo)}${b.lo !== b.hi ? '〜' + fmt(b.hi) : ''}</text>`).join('')}
+      ${above.length ? `<text x="${m.l + 4}" y="${m.t + 9}" class="pf-tick">↑ さらに上：${above.map((b) => `${b.name} ${fmt(b.lo)}〜`).join('・')}</text>` : ''}
+      ${below.length ? `<text x="${m.l + 4}" y="${H - m.b - 5}" class="pf-tick">↓ さらに下：${below.map((b) => `${b.name} 〜${fmt(b.hi)}`).join('・')}</text>` : ''}
+    </svg>
+    <div class="legend pf-legend"><span><span class="dot" style="background:var(--pri)"></span>10週線（≈50日）</span><span><span class="dot" style="background:#8e24aa"></span>40週線（≈200日）</span><span>点線＝最新の終値</span></div>`;
+  }
+  function frameCard(h) {
+    const f = h.frame;
+    if (!f) return '';
+    return `<div class="card pf-card" id="pff-${esc(h.ticker)}">
+      <div class="pf-head">
+        <div><div class="story-ticker">${esc(h.ticker)}</div><div class="sub">${esc(h.name)}・予想EPS ${esc(f.label)}</div></div>
+        <div class="pf-now"><span class="pf-big mono">${f1(f.per_now_lo)}${f.per_now_lo !== f.per_now_hi ? '〜' + f1(f.per_now_hi) : ''}</span><span class="sub">倍（予想PER）</span> <span class="badge muted">${esc(frameZone(h))}</span></div>
+      </div>
+      ${frameChart(h)}
+      <div class="story-note">予想EPS ${esc(f.eps_lo)}${f.eps_lo !== f.eps_hi ? '〜' + esc(f.eps_hi) : ''} ${esc(h.currency)}（${esc(f.source)}）。${esc(f.note)}</div>
+    </div>`;
+  }
+
   function table(hs) {
     return `<div class="op-table"><table class="pf-table"><thead><tr>
       <th>銘柄</th><th>区分</th><th class="r">今のPER</th><th class="r">位置</th><th class="r">下位10%</th><th class="r">中央</th><th class="r">上位10%</th><th class="r">最高</th>
@@ -98,6 +168,10 @@
       </div>
       <div class="card"><div class="card-title">一覧：今のPERと過去の範囲</div>${table(hs)}
         <div class="sub" style="margin-top:var(--s3)">${esc(d.method)} 株価換算は直近期のEPSに過去の倍率を掛けたもの。</div></div>
+      <div class="card"><div class="card-title">来年度の予想EPSで見た株価の枠</div>
+        <div class="sub">${esc(d.frame_method || '')} 色の帯＝過去5年のPERの最低・下位10%・中央・上位10%・最高を、来年度の予想EPSで株価に直したもの。</div></div>
+      <div class="pf-grid">${hs.map(frameCard).join('')}</div>
+      <div class="card" style="margin-top:var(--s5)"><div class="card-title">PERの推移（過去5年）</div><div class="sub">確定EPSで見たPERの推移と、過去の範囲。</div></div>
       <div class="pf-grid">${hs.map(card).join('')}</div>
       <div class="card"><div class="card-title">読み方と注意</div><ul class="pf-notes">
         <li><b>警報</b>：EPSは伸びているのにPERが2〜3四半期続けて縮むときは、市場がストーリーを疑い始めているサイン。</li>
