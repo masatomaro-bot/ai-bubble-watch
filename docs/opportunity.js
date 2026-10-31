@@ -128,13 +128,14 @@ root.querySelector('#op-add').onsubmit=ev=>{ev.preventDefault();if(storageError)
 root.querySelector('#op-export').onclick=()=>{if(storageError){message('読み込みエラーのためバックアップ出力を停止しています。');return;}const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`opportunity-watch-${today}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 root.querySelector('#op-import').onchange=async ev=>{const file=ev.target.files[0];if(!file)return;try{if(file.size>5000000)throw Error();const imported=JSON.parse(await file.text());if(!validate(imported))throw Error();if(!confirm('現在の判断カードをバックアップの内容で置き換えますか？'))return;if(persist(imported)){clearDrafts();render();message('バックアップを復元しました。');}}catch{message('復元できません。有効な機会ウォッチのJSONを選んでください。');}finally{ev.target.value='';}};
 }
-function view(name){const offense=name==='opportunity'||name.startsWith('review-');const wrap=document.getElementById('opportunity-wrap');if(wrap){wrap.hidden=!offense;document.getElementById('opportunity').hidden=false;if(name.startsWith('review-')){const d=wrap.querySelector('details.op-legacy');if(d)d.open=true;}}else document.getElementById('opportunity').hidden=!offense;document.getElementById('content').hidden=offense;document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===(offense?'opportunity':'climate'))));}
+function view(name){const pf=name==='portfolio';const offense=!pf&&(name==='opportunity'||name.startsWith('review-'));const wrap=document.getElementById('opportunity-wrap');if(wrap){wrap.hidden=!offense;document.getElementById('opportunity').hidden=false;if(name.startsWith('review-')){const d=wrap.querySelector('details.op-legacy');if(d)d.open=true;}}else document.getElementById('opportunity').hidden=!offense;const pw=document.getElementById('portfolio-wrap');if(pw)pw.hidden=!pf;document.getElementById('content').hidden=offense||pf;const active=pf?'portfolio':offense?'opportunity':'climate';document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===active)));}
+function viewFromHash(){return (location.hash==='#portfolio'||location.hash.startsWith('#pf-'))?'portfolio':(location.hash==='#opportunity'||location.hash.startsWith('#review-'))?'opportunity':'climate';}
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{location.hash=b.dataset.view;view(b.dataset.view);});
-window.addEventListener('hashchange',()=>view((location.hash==='#opportunity'||location.hash.startsWith('#review-'))?'opportunity':'climate'));
+window.addEventListener('hashchange',()=>view(viewFromHash()));
 function refreshAnalysis(){
   if(document.querySelector('#opportunity form[data-dirty=true]')){pendingMarket=true;message('新しいデータを受信しました。編集中の内容を保存すると表示に反映されます。');return;}
   pendingMarket=false;render();
 }
 window.addEventListener('watch-data',refreshAnalysis);
-render();view((location.hash==='#opportunity'||location.hash.startsWith('#review-'))?'opportunity':'climate');
+render();view(viewFromHash());
 })();

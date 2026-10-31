@@ -1,0 +1,22 @@
+/* ポートフォリオウォッチ (2026-10-31) */
+.pf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:var(--s5);}
+.pf-card{margin-bottom:0;}
+.pf-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s3);}
+.pf-now{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;}
+.pf-big{font-size:24px;font-weight:700;}
+.pf-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}
+.pf-chart{display:block;margin:var(--s2) 0;}
+.pf-chart .pf-gl{stroke:var(--div);stroke-width:1;}
+.pf-chart .pf-tick{font:10px var(--mono);fill:var(--muted);}
+.pf-chart .pf-line{fill:none;stroke:var(--tx);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;}
+.pf-chart .pf-band{fill:var(--pri);opacity:.22;}
+.pf-chart .pf-mid{fill:none;stroke:var(--pri);stroke-width:2;stroke-linecap:round;}
+.pf-table th,.pf-table td{white-space:nowrap;}
+.pf-table .r{text-align:right;}
+.pf-floor{color:var(--ok);}
+.pf-cap{color:var(--warn);}
+.pf-notes{padding-left:1.2rem;font-size:13px;display:flex;flex-direction:column;gap:6px;}
+#portfolio-wrap .card{margin-bottom:var(--s5);}
+#portfolio-wrap .pf-grid .card{margin-bottom:0;}
+.pf-metrics .story-metric strong{font-size:13px;line-height:1.4;}
+.pf-metrics .story-metric span{font-size:10.5px;}
