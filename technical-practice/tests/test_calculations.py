@@ -1061,3 +1061,12 @@ def test_fred_error_message_hides_api_key(monkeypatch):
     macro.FETCH_ERRORS.clear()
     macro.fetch_fred("X")
     assert "SECRETKEY" not in macro.FETCH_ERRORS["FRED:X"]
+
+
+def test_compute_stress_gauges_vix_avg_catches_respike_after_spike():
+    # 10日前が急騰日だと1点比較では「低下」になるが、直近平均は上回っている
+    closes = [15.0] * 20 + [25.0] + [16.0] * 9 + [20.0]
+    result = compute_stress_gauges({"^VIX": make_price_df(closes)})
+    assert result["vix"]["change_10d"] == pytest.approx(-5.0)
+    assert result["vix"]["avg_10d"] == pytest.approx(16.9)
+    assert result["vix"]["level"] > result["vix"]["avg_10d"]

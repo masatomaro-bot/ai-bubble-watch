@@ -785,10 +785,19 @@ def compute_stress_gauges(gauge_hist: dict) -> dict:
             return None, None
         level = round(float(close.iloc[-1]), 2)
         change = (
-            round(float(close.iloc[-1] - close.iloc[-STRESS_GAUGE_CHANGE_WINDOW]), 2)
+            # iloc[-1-N] がちょうどN営業日前(iloc[-N]だと N-1 日前になる)
+            round(float(close.iloc[-1] - close.iloc[-1 - STRESS_GAUGE_CHANGE_WINDOW]), 2)
             if len(close) > STRESS_GAUGE_CHANGE_WINDOW else None
         )
         return level, change
+
+    def prior_avg(ticker):
+        # 当日を除く直近N営業日の平均。1点比較だと「N日前がたまたま急騰日」
+        # のとき実際には不安定なのに低下扱いになるため、平均との比較も出す。
+        close = close_of(ticker)
+        if close is None or len(close) <= STRESS_GAUGE_CHANGE_WINDOW:
+            return None
+        return round(float(close.iloc[-1 - STRESS_GAUGE_CHANGE_WINDOW:-1].mean()), 2)
 
     def ratio_and_change_pct(numer_ticker, denom_ticker):
         numer, denom = close_of(numer_ticker), close_of(denom_ticker)
@@ -799,14 +808,14 @@ def compute_stress_gauges(gauge_hist: dict) -> dict:
             return None, None
         last = round(float(ratio.iloc[-1]), 4)
         change_pct = (
-            round(100 * (ratio.iloc[-1] / ratio.iloc[-STRESS_GAUGE_CHANGE_WINDOW] - 1), 2)
+            round(100 * (ratio.iloc[-1] / ratio.iloc[-1 - STRESS_GAUGE_CHANGE_WINDOW] - 1), 2)
             if len(ratio) > STRESS_GAUGE_CHANGE_WINDOW else None
         )
         return last, change_pct
 
     vix_level, vix_change = level_and_change(VIX_TICKER)
     result = {
-        "vix": {"level": vix_level, "change_10d": vix_change},
+        "vix": {"level": vix_level, "change_10d": vix_change, "avg_10d": prior_avg(VIX_TICKER)},
     }
     for key, (numer, denom) in STRESS_GAUGE_RATIO_TICKERS.items():
         ratio, change_pct = ratio_and_change_pct(numer, denom)

@@ -15,7 +15,7 @@ const LOOKBACK = 5; // 「改善中」を判定する比較対象(営業日前)
 // トレンド確認→リーダーが動く→主役が戻る→参加が広がる」の順に進みやすい。
 // 順序は典型であって保証ではない。50%などの水準は自前の仮置き(要校正)。
 const GATES = [
-  { id: 'stress', label: '外側のストレスが落ち着く', target: 'VIXが10日前より低く、HYG/IEF(信用)が10日前より高い' },
+  { id: 'stress', label: '外側のストレスが落ち着く', target: 'VIXが10日前より低く、かつ直近10日平均以下 / HYG/IEF(信用)が10日前より高い' },
   { id: 'lows', label: '新安値の縮小が止まる', target: '新高値 ≥ 新安値(未達でも新安値が5日前より減っていれば一部)' },
   { id: 'index50', label: '指数が50日線を取り戻す', target: 'S&P500とNASDAQの終値が両方とも50日線の上' },
   { id: 'oneil', label: '上昇トレンドの確認', target: 'O\'Neil/IBD式で両指数が「上昇確認」' },
@@ -36,12 +36,16 @@ function evaluateGates(d, prior) {
   const out = [];
   const g = d.stress_gauges || {};
   const vixCh = num(g.vix?.change_10d);
+  const vixLv = num(g.vix?.level);
+  const vixAvg = num(g.vix?.avg_10d); // 古い履歴JSONには無い(null→従来判定)
   const credCh = num(g.credit_hyg_ief?.change_10d_pct);
   {
-    const okVix = vixCh !== null && vixCh <= 0;
+    // 10日前との1点比較だけだと、10日前が急騰日なら再上昇中でも「低下」になる。
+    // 直近10日平均を上回っている間は落ち着いたと見なさない。
+    const okVix = vixCh !== null && vixCh <= 0 && (vixAvg === null || vixLv === null || vixLv <= vixAvg);
     const okCred = credCh !== null && credCh >= 0;
     const status = vixCh === null && credCh === null ? 'na' : okVix && okCred ? 'ok' : okVix || okCred ? 'partial' : 'ng';
-    out.push({ ...GATES[0], status, value: `VIX ${num(g.vix?.level) ?? '-'}(10日 ${signed(vixCh)}) / 信用 ${signed(credCh, '%')}` });
+    out.push({ ...GATES[0], status, value: `VIX ${vixLv ?? '-'}(10日 ${signed(vixCh)}${vixAvg !== null ? ` / 10日平均 ${vixAvg}` : ''}) / 信用 ${signed(credCh, '%')}` });
   }
   {
     const ext = d.breadth_extended || {};
