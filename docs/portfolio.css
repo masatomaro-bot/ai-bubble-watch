@@ -20,3 +20,6 @@
 #portfolio-wrap .pf-grid .card{margin-bottom:0;}
 .pf-metrics .story-metric strong{font-size:13px;line-height:1.4;}
 .pf-metrics .story-metric span{font-size:10.5px;}
+.pf-chart .pf-bl{font-weight:700;}
+.pf-legend{margin:2px 0 var(--s2);}
+#portfolio-wrap .pf-grid + .card{margin-top:var(--s5);}
