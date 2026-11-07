@@ -1,11 +1,11 @@
 {
- "updated_at": "2026-11-07T08:02Z",
+ "updated_at": "2026-11-07T09:06Z",
  "week": "2026-11-06",
  "summary": null,
  "lamps": {
   "eps_revision": {
-   "state": "off",
-   "detail": "次四半期 比較不可 ／ 来年 +0.7(前週比、%pt)"
+   "state": "watch",
+   "detail": "次四半期(Q4 2026) 0.0 ／ 来年(CY2027) -0.2(前週比、%pt)"
   },
   "guidance": {
    "state": "off",
@@ -30,13 +30,21 @@
     "guidance_negative": 56,
     "guidance_positive": 56,
     "beat_pct": null,
-    "quarters": {},
+    "quarters": {
+     "Q3 2025": 7.7,
+     "Q4 2025": 7.4,
+     "Q1 2026": 11.6,
+     "Q2 2026": 12.6
+    },
     "years": {
-     "CY2025": 10.7
+     "CY2025": 10.7,
+     "CY2026": 13.7
     },
     "week": "2025-09-19",
     "issue_date": "2025-09-19",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_091925.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_091925.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 22.5,
@@ -46,227 +54,387 @@
     "guidance_negative": 56,
     "guidance_positive": 56,
     "beat_pct": null,
-    "quarters": {},
+    "quarters": {
+     "Q3 2025": 7.9,
+     "Q4 2025": 7.3,
+     "Q1 2026": 11.7,
+     "Q2 2026": 12.7
+    },
     "years": {
-     "CY2025": 10.8
+     "CY2025": 10.8,
+     "CY2026": 13.8
     },
     "week": "2025-09-26",
     "issue_date": "2025-09-26",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_092625.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_092625.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.8,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.6,
     "guidance_quarter": "Q3 2025",
     "guidance_negative": 56,
     "guidance_positive": 56,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2025": 8.0,
+     "Q4 2025": 7.3,
+     "Q1 2026": 11.8,
+     "Q2 2026": 12.7
+    },
+    "years": {
+     "CY2025": 10.9,
+     "CY2026": 13.8
+    },
     "week": "2025-10-03",
     "issue_date": "2025-10-03",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_100325.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_100325.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.8,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.6,
     "guidance_quarter": "Q3 2025",
     "guidance_negative": 57,
     "guidance_positive": 55,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2025": 8.0,
+     "Q4 2025": 7.4,
+     "Q1 2026": 11.7,
+     "Q2 2026": 12.7
+    },
+    "years": {
+     "CY2025": 10.9,
+     "CY2026": 13.8
+    },
     "week": "2025-10-10",
     "issue_date": "2025-10-10",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_101025.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_101025.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 22.4,
-    "pe_avg5": null,
-    "pe_avg10": null,
-    "guidance_quarter": null,
-    "guidance_negative": null,
-    "guidance_positive": null,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.6,
+    "guidance_quarter": "Q4 2025",
+    "guidance_negative": 2,
+    "guidance_positive": 8,
     "beat_pct": 86.0,
-    "quarters": {},
+    "quarters": {
+     "Q3 2025": 8.5,
+     "Q2 2025": 26.6,
+     "Q4 2025": 7.5,
+     "Q1 2026": 11.9,
+     "Q2 2026": 12.8
+    },
     "years": {
-     "CY2025": 11.0
+     "CY2025": 11.0,
+     "CY2026": 13.9
     },
     "week": "2025-10-17",
     "issue_date": "2025-10-17",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_101725.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_101725.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.7,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.6,
     "guidance_quarter": "Q4 2025",
     "guidance_negative": 11,
     "guidance_positive": 12,
     "beat_pct": 87.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2025": 9.2,
+     "Q4 2025": 7.4,
+     "Q1 2026": 11.9,
+     "Q2 2026": 12.8
+    },
+    "years": {
+     "CY2025": 11.0,
+     "CY2026": 13.9
+    },
     "week": "2025-10-24",
     "issue_date": "2025-10-24",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_102425.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_102425.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.9,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.6,
     "guidance_quarter": "Q4 2025",
     "guidance_negative": 28,
     "guidance_positive": 21,
     "beat_pct": 83.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2025": 10.7,
+     "Q4 2025": 7.6,
+     "Q1 2026": 11.8,
+     "Q2 2026": 12.8
+    },
+    "years": {
+     "CY2025": 11.2,
+     "CY2026": 14.0
+    },
     "week": "2025-10-31",
     "issue_date": "2025-10-31",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_103125.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_103125.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.7,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.6,
     "guidance_quarter": "Q4 2025",
     "guidance_negative": 42,
     "guidance_positive": 31,
     "beat_pct": 82.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2025": 13.1,
+     "Q4 2025": 7.5,
+     "Q1 2026": 11.8,
+     "Q2 2026": 12.7
+    },
+    "years": {
+     "CY2025": 11.6,
+     "CY2026": 13.7
+    },
     "week": "2025-11-07",
     "issue_date": "2025-11-07",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_110725.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_110725.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.4,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.7,
     "guidance_quarter": "Q4 2025",
     "guidance_negative": 42,
     "guidance_positive": 33,
     "beat_pct": 82.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2025": 13.1,
+     "Q4 2025": 7.4
+    },
+    "years": {
+     "CY2025": 11.7,
+     "CY2026": 13.9
+    },
     "week": "2025-11-14",
     "issue_date": "2025-11-14",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111425.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111425.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 21.5,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.7,
     "guidance_quarter": "Q4 2025",
     "guidance_negative": 43,
     "guidance_positive": 34,
     "beat_pct": 83.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2025": 13.4,
+     "Q4 2025": 7.5,
+     "Q1 2026": 12.2,
+     "Q2 2026": 13.3
+    },
+    "years": {
+     "CY2025": 11.8,
+     "CY2026": 14.2
+    },
     "week": "2025-11-21",
     "issue_date": "2025-11-21",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_112125.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_112125.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.4,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.7,
     "guidance_quarter": "Q4 2025",
     "guidance_negative": 52,
     "guidance_positive": 48,
     "beat_pct": 83.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q4 2025": 7.7,
+     "Q3 2025": 14.9,
+     "Q1 2026": 12.2,
+     "Q2 2026": 13.6,
+     "Q3 2026": 13.6,
+     "Q4 2026": 17.5
+    },
+    "years": {
+     "CY2025": 11.9,
+     "CY2026": 14.5
+    },
     "week": "2025-12-05",
     "issue_date": "2025-12-05",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_120525.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_120525.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.5,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.7,
     "guidance_quarter": "Q4 2025",
     "guidance_negative": 56,
     "guidance_positive": 49,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q4 2025": 8.1,
+     "Q1 2026": 12.4,
+     "Q2 2026": 13.8,
+     "Q3 2026": 13.8,
+     "Q4 2026": 17.5
+    },
+    "years": {
+     "CY2025": 8.6,
+     "CY2026": 14.5
+    },
     "week": "2025-12-12",
     "issue_date": "2025-12-12",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_121225.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_121225.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 21.8,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.7,
     "guidance_quarter": "Q4 2025",
     "guidance_negative": 58,
     "guidance_positive": 50,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q4 2025": 8.3,
+     "Q1 2026": 13.1,
+     "Q2 2026": 14.6,
+     "Q3 2026": 14.7,
+     "Q4 2026": 18.1
+    },
+    "years": {
+     "CY2026": 8.6,
+     "CY2025": 12.5
+    },
     "week": "2025-12-19",
     "issue_date": "2025-12-19",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_121925.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_121925.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.2,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.7,
     "guidance_quarter": "Q4 2025",
     "guidance_negative": 57,
     "guidance_positive": 50,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q4 2025": 8.3,
+     "Q1 2026": 12.6,
+     "Q2 2026": 14.6,
+     "Q3 2026": 14.9,
+     "Q4 2026": 18.3
+    },
+    "years": {
+     "CY2026": 14.9
+    },
     "week": "2026-01-09",
     "issue_date": "2026-01-09",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_010926.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_010926.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
-    "guidance_quarter": null,
-    "guidance_negative": null,
-    "guidance_positive": null,
+    "pe": 22.2,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.8,
+    "guidance_quarter": "Q1 2026",
+    "guidance_negative": 2,
+    "guidance_positive": 3,
     "beat_pct": 79.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q4 2025": 8.2,
+     "Q4 2024": 15.9,
+     "Q1 2026": 12.2,
+     "Q2 2026": 14.6,
+     "Q3 2026": 14.8,
+     "Q4 2026": 18.4
+    },
+    "years": {
+     "CY2026": 14.9
+    },
     "week": "2026-01-16",
     "issue_date": "2026-01-16",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_011626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_011626.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 22.1,
     "pe_avg5": 20.0,
     "pe_avg10": 18.8,
-    "guidance_quarter": null,
-    "guidance_negative": null,
-    "guidance_positive": null,
+    "guidance_quarter": "Q1 2026",
+    "guidance_negative": 6,
+    "guidance_positive": 4,
     "beat_pct": 75.0,
-    "quarters": {},
+    "quarters": {
+     "Q4 2025": 8.2,
+     "Q4 2024": 15.9,
+     "Q1 2026": 11.2,
+     "Q2 2026": 14.5,
+     "Q3 2026": 14.8,
+     "Q4 2026": 18.4
+    },
     "years": {
      "CY2026": 14.7
     },
     "week": "2026-01-23",
     "issue_date": "2026-01-23",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_012326.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_012326.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 22.2,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.8,
     "guidance_quarter": "Q1 2026",
     "guidance_negative": 7,
     "guidance_positive": 17,
     "beat_pct": 75.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q4 2025": 11.9,
+     "Q4 2024": 15.9,
+     "Q1 2026": 11.7,
+     "Q2 2026": 14.9,
+     "Q3 2026": 15.2,
+     "Q4 2026": 15.4
+    },
+    "years": {
+     "CY2026": 14.3
+    },
     "week": "2026-01-30",
     "issue_date": "2026-01-30",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_013026.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_013026.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 21.5,
@@ -276,41 +444,69 @@
     "guidance_negative": 23,
     "guidance_positive": 28,
     "beat_pct": 76.0,
-    "quarters": {},
+    "quarters": {
+     "Q4 2025": 13.0,
+     "Q1 2026": 11.3,
+     "Q2 2026": 14.9,
+     "Q3 2026": 15.4,
+     "Q4 2026": 15.0
+    },
     "years": {
      "CY2026": 14.1
     },
     "week": "2026-02-06",
     "issue_date": "2026-02-06",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_020626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_020626.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 21.5,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.8,
     "guidance_quarter": "Q1 2026",
     "guidance_negative": 31,
     "guidance_positive": 38,
     "beat_pct": 74.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q4 2025": 13.2,
+     "Q1 2026": 11.1,
+     "Q2 2026": 14.9,
+     "Q3 2026": 15.6,
+     "Q4 2026": 15.0
+    },
+    "years": {
+     "CY2026": 14.4
+    },
     "week": "2026-02-13",
     "issue_date": "2026-02-13",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_021326.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_021326.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 21.6,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.8,
     "guidance_quarter": "Q1 2026",
     "guidance_negative": 45,
     "guidance_positive": 52,
     "beat_pct": 73.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q4 2025": 14.2,
+     "Q1 2026": 11.4,
+     "Q2 2026": 15.4,
+     "Q3 2026": 16.2,
+     "Q4 2026": 15.0
+    },
+    "years": {
+     "CY2026": 14.6
+    },
     "week": "2026-02-27",
     "issue_date": "2026-02-27",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_022726.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_022726.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 21.2,
@@ -320,45 +516,66 @@
     "guidance_negative": 46,
     "guidance_positive": 56,
     "beat_pct": null,
-    "quarters": {},
+    "quarters": {
+     "Q1 2026": 11.5,
+     "Q2 2026": 15.5,
+     "Q3 2026": 16.5,
+     "Q4 2026": 15.6
+    },
     "years": {
      "CY2026": 15.0
     },
     "week": "2026-03-06",
     "issue_date": "2026-03-06",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_030626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_030626.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.9,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.9,
     "guidance_quarter": "Q1 2026",
     "guidance_negative": 46,
     "guidance_positive": 57,
     "beat_pct": null,
-    "quarters": {},
+    "quarters": {
+     "Q1 2026": 11.6,
+     "Q2 2026": 16.0,
+     "Q3 2026": 16.9,
+     "Q4 2026": 15.9
+    },
     "years": {
      "CY2026": 15.3
     },
     "week": "2026-03-13",
     "issue_date": "2026-03-12",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_031226.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_031226.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.3,
+    "pe_avg5": 20.0,
+    "pe_avg10": 18.9,
     "guidance_quarter": "Q1 2026",
     "guidance_negative": 50,
     "guidance_positive": 57,
     "beat_pct": null,
-    "quarters": {},
+    "quarters": {
+     "Q1 2026": 12.5,
+     "Q2 2026": 17.8,
+     "Q3 2026": 18.8,
+     "Q4 2026": 18.1
+    },
     "years": {
      "CY2026": 16.3
     },
     "week": "2026-03-20",
     "issue_date": "2026-03-19",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_031926.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_031926.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 19.9,
@@ -368,169 +585,274 @@
     "guidance_negative": 50,
     "guidance_positive": 60,
     "beat_pct": null,
-    "quarters": {},
+    "quarters": {
+     "Q1 2026": 13.0,
+     "Q2 2026": 18.7,
+     "Q3 2026": 20.8,
+     "Q4 2026": 19.0
+    },
     "years": {
      "CY2026": 17.1
     },
     "week": "2026-03-27",
     "issue_date": "2026-03-27",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_032726.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_032726.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 19.8,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.9,
     "guidance_quarter": "Q1 2026",
     "guidance_negative": 51,
     "guidance_positive": 59,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q1 2026": 13.2,
+     "Q2 2026": 19.1,
+     "Q3 2026": 21.2,
+     "Q4 2026": 19.3
+    },
+    "years": {
+     "CY2026": 17.4
+    },
     "week": "2026-04-03",
     "issue_date": "2026-04-02",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_040226.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_040226.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.4,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.9,
     "guidance_quarter": "Q1 2026",
     "guidance_negative": 51,
     "guidance_positive": 58,
     "beat_pct": 80.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q1 2026": 12.6,
+     "Q2 2026": 19.7,
+     "Q3 2026": 21.8,
+     "Q4 2026": 19.6
+    },
+    "years": {
+     "CY2026": 17.6
+    },
     "week": "2026-04-10",
     "issue_date": "2026-04-10",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_041026A.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_041026A.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 20.9,
     "pe_avg5": 19.9,
     "pe_avg10": 18.9,
-    "guidance_quarter": null,
-    "guidance_negative": null,
-    "guidance_positive": null,
+    "guidance_quarter": "Q2 2026",
+    "guidance_negative": 4,
+    "guidance_positive": 3,
     "beat_pct": 88.0,
-    "quarters": {},
+    "quarters": {
+     "Q1 2026": 13.2,
+     "Q2 2026": 20.1,
+     "Q3 2026": 22.2,
+     "Q4 2026": 19.9
+    },
     "years": {
      "CY2026": 18.0
     },
     "week": "2026-04-17",
     "issue_date": "2026-04-17",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_041726.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_041726.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.9,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.9,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 11,
     "guidance_positive": 9,
     "beat_pct": 84.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q1 2026": 15.1,
+     "Q2 2026": 20.6,
+     "Q3 2026": 22.7,
+     "Q4 2026": 20.4
+    },
+    "years": {
+     "CY2026": 18.6
+    },
     "week": "2026-04-24",
     "issue_date": "2026-04-24",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_042426.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_042426.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.9,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.9,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 28,
     "guidance_positive": 23,
     "beat_pct": 84.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q1 2026": 27.1,
+     "Q2 2026": 21.3,
+     "Q3 2026": 23.0,
+     "Q4 2026": 20.6
+    },
+    "years": {
+     "CY2026": 21.3
+    },
     "week": "2026-05-01",
     "issue_date": "2026-05-01",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_050126.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_050126.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 21.0,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.9,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 38,
     "guidance_positive": 39,
     "beat_pct": 84.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q1 2026": 27.7,
+     "Q2 2026": 19.9,
+     "Q3 2026": 23.2,
+     "Q4 2026": 20.7
+    },
+    "years": {
+     "CY2026": 21.0
+    },
     "week": "2026-05-08",
     "issue_date": "2026-05-08",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_050826.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_050826.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 21.4,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.9,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 38,
     "guidance_positive": 42,
     "beat_pct": 84.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q1 2026": 27.7,
+     "Q2 2026": 20.5,
+     "Q3 2026": 23.6,
+     "Q4 2026": 21.1
+    },
+    "years": {
+     "CY2026": 21.5
+    },
     "week": "2026-05-15",
     "issue_date": "2026-05-15",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_051526.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_051526.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 21.1,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.9,
     "guidance_quarter": null,
     "guidance_negative": null,
     "guidance_positive": null,
     "beat_pct": 84.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q1 2026": 28.4,
+     "Q2 2026": 21.0,
+     "Q3 2026": 24.2,
+     "Q4 2026": 21.7
+    },
+    "years": {
+     "CY2026": 22.1
+    },
     "week": "2026-05-22",
     "issue_date": "2026-05-21",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_052126.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_052126.pdf",
+    "parser": 2,
+    "missing": [
+     "ガイダンス件数"
+    ]
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 21.2,
+    "pe_avg5": 19.9,
+    "pe_avg10": 18.9,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 46,
     "guidance_positive": 56,
     "beat_pct": 85.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q1 2026": 28.6,
+     "Q2 2026": 21.6,
+     "Q3 2026": 24.8,
+     "Q4 2026": 22.3
+    },
+    "years": {
+     "CY2026": 22.6
+    },
     "week": "2026-05-29",
     "issue_date": "2026-05-29",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_052926A.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_052926A.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 21.1,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 47,
     "guidance_positive": 61,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q2 2026": 21.7,
+     "Q3 2026": 25.1,
+     "Q4 2026": 22.6
+    },
+    "years": {
+     "CY2026": 22.8
+    },
     "week": "2026-06-05",
     "issue_date": "2026-06-05",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_060526.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_060526.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.1,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 47,
     "guidance_positive": 62,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q2 2026": 21.9,
+     "Q3 2026": 25.3,
+     "Q4 2026": 22.8
+    },
+    "years": {
+     "CY2026": 23.2,
+     "CY2027": 16.2
+    },
     "week": "2026-06-12",
     "issue_date": "2026-06-12",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_061226.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_061226.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": null,
@@ -540,127 +862,207 @@
     "guidance_negative": 48,
     "guidance_positive": 62,
     "beat_pct": null,
-    "quarters": {},
+    "quarters": {
+     "Q2 2026": 22.0,
+     "Q3 2026": 25.6,
+     "Q4 2026": 23.1
+    },
     "years": {
-     "CY2026": 23.3
+     "CY2026": 23.3,
+     "CY2027": 16.3
     },
     "week": "2026-06-19",
     "issue_date": "2026-06-18",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_061826.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_061826.pdf",
+    "parser": 2,
+    "missing": [
+     "予想PER"
+    ]
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.1,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 48,
     "guidance_positive": 63,
     "beat_pct": null,
-    "quarters": {},
+    "quarters": {
+     "Q2 2026": 23.1,
+     "Q3 2026": 26.7,
+     "Q4 2026": 24.2
+    },
     "years": {
-     "CY2026": 24.0
+     "CY2026": 24.0,
+     "CY2027": 16.8
     },
     "week": "2026-06-26",
     "issue_date": "2026-06-26",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_062626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_062626.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.4,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 48,
     "guidance_positive": 63,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q2 2026": 23.3,
+     "Q3 2026": 26.8,
+     "Q4 2026": 24.4
+    },
+    "years": {
+     "CY2026": 24.1
+    },
     "week": "2026-07-03",
     "issue_date": "2026-07-02",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_070226.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_070226.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.5,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
     "guidance_quarter": "Q2 2026",
     "guidance_negative": 49,
     "guidance_positive": 62,
     "beat_pct": 89.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q2 2026": 23.6,
+     "Q3 2026": 26.6,
+     "Q4 2026": 24.3
+    },
+    "years": {
+     "CY2026": 24.2,
+     "CY2027": 17.4
+    },
     "week": "2026-07-10",
     "issue_date": "2026-07-10",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_071026.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_071026.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
-    "guidance_quarter": null,
-    "guidance_negative": null,
-    "guidance_positive": null,
+    "pe": 20.3,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
+    "guidance_quarter": "Q3 2026",
+    "guidance_negative": 4,
+    "guidance_positive": 5,
     "beat_pct": 88.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q2 2026": 24.7,
+     "Q3 2026": 27.0,
+     "Q4 2026": 24.6
+    },
+    "years": {
+     "CY2026": 24.5,
+     "CY2027": 17.5
+    },
     "week": "2026-07-17",
     "issue_date": "2026-07-17",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_071726.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_071726.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.1,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
     "guidance_quarter": "Q3 2026",
     "guidance_negative": 9,
     "guidance_positive": 11,
     "beat_pct": 86.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q2 2026": 37.9,
+     "Q3 2026": 27.3,
+     "Q4 2026": 24.9
+    },
+    "years": {
+     "CY2026": 27.3,
+     "CY2027": 15.3
+    },
     "week": "2026-07-24",
     "issue_date": "2026-07-24",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_072426.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_072426.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 19.6,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
     "guidance_quarter": "Q3 2026",
     "guidance_negative": 20,
     "guidance_positive": 34,
     "beat_pct": 86.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q2 2026": 47.4,
+     "Q3 2026": 27.4,
+     "Q4 2026": 25.2
+    },
+    "years": {
+     "CY2026": 29.1,
+     "CY2027": 14.1
+    },
     "week": "2026-07-31",
     "issue_date": "2026-07-31",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_073126.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_073126.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 20.0,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
     "guidance_quarter": null,
     "guidance_negative": null,
     "guidance_positive": null,
     "beat_pct": 86.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q2 2026": 50.4,
+     "Q3 2026": 27.4,
+     "Q4 2026": 25.2
+    },
+    "years": {
+     "CY2026": 30.0,
+     "CY2027": 13.6
+    },
     "week": "2026-08-07",
     "issue_date": "2026-08-07",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_080726.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_080726.pdf",
+    "parser": 2,
+    "missing": [
+     "ガイダンス件数"
+    ]
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 19.6,
+    "pe_avg5": 19.9,
+    "pe_avg10": 19.0,
     "guidance_quarter": "Q3 2026",
     "guidance_negative": 35,
     "guidance_positive": 63,
     "beat_pct": 86.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q2 2026": 52.0,
+     "Q3 2026": 28.2,
+     "Q4 2026": 25.8
+    },
+    "years": {
+     "CY2026": 31.2,
+     "CY2027": 14.4
+    },
     "week": "2026-08-28",
     "issue_date": "2026-08-28",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_082826.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_082826.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 19.5,
@@ -670,11 +1072,21 @@
     "guidance_negative": 41,
     "guidance_positive": 70,
     "beat_pct": 87.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 28.5,
+     "Q4 2026": 26.1,
+     "Q1 2027": 17.9,
+     "Q2 2027": 1.2
+    },
+    "years": {
+     "CY2026": 31.5,
+     "CY2027": 15.0
+    },
     "week": "2026-09-04",
     "issue_date": "2026-09-04",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_090426.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_090426.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 19.1,
@@ -684,11 +1096,21 @@
     "guidance_negative": 42,
     "guidance_positive": 72,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 28.7,
+     "Q4 2026": 26.3,
+     "Q1 2027": 18.0,
+     "Q2 2027": 1.3
+    },
+    "years": {
+     "CY2026": 31.6,
+     "CY2027": 15.1
+    },
     "week": "2026-09-11",
     "issue_date": "2026-09-11",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_091126.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_091126.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
     "pe": 19.1,
@@ -698,109 +1120,189 @@
     "guidance_negative": 43,
     "guidance_positive": 72,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 28.9,
+     "Q4 2026": 26.5,
+     "Q1 2027": 18.2,
+     "Q2 2027": 1.5
+    },
+    "years": {
+     "CY2026": 31.8,
+     "CY2027": 15.2
+    },
     "week": "2026-09-18",
     "issue_date": "2026-09-18",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_091826.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_091826.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 19.2,
+    "pe_avg5": 19.8,
+    "pe_avg10": 19.0,
     "guidance_quarter": "Q3 2026",
     "guidance_negative": 44,
     "guidance_positive": 72,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 29.1,
+     "Q4 2026": 26.8,
+     "Q1 2027": 18.4,
+     "Q2 2027": 1.7
+    },
+    "years": {
+     "CY2026": 32.0,
+     "CY2027": 15.4
+    },
     "week": "2026-09-25",
     "issue_date": "2026-09-25",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_092526.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_092526.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 19.0,
+    "pe_avg5": 19.8,
+    "pe_avg10": 19.1,
     "guidance_quarter": "Q3 2026",
     "guidance_negative": 44,
     "guidance_positive": 72,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 29.5,
+     "Q4 2026": 27.6,
+     "Q1 2027": 19.1,
+     "Q2 2027": 2.3
+    },
+    "years": {
+     "CY2026": 32.4,
+     "CY2027": 15.8
+    },
     "week": "2026-10-02",
     "issue_date": "2026-10-02",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_100226.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_100226.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 19.1,
+    "pe_avg5": 19.8,
+    "pe_avg10": 19.1,
     "guidance_quarter": "Q3 2026",
     "guidance_negative": 44,
     "guidance_positive": 72,
     "beat_pct": null,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 29.6,
+     "Q4 2026": 28.0,
+     "Q1 2027": 18.9,
+     "Q2 2027": 2.6
+    },
+    "years": {
+     "CY2026": 32.7,
+     "CY2027": 15.8
+    },
     "week": "2026-10-09",
     "issue_date": "2026-10-09",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_100926.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_100926.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
-    "guidance_quarter": null,
-    "guidance_negative": null,
-    "guidance_positive": null,
+    "pe": 19.0,
+    "pe_avg5": 19.8,
+    "pe_avg10": 19.1,
+    "guidance_quarter": "Q4 2026",
+    "guidance_negative": 4,
+    "guidance_positive": 4,
     "beat_pct": 84.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 29.0,
+     "Q4 2026": 28.6,
+     "Q1 2027": 19.3,
+     "Q2 2027": 2.8
+    },
+    "years": {
+     "CY2026": 32.8,
+     "CY2027": 16.0
+    },
     "week": "2026-10-16",
     "issue_date": "2026-10-16",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_101626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_101626.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 18.7,
+    "pe_avg5": 19.8,
+    "pe_avg10": 19.1,
     "guidance_quarter": "Q4 2026",
     "guidance_negative": 7,
     "guidance_positive": 10,
     "beat_pct": 83.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 29.5,
+     "Q4 2026": 29.2,
+     "Q1 2027": 19.6,
+     "Q2 2027": 2.9
+    },
+    "years": {
+     "CY2026": 33.1,
+     "CY2027": 16.0
+    },
     "week": "2026-10-23",
     "issue_date": "2026-10-23",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_102326.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_102326.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 18.7,
+    "pe_avg5": 19.8,
+    "pe_avg10": 19.1,
     "guidance_quarter": "Q4 2026",
     "guidance_negative": 19,
     "guidance_positive": 28,
     "beat_pct": 82.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 30.2,
+     "Q4 2026": 28.4,
+     "Q1 2027": 19.2,
+     "Q2 2027": 2.8
+    },
+    "years": {
+     "CY2026": 32.9,
+     "CY2027": 16.3
+    },
     "week": "2026-10-30",
     "issue_date": "2026-10-30",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_103026.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_103026.pdf",
+    "parser": 2,
+    "missing": []
    },
    {
-    "pe": null,
-    "pe_avg5": null,
-    "pe_avg10": null,
+    "pe": 17.7,
+    "pe_avg5": 19.8,
+    "pe_avg10": 19.1,
     "guidance_quarter": "Q4 2026",
     "guidance_negative": 32,
     "guidance_positive": 43,
     "beat_pct": 84.0,
-    "quarters": {},
-    "years": {},
+    "quarters": {
+     "Q3 2026": 31.4,
+     "Q4 2026": 28.4,
+     "Q1 2027": 19.5,
+     "Q2 2027": 3.0
+    },
+    "years": {
+     "CY2026": 33.3,
+     "CY2027": 16.1
+    },
     "week": "2026-11-06",
     "issue_date": "2026-11-06",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_110626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_110626.pdf",
+    "parser": 2,
+    "missing": []
    }
   ],
   "eps_quarter": {
@@ -861,116 +1363,116 @@
     "2026-11-06"
    ],
    "values": [
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
+    7.7,
+    7.9,
+    8.0,
+    8.0,
+    7.5,
+    7.4,
+    7.6,
+    7.5,
+    7.4,
+    7.5,
+    7.7,
+    8.1,
+    8.3,
+    8.3,
+    12.2,
+    11.2,
+    11.7,
+    11.3,
+    11.1,
+    11.4,
+    11.5,
+    11.6,
+    12.5,
+    13.0,
+    13.2,
+    12.6,
+    20.1,
+    20.6,
+    21.3,
+    19.9,
+    20.5,
+    21.7,
+    21.6,
+    21.7,
+    21.9,
+    22.0,
+    23.1,
+    23.3,
+    23.6,
+    27.0,
+    27.3,
+    27.4,
+    25.2,
+    28.2,
+    28.5,
+    28.7,
+    28.9,
+    29.1,
+    29.5,
+    29.6,
+    28.6,
+    29.2,
+    28.4,
+    28.4
    ],
    "labels": [
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
+    "Q3 2025",
+    "Q3 2025",
+    "Q3 2025",
+    "Q3 2025",
+    "Q4 2025",
+    "Q4 2025",
+    "Q4 2025",
+    "Q4 2025",
+    "Q4 2025",
+    "Q4 2025",
+    "Q4 2025",
+    "Q4 2025",
+    "Q4 2025",
+    "Q4 2025",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q1 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q4 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q2 2026",
+    "Q3 2026",
+    "Q3 2026",
+    "Q3 2026",
+    "Q4 2026",
+    "Q3 2026",
+    "Q3 2026",
+    "Q3 2026",
+    "Q3 2026",
+    "Q3 2026",
+    "Q3 2026",
+    "Q3 2026",
+    "Q4 2026",
+    "Q4 2026",
+    "Q4 2026",
+    "Q4 2026"
    ]
   },
   "eps_year": {
@@ -1031,11 +1533,21 @@
     "2026-11-06"
    ],
    "values": [
-    10.7,
-    10.8,
+    13.7,
+    13.8,
+    13.8,
+    13.8,
+    13.9,
+    13.9,
+    14.0,
+    13.7,
+    13.9,
+    14.2,
+    14.5,
+    14.5,
+    8.6,
     null,
     null,
-    11.0,
     null,
     null,
     null,
@@ -1046,101 +1558,91 @@
     null,
     null,
     null,
-    14.7,
-    null,
-    14.1,
     null,
     null,
-    15.0,
-    15.3,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    16.2,
     16.3,
-    17.1,
+    16.8,
     null,
-    null,
-    18.0,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    23.3,
-    24.0,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
+    17.4,
+    17.5,
+    15.3,
+    14.1,
+    13.6,
+    14.4,
+    15.0,
+    15.1,
+    15.2,
+    15.4,
+    15.8,
+    15.8,
+    16.0,
+    16.0,
+    16.3,
+    16.1
    ],
    "labels": [
-    "CY2025",
-    "CY2025",
-    null,
-    null,
-    "CY2025",
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    "CY2026",
-    null,
-    "CY2026",
-    null,
-    null,
     "CY2026",
     "CY2026",
     "CY2026",
     "CY2026",
-    null,
-    null,
-    "CY2026",
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
     "CY2026",
     "CY2026",
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
+    "CY2026",
+    "CY2026",
+    "CY2026",
+    "CY2026",
+    "CY2026",
+    "CY2026",
+    "CY2026",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027",
+    "CY2027"
    ]
   }
  },
