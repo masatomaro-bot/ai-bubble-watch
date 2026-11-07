@@ -67,25 +67,42 @@ function epsCard(d) {
   const f = d.factset || {};
   const q = f.eps_quarter, y = f.eps_year;
   const draw = chart();
-  const last = (s) => { if (!s) return null; for (let i = s.values.length - 1; i >= 0; i--) if (s.values[i] !== null) return { v: s.values[i], l: s.labels[i], d: s.dates[i] }; return null; };
-  const lq = last(q), ly = last(y);
-  // 期が切り替わる週は線を分けるため、ラベルが変わったら null を挟む
-  const split = (s) => s ? s.values.map((v, i) => (i > 0 && s.labels[i] !== s.labels[i - 1] ? null : v)) : [];
-  const ch = q && q.dates.length ? { dates: q.dates, values: split(q), year: split(y) } : null;
-  const head = lq || ly ? `<div class="macro-value">${lq ? `${esc(lq.l)} ${esc(lq.v)}%` : ''}${ly ? `<span class="sub" style="font-size:13px;font-weight:600"> ／ ${esc(ly.l)} ${esc(ly.v)}%</span>` : ''}</div>
+  const n = q ? q.dates.length : 0;
+  const latestIssue = n ? q.dates[n - 1] : null;
+  // 最新号の値(読めなかった場合は null)。古い号の値を「最新」として出さない(2026-11-07修正)
+  const now = (s) => (s && s.values.length ? { v: s.values[s.values.length - 1], l: s.labels[s.labels.length - 1] } : null);
+  const lastSeen = (s) => { if (!s) return null; for (let i = s.values.length - 1; i >= 0; i--) if (s.values[i] !== null) return { v: s.values[i], l: s.labels[i], d: s.dates[i] }; return null; };
+  const nq = now(q), ny = now(y);
+  const part = (name, cur, seen) => {
+    if (cur && cur.v !== null) return `${name}(${esc(cur.l)}) ${esc(cur.v)}%`;
+    const tail = seen ? `(最後に読めたのは ${esc(ymd(seen.d))}号の ${esc(seen.l)} ${esc(seen.v)}%)` : '';
+    return `${name}${cur && cur.l ? `(${esc(cur.l)})` : ''} 最新号で読み取れず<span class="sub" style="font-size:12px;font-weight:500">${tail}</span>`;
+  };
+  const anyNow = (nq && nq.v !== null) || (ny && ny.v !== null);
+  const lastRow = (f.rows || []).slice(-1)[0] || {};
+  const miss = (lastRow.missing || []).filter((m) => m.includes('増益率'));
+  const head = n ? `<div class="macro-value" style="font-size:18px">${part('次四半期', nq, lastSeen(q))}<br>${part('来年', ny, lastSeen(y))}</div>
     <div class="sub">FactSetの予想増益率(前年比)。${esc((d.lamps.eps_revision || {}).detail || '')}</div>
-    <div class="macro-read">${{ on: '次四半期も来年も予想が削られた＝分母(EPS)が下がり始めたサイン', watch: '片方だけ削られた＝様子見', off: '予想は削られていない＝分母はまだ崩れていない', unknown: '前週と比べられない週(期の切り替わり等)' }[(d.lamps.eps_revision || {}).state || 'unknown']}</div>` : empty('予想増益率');
+    ${!anyNow || miss.length ? `<div class="macro-read" style="color:var(--gold)">${esc(ymd(latestIssue))}号から${esc(miss.join('・') || '予想増益率')}を読み取れなかった。この週の①は判定していない。</div>` : ''}
+    <div class="macro-read">${{ on: '次四半期も来年も予想が削られた＝分母(EPS)が下がり始めたサイン', watch: '片方だけ削られた＝様子見', off: '予想は削られていない＝分母はまだ崩れていない', unknown: '今週は前週と比べられない(読み取れなかった週、または期の切り替わり週)' }[(d.lamps.eps_revision || {}).state || 'unknown']}</div>` : empty('予想増益率');
+  // 値が読めなかった週は省いて描く(線を補って作らない。点は実際に読めた号だけ)。期が切り替わる所で線を分ける
+  let ch = null;
+  if (n) {
+    const keep = q.dates.map((_, i) => i).filter((i) => q.values[i] !== null || y.values[i] !== null);
+    const sub = (s) => keep.map((i, k) => (k > 0 && s.labels[i] !== s.labels[keep[k - 1]] ? null : s.values[i]));
+    ch = { dates: keep.map((i) => q.dates[i]), values: sub(q), year: sub(y) };
+  }
   const body = draw && ch ? draw(ch, {
-    aria: '予想増益率の推移', width: 900, height: 210, mainColor: 'var(--err)',
+    aria: '予想増益率の推移', width: 900, height: 210, mainColor: 'var(--err)', dots: true,
     lines: [{ key: 'year', color: 'var(--pri)', width: 1.6, label: '来年(暦年)' }],
-    fmt: (v) => `${r1(v)}%`, dateFmt: ymd, note: '赤＝次四半期 ／ 青＝来年。期が切り替わる週で線は途切れる', empty: '週ごとの記録がたまると線になります。',
+    fmt: (v) => `${r1(v)}%`, dateFmt: ymd, note: '赤＝次四半期 ／ 青＝来年。点＝値が読めた号(読めなかった週は省く)。対象の期が変わる所で線は途切れる', empty: '読み取れた号がまだ少ないため、線はまだ出せません。',
   }) : '';
   return card(1, '利益予想の修正(分母：EPS)', d.lamps.eps_revision, head, body,
-    guide('アナリストが予想する、S&P500全体の利益の伸び率(次の四半期と来年)。FactSetが毎週集計して公表している。',
+    guide('アナリストが予想する、S&P500全体の利益の伸び率(次の四半期と来年)。FactSetが毎週集計して公表している。「来年」は号の発行年の翌年(2026年の号ならCY2027)。',
       '予想PERが下がったとき「分母(EPS)が上がった」のか「強欲(倍率)が下がった」のかを見分けるため。景気悪化は、まず利益予想の下方修正として現れる。民主党ショック後、株価(分子)は下げたが、予想EPS(分母)はまだ削られていない可能性がある。',
-      '線が右下がりに変わったら要注意。株価が同じでも予想EPSが削られるとPERは上がるので、「PERが低いから割安」と見えていたものが割安ではなくなる。',
-      '前週より次四半期・来年の両方が下がれば①点灯、片方なら注意。期が切り替わる週は比べない。'),
-    `出典：FactSet Earnings Insight(週次・無料PDF)。最新号 ${esc((f.rows || []).slice(-1)[0]?.issue_date || '-')}`);
+      '見るのは水準ではなく前週からの変化。線が右下がりに変わったら要注意。株価が同じでも予想EPSが削られるとPERは上がるので、「PERが低いから割安」と見えていたものが割安ではなくなる。注意：伸び率は「予想EPS÷前年の実績」なので、決算で前年側の実績が変わるだけでも動く。',
+      '最新号と前週号を比べ、次四半期・来年の両方が下がれば①点灯、片方なら注意。どちらかの号で値が読めなかった週と、期が切り替わる週は比べない(不明)。'),
+    `出典：FactSet Earnings Insight(週次・無料PDF)。最新号 ${esc(lastRow.issue_date || '-')}`);
 }
 
 // 2. ガイダンス

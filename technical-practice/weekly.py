@@ -113,7 +113,14 @@ _NUM = r"(-?\d+(?:\.\d+)?)"
 
 def _clean(text: str) -> str:
     """PDFの改行・ハイフネーション・連続空白をならして正規表現を当てやすくする。"""
-    t = text.replace("’", "'").replace("“", '"').replace("”", '"').replace("\xa0", " ")
+    t = text.replace("’", "'").replace("“", '"').replace("”", '"')
+    # PDFから取り出した文字には、見た目は同じでも別の文字(ハイフンや空白の異体字)が混ざる。
+    # これがあると「12-month」「Q4 2026」に正規表現が当たらず、項目が丸ごと取れない週が出ていた(2026-11-07修正)。
+    for ch in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212", "\u00ad"):
+        t = t.replace(ch, "-")
+    for ch in ("\xa0", "\u2002", "\u2003", "\u2009", "\u200a", "\u202f", "\u3000"):
+        t = t.replace(ch, " ")
+    t = t.replace("\u200b", "").replace("\ufb01", "fi").replace("\ufb02", "fl")
     t = re.sub(r"-\s*\n\s*", "-", t)
     t = re.sub(r"\s+", " ", t)
     return t
@@ -163,25 +170,63 @@ def parse_factset_text(text: str) -> dict:
     if m:
         out["beat_pct"] = float(m.group(1))
 
-    for q, g in re.findall(
-        r"For (Q[1-4] \d{4}),? analysts are (?:projecting|predicting|expecting) (?:\(?year-over-year\)? )?earnings "
-        r"growth (?:rate )?of " + _NUM + "%",
+    # 予想増益率。号によって書き方が2通りある：
+    #   "For Q4 2026, analysts are projecting earnings growth of 28.4% ..."
+    #   "For Q4 2026, the estimated (year-over-year) earnings growth rate for the S&P 500 is 28.4%"
+    # PDFの段組みで文の途中に別の文字列が挟まることがあるため、「For 期」から増益率までの間は
+    # 次の「For 」が出てこない範囲(200字まで)を許す。売上(revenue)の伸び率を拾わないよう earnings を必須にする。
+    gap = r"(?:(?!For ).){0,200}?"
+    for per, g in re.findall(
+        r"For (Q[1-4] \d{4}|CY ?\d{4}),?" + gap + r"earnings growth (?:rate )?(?:of|for the S&P 500 is|is) " + _NUM + "%",
         t, re.I,
     ):
-        out["quarters"].setdefault(q, float(g))
-    for y, g in re.findall(
-        r"For CY ?(\d{4}),? analysts are (?:projecting|predicting|expecting) (?:\(?year-over-year\)? )?earnings "
-        r"growth (?:rate )?of " + _NUM + "%",
-        t, re.I,
-    ):
-        out["years"].setdefault(f"CY{y}", float(g))
+        if per.upper().startswith("CY"):
+            out["years"].setdefault("CY" + per[-4:], float(g))
+        else:
+            out["quarters"].setdefault(per.upper(), float(g))
     return out
 
 
-def _pdf_text(raw: bytes, max_pages: int = 6) -> str:
+def parse_coverage(p: dict) -> list[str]:
+    """号から読み取れなかった項目の名前(画面とエラー欄に出す)。"""
+    miss = []
+    if p.get("pe") is None:
+        miss.append("予想PER")
+    if p.get("guidance_negative") is None:
+        miss.append("ガイダンス件数")
+    if not p.get("quarters"):
+        miss.append("四半期の予想増益率")
+    if not p.get("years"):
+        miss.append("暦年の予想増益率")
+    return miss
+
+
+PARSER_VERSION = 2  # 解析方法を変えたら上げる。古い版で読んだ週はキャッシュにあっても取り直す
+
+
+def _pdf_text(raw: bytes, max_pages: int = 40) -> str:
+    """全ページ(40ページまで)の文字を取り出す。以前は先頭6ページだけで、増益率の文が後ろのページに
+    ある号を取りこぼしていた。段組みの読み順が崩れる号に備え、レイアウト維持の取り出しも後ろに足す。"""
     from pypdf import PdfReader
     reader = PdfReader(io.BytesIO(raw))
-    return "\n".join((p.extract_text() or "") for p in reader.pages[:max_pages])
+    pages = reader.pages[:max_pages]
+    plain = "\n".join((p.extract_text() or "") for p in pages)
+    try:
+        layout = "\n".join((p.extract_text(extraction_mode="layout") or "") for p in pages)
+    except Exception:  # noqa: BLE001  古いpypdfにはlayoutモードがない
+        layout = ""
+    return plain + "\n\n" + layout
+
+
+def _merge_parsed(a: dict, b: dict) -> dict:
+    """2通りの取り出し方の結果を合わせる(先に取れた値を優先)。"""
+    out = dict(a)
+    for k, v in b.items():
+        if k in ("quarters", "years"):
+            out[k] = {**v, **(a.get(k) or {})}
+        elif out.get(k) is None:
+            out[k] = v
+    return out
 
 
 def fetch_factset_issue(friday: date) -> dict | None:
@@ -200,11 +245,14 @@ def fetch_factset_issue(friday: date) -> dict | None:
             if not raw.startswith(b"%PDF"):
                 continue
             try:
-                parsed = parse_factset_text(_pdf_text(raw))
+                text = _pdf_text(raw)
+                plain, _, layout = text.partition("\n\n")
+                parsed = _merge_parsed(parse_factset_text(plain), parse_factset_text(layout)) if layout else parse_factset_text(text)
             except Exception as e:  # noqa: BLE001
                 _err(f"FactSet解析:{d.isoformat()}{suffix}", e)
                 return None
-            parsed.update({"week": friday.isoformat(), "issue_date": d.isoformat(), "url": url})
+            parsed.update({"week": friday.isoformat(), "issue_date": d.isoformat(), "url": url,
+                           "parser": PARSER_VERSION, "missing": parse_coverage(parsed)})
             return parsed
     return None
 
@@ -225,12 +273,14 @@ def update_factset(weeks_back: int, cache: dict, today: date | None = None) -> d
     for i in range(weeks_back):
         wk = fri - timedelta(weeks=i)
         key = wk.isoformat()
-        if key in cache and i >= 2 and cache[key].get("pe") is not None:
+        if key in cache and i >= 2 and cache[key].get("parser") == PARSER_VERSION and not cache[key].get("missing"):
             continue
         issue = fetch_factset_issue(wk)
         if issue:
             cache[key] = issue
             misses = 0
+            if i == 0 and issue.get("missing"):
+                _err("FactSet:最新号の解析", f"{issue['issue_date']}号から読み取れなかった項目：{'・'.join(issue['missing'])}")
         else:
             misses += 1
             if i == 0:
@@ -258,7 +308,9 @@ def revision_series(rows: list[dict], kind: str) -> dict:
             label = r.get("guidance_quarter") if r.get("guidance_quarter") in src else (sorted(src)[-1] if src else None)
         else:
             src = r.get("years") or {}
-            label = sorted(src)[-1] if src else None
+            # 「来年」＝号の発行年の翌年。号に載っている一番先の年を取る方式だと、来年の値が読めなかった週に
+            # 今年(CY2026)の値が「来年」として表示されてしまっていた(2026-11-07修正)。
+            label = f"CY{int(str(d)[:4]) + 1}" if d else None
         dates.append(d)
         labels.append(label)
         values.append(src.get(label) if label else None)
@@ -492,20 +544,27 @@ def merge_manual_into_aaii(aaii: list[dict], manual: list[dict]) -> list[dict]:
 # 6. 警戒ランプ(判定ルール。しきい値は画面に明記する)
 # ---------------------------------------------------------------------------
 def lamp_eps_revision(q: dict, y: dict) -> dict:
-    """警戒①：予想増益率(次四半期・来年)が前週より下がったか。期が切り替わった週は比べない。"""
+    """警戒①：予想増益率(次四半期・来年)が前週より下がったか。
+    比べるのは「最新号」と「その1つ前の号」だけ。どちらかで値が読めなかった週や、期が切り替わった週は比べない。
+    (以前は値のある最後の2点を比べていたため、数か月前の値どうしの差で判定してしまうことがあった。2026-11-07修正)"""
     def last_move(s):
-        pts = [(d, v, l) for d, v, l in zip(s["dates"], s["values"], s["labels"]) if v is not None]
-        if len(pts) < 2 or pts[-1][2] != pts[-2][2]:
+        n = len(s["values"])
+        if n < 2:
             return None
-        return round(pts[-1][1] - pts[-2][1], 2)
+        (v0, l0), (v1, l1) = (s["values"][-2], s["labels"][-2]), (s["values"][-1], s["labels"][-1])
+        if v0 is None or v1 is None or l0 != l1:
+            return None
+        return round(v1 - v0, 2)
 
     mq, my = last_move(q), last_move(y)
     if mq is None and my is None:
-        return {"state": "unknown", "detail": "比べられる前週の値がない(期の切り替わり週を含む)"}
+        return {"state": "unknown", "detail": "最新号と前週号で比べられる値がない(読み取れなかった週、または期の切り替わり週)"}
     downs = sum(1 for m in (mq, my) if m is not None and m < 0)
     known = sum(1 for m in (mq, my) if m is not None)
     state = "on" if downs == known and downs > 0 else "watch" if downs > 0 else "off"
-    return {"state": state, "detail": f"次四半期 {_fmt_move(mq)} ／ 来年 {_fmt_move(my)}(前週比、%pt)"}
+    ql, yl = (q["labels"] or [None])[-1], (y["labels"] or [None])[-1]
+    return {"state": state, "detail": f"次四半期{f'({ql})' if ql else ''} {_fmt_move(mq)} ／ "
+                                      f"来年{f'({yl})' if yl else ''} {_fmt_move(my)}(前週比、%pt)"}
 
 
 def _fmt_move(v):

@@ -111,3 +111,36 @@ def test_cftc_build_and_last_friday():
     assert c["gold"]["chg_1w"] == (220530 - 40982) - (223724 - 37273)
     assert wk.last_friday(date(2026, 11, 8)) == date(2026, 11, 6)
     assert wk.last_friday(date(2026, 11, 6)) == date(2026, 11, 6)
+
+
+def test_parse_factset_text_tolerates_pdf_noise():
+    """PDFから取り出した文字に異体字のハイフン・空白や段組みの割り込みがあっても読める(2026-11-07修正)。"""
+    noisy = (
+        "Valuation: The forward 12‑month P/E ratio for the S&P 500 is 18.7. This P/E ratio is below the 5‐year "
+        "average (19.8) and below the 10‐year average (19.1).\n"
+        "For Q4 2026, analysts are projecting\nTopic of the Week sidebar text\nearnings growth of 28.4% and revenue growth of 13.1%. "
+        "For CY 2026, the estimated (year-over-year) earnings growth rate for the S&P 500 is 32.9%. "
+        "For CY 2027, analysts are projecting revenue growth of 9.6% and earnings growth of 16.3%."
+    )
+    p = wk.parse_factset_text(noisy)
+    assert (p["pe"], p["pe_avg5"], p["pe_avg10"]) == (18.7, 19.8, 19.1)
+    assert p["quarters"] == {"Q4 2026": 28.4}
+    assert p["years"] == {"CY2026": 32.9, "CY2027": 16.3}
+    assert wk.parse_coverage(p) == ["ガイダンス件数"]
+
+
+def test_year_series_uses_next_calendar_year_only():
+    rows = [{"issue_date": "2026-11-06", "quarters": {}, "years": {"CY2026": 24.0}}]
+    y = wk.revision_series(rows, "year")
+    assert y["labels"] == ["CY2027"] and y["values"] == [None]  # 今年の値を「来年」として出さない
+
+
+def test_revision_lamp_ignores_stale_values():
+    """最新号で値が読めなかったら、数か月前の値どうしで判定せず「不明」にする。"""
+    rows = [
+        {"issue_date": "2026-06-19", "quarters": {}, "years": {"CY2027": 23.3}},
+        {"issue_date": "2026-06-26", "quarters": {}, "years": {"CY2027": 24.0}},
+        {"issue_date": "2026-11-06", "quarters": {}, "years": {}},
+    ]
+    lamp = wk.lamp_eps_revision(wk.revision_series(rows, "quarter"), wk.revision_series(rows, "year"))
+    assert lamp["state"] == "unknown"
