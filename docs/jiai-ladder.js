@@ -227,7 +227,9 @@ function priceChart(ch, opts) {
       cur.push(`${x(i).toFixed(1)},${yy}`); prevY = yy;
     });
     if (cur.length) segs.push(cur);
-    return segs.map((sg) => `<polyline points="${sg.join(' ')}" fill="none" stroke="${color}" stroke-width="${width || 1.6}" stroke-linejoin="round"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`).join('');
+    // o.dots：点も描く(週次など点がまばらな系列で、1点だけの区間も見えるように)
+    const dots = o.dots ? arr.map((v, i) => (v === null || v === undefined ? '' : `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.6" fill="${color}"/>`)).join('') : '';
+    return segs.map((sg) => `<polyline points="${sg.join(' ')}" fill="none" stroke="${color}" stroke-width="${width || 1.6}" stroke-linejoin="round"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`).join('') + dots;
   };
   let body = '';
   if (candle) {
