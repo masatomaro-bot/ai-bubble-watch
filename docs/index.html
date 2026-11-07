@@ -118,7 +118,7 @@ tr:last-child td{border-bottom:none;}
 .stat{min-width:0}
 </style>
 <link rel="stylesheet" href="opportunity.css?v=20261031b">
-<link rel="stylesheet" href="jiai.css?v=20261031b">
+<link rel="stylesheet" href="jiai.css?v=20261107a">
 <link rel="stylesheet" href="portfolio.css?v=20261031b">
 <script src="jiai-ladder.js?v=20261031b" defer></script>
 <script src="theme-leaders.js?v=20261031b" defer></script>
@@ -129,9 +129,10 @@ tr:last-child td{border-bottom:none;}
 <script src="opportunity-discovery.js?v=20261031b" defer></script>
 <script src="opportunity-stories-data.js?v=20261031b" defer></script>
 <script src="opportunity-stories.js?v=20261031b" defer></script>
-<script src="opportunity.js?v=20261031b" defer></script>
+<script src="opportunity.js?v=20261107a" defer></script>
 <script src="opportunity-lanes.js?v=20261031b" defer></script>
 <script src="portfolio.js?v=20261031b" defer></script>
+<script src="weekly-watch.js?v=20261107a" defer></script>
 </head>
 <body>
 
@@ -154,7 +155,7 @@ tr:last-child td{border-bottom:none;}
     を参照してください。
   </div>
 
-  <nav class="watch-nav" aria-label="観測画面"><button type="button" data-view="climate" aria-pressed="true">地合いウォッチ</button><button type="button" data-view="opportunity" aria-pressed="false">機会ウォッチ</button><button type="button" data-view="portfolio" aria-pressed="false">ポートフォリオウォッチ</button></nav>
+  <nav class="watch-nav" aria-label="観測画面"><button type="button" data-view="climate" aria-pressed="true">地合いウォッチ</button><button type="button" data-view="opportunity" aria-pressed="false">機会ウォッチ</button><button type="button" data-view="portfolio" aria-pressed="false">ポートフォリオウォッチ</button><button type="button" data-view="weekly" aria-pressed="false">週間ウォッチ</button></nav>
   <nav class="op-actions research-links" aria-label="市場の調査リンク"><a class="op-btn" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPTを開く ↗</a><a class="op-btn" href="https://www.tradingview.com/symbols/SPX/" target="_blank" rel="noopener noreferrer">S&amp;P 500のチャート ↗</a></nav>
   <div id="opportunity-wrap" hidden>
     <div id="op-lanes"></div>
@@ -164,6 +165,7 @@ tr:last-child td{border-bottom:none;}
     </details>
   </div>
   <div id="portfolio-wrap" hidden><section id="portfolio" aria-label="ポートフォリオウォッチ"></section></div>
+  <div id="weekly-wrap" hidden><section id="weekly" aria-label="週間ウォッチ"><div class="loading">週間データを読み込み中...</div></section></div>
   <div id="content"><div class="loading">データを読み込み中...</div></div>
 </div>
 
@@ -783,6 +785,7 @@ async function main() {
   const overallInfo = TREND_LABELS[latest.overall_trend_state] || TREND_LABELS["不明"];
 
   content.innerHTML = `
+    <div id="weekly-lamps"></div>
     ${window.MacroPanel ? MacroPanel.render(latest) : ""}
 
     <div class="card">
