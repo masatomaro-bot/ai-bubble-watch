@@ -1,532 +1,200 @@
-<!DOCTYPE html>
-<html lang="ja" data-theme="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Bubble Watch</title>
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --text-xs:clamp(0.75rem,0.7rem + 0.25vw,0.875rem);
-  --text-sm:clamp(0.875rem,0.8rem + 0.35vw,1rem);
-  --text-base:clamp(1rem,0.95rem + 0.25vw,1.125rem);
-  --text-lg:clamp(1.125rem,1rem + 0.75vw,1.5rem);
-  --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
-  --s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;--s6:1.5rem;--s8:2rem;--s10:2.5rem;--s12:3rem;
-  --r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-full:9999px;
-  --tr:180ms cubic-bezier(0.16,1,0.3,1);
-  --font:'Satoshi','Inter',sans-serif;
-  --mono:'JetBrains Mono',monospace;
-}
-[data-theme="dark"]{
-  --bg:#111110;--surf:#161514;--surf2:#1b1a18;--off:#1e1d1b;
-  --div:#232220;--bdr:#2e2d2b;
-  --tx:#cdccca;--muted:#797876;--faint:#5a5957;
-  --pri:#4f98a3;--pri-h:#1e3236;
-  --ok:#6daa45;--ok-h:#202f1a;
-  --err:#d163a7;--err-h:#2d1d27;
-  --warn:#bb653b;--warn-h:#2e1e14;
-  --gold:#e8af34;--gold-h:#2a2011;
-  --sh-sm:0 1px 2px oklch(0 0 0/.25);
-  --sh-md:0 4px 12px oklch(0 0 0/.4);
-}
-[data-theme="light"]{
-  --bg:#f7f6f2;--surf:#f9f8f5;--surf2:#fbfbf9;--off:#f3f0ec;
-  --div:#dcd9d5;--bdr:#d4d1ca;
-  --tx:#28251d;--muted:#7a7974;--faint:#bab9b4;
-  --pri:#01696f;--pri-h:#cedcd8;
-  --ok:#437a22;--ok-h:#d4dfcc;
-  --err:#a12c7b;--err-h:#e0ced7;
-  --warn:#964219;--warn-h:#ddcfc6;
-  --gold:#d19900;--gold-h:#e9e0c6;
-  --sh-sm:0 1px 2px oklch(0.2 0.01 80/.06);
-  --sh-md:0 4px 12px oklch(0.2 0.01 80/.08);
-}
-html{-webkit-font-smoothing:antialiased;}
-body{min-height:100dvh;font-family:var(--font);font-size:var(--text-sm);color:var(--tx);background:var(--bg);line-height:1.5;}
-button{cursor:pointer;background:none;border:none;font:inherit;color:inherit;}
+From 4ef21217361a788d175a924643939ae3810ecb5e Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 9 Nov 2026 22:33:56 +0900
+Subject: [PATCH] =?UTF-8?q?=E5=9C=B0=E5=90=88=E3=81=84=E3=82=A6=E3=82=A9?=
+ =?UTF-8?q?=E3=83=83=E3=83=81=E3=82=92=E3=80=8C=E5=A4=96=E5=81=B4=E2=86=92?=
+ =?UTF-8?q?=E6=8C=87=E6=95=B0=E2=86=92=E5=86=85=E9=83=A8=E2=86=92=E3=82=BB?=
+ =?UTF-8?q?=E3=82=AF=E3=82=BF=E3=83=BC=E2=86=92=E3=83=86=E3=83=BC=E3=83=9E?=
+ =?UTF-8?q?=E2=86=92=E9=8A=98=E6=9F=84=E3=80=8D=E3=81=AE=E9=A0=86=E3=81=AB?=
+ =?UTF-8?q?=E4=B8=A6=E3=81=B9=E6=9B=BF=E3=81=88=E3=80=81=E5=90=84=E6=AE=B5?=
+ =?UTF-8?q?=E3=81=AB=E5=95=8F=E3=81=84=E3=81=AE=E8=A6=8B=E5=87=BA=E3=81=97?=
+ =?UTF-8?q?=E3=82=92=E8=BF=BD=E5=8A=A0?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-/* TOPBAR */
-.topbar{display:flex;align-items:center;justify-content:space-between;
-  padding:var(--s3) var(--s6);background:var(--surf);
-  border-bottom:1px solid var(--div);position:sticky;top:0;z-index:200;}
-.logo{display:flex;align-items:center;gap:var(--s2);}
-.logo-text{font-size:var(--text-base);font-weight:700;letter-spacing:-0.02em;}
-.logo-text span{color:var(--pri);}
-.topbar-r{display:flex;align-items:center;gap:var(--s3);}
-.now{font-size:var(--text-xs);color:var(--muted);font-family:var(--mono);}
-.theme-btn{padding:var(--s2);border-radius:var(--r-md);color:var(--muted);
-  transition:color var(--tr),background var(--tr);}
-.theme-btn:hover{background:var(--off);color:var(--tx);}
+- 冒頭に見る順番の目次（①〜⑥ジャンプリンク）を追加
+- 回復ラダーを最上部に移動し「毎日のショート版」と明記
+- ストレス指標・経済カレンダーを①外側に、市場の幅・前日比較を③内部に移動
+- セクター体温とテーマ・ローテーションを別カードに分離（④・⑤）
 
-/* MAIN */
-.main{padding:var(--s6);max-width:1400px;margin:0 auto;}
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01JoAriHYHxAUVwhfnoksMSf
+---
+ docs/index.html | 107 ++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 71 insertions(+), 36 deletions(-)
 
-/* TABS */
-.tabs{display:flex;gap:var(--s1);margin-bottom:var(--s6);
-  background:var(--surf);border-radius:var(--r-lg);
-  padding:var(--s1);border:1px solid var(--div);width:fit-content;flex-wrap:wrap;}
-.tab-btn{padding:var(--s2) var(--s4);border-radius:var(--r-md);
-  font-size:var(--text-sm);font-weight:500;color:var(--muted);
-  transition:all var(--tr);}
-.tab-btn:hover{color:var(--tx);background:var(--off);}
-.tab-btn.active{background:var(--pri);color:#fff;}
-.tab-panel{display:none;}.tab-panel.active{display:block;}
-
-/* CARDS */
-.card{background:var(--surf);border:1px solid var(--div);
-  border-radius:var(--r-lg);padding:var(--s5);box-shadow:var(--sh-sm);
-  margin-bottom:var(--s4);}
-.card-title{font-size:var(--text-sm);font-weight:700;margin-bottom:var(--s1);}
-.card-meta{font-size:var(--text-xs);color:var(--muted);margin-bottom:var(--s4);}
-
-/* GRID */
-.g2{display:grid;gap:var(--s4);grid-template-columns:1fr 1fr;}
-.g3{display:grid;gap:var(--s4);grid-template-columns:1fr 1fr 1fr;}
-.full{grid-column:1/-1;}
-
-/* SIGNAL */
-.sig-list{display:flex;flex-direction:column;gap:var(--s2);}
-.sig-item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;
-  gap:var(--s3);padding:var(--s3) var(--s4);
-  background:var(--off);border-radius:var(--r-md);border:1px solid var(--div);}
-.dot{width:8px;height:8px;border-radius:var(--r-full);flex-shrink:0;}
-.dot.g{background:var(--ok);box-shadow:0 0 5px var(--ok);}
-.dot.y{background:var(--gold);box-shadow:0 0 5px var(--gold);}
-.dot.r{background:var(--err);box-shadow:0 0 5px var(--err);}
-.sig-name{font-size:var(--text-xs);font-weight:600;}
-.sig-desc{font-size:var(--text-xs);color:var(--muted);}
-.sig-val{font-size:var(--text-xs);font-weight:700;font-family:var(--mono);white-space:nowrap;}
-
-/* CHECKLIST */
-.checklist{display:flex;flex-direction:column;gap:var(--s2);}
-.ci{display:flex;align-items:flex-start;gap:var(--s3);padding:var(--s3);
-  border-radius:var(--r-md);border:1px solid var(--div);background:var(--off);cursor:pointer;}
-.cb{width:16px;height:16px;flex-shrink:0;border-radius:var(--r-sm);
-  border:1.5px solid var(--bdr);margin-top:1px;display:flex;align-items:center;justify-content:center;
-  transition:all var(--tr);}
-.cb.on{background:var(--pri);border-color:var(--pri);}
-.ct{font-size:var(--text-xs);line-height:1.5;}
-.ct.done{color:var(--muted);text-decoration:line-through;}
-
-/* TABLE */
-.dt{width:100%;border-collapse:collapse;}
-.dt th{font-size:var(--text-xs);font-weight:600;text-transform:uppercase;
-  letter-spacing:.04em;color:var(--muted);padding:var(--s2) var(--s3);
-  border-bottom:1px solid var(--div);text-align:left;}
-.dt td{font-size:var(--text-xs);padding:var(--s3);border-bottom:1px solid var(--div);
-  font-variant-numeric:tabular-nums;}
-.dt tr:last-child td{border-bottom:none;}
-.dt tr:hover td{background:var(--off);}
-.badge{font-size:var(--text-xs);font-weight:700;padding:2px var(--s2);border-radius:var(--r-full);}
-.bg{background:var(--ok-h);color:var(--ok);}
-.by{background:var(--gold-h);color:var(--gold);}
-.br{background:var(--err-h);color:var(--err);}
-.bp{background:var(--pri-h);color:var(--pri);}
-
-/* SCENARIO TABLE */
-.prob-row{display:flex;align-items:center;gap:var(--s2);}
-.pbar{height:6px;border-radius:var(--r-full);background:var(--div);flex:1;overflow:hidden;}
-.pfill{height:100%;border-radius:var(--r-full);}
-
-/* TIMELINE */
-.tl-item{display:grid;grid-template-columns:76px 72px 1fr;align-items:center;
-  gap:var(--s3);padding:var(--s3);border-bottom:1px solid var(--div);}
-.tl-item:last-child{border-bottom:none;}
-.tl-date{font-size:var(--text-xs);font-family:var(--mono);color:var(--muted);}
-
-/* TV WIDGET CONTAINERS */
-.tv-wrap{border-radius:var(--r-lg);overflow:hidden;background:var(--surf2);}
-.tv-ticker-wrap{border-radius:var(--r-lg);overflow:hidden;margin-bottom:var(--s4);}
-
-/* ALERT BANNER */
-.alert{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) var(--s4);
-  border-radius:var(--r-md);margin-bottom:var(--s4);font-size:var(--text-xs);font-weight:600;}
-.alert.warn{background:var(--warn-h);color:var(--warn);}
-.alert.ok{background:var(--ok-h);color:var(--ok);}
-
-@media(max-width:900px){.g2,.g3{grid-template-columns:1fr;}.main{padding:var(--s4);}}
-@media(max-width:600px){.tabs{width:100%;}.tab-btn{flex:1;text-align:center;padding:var(--s2);}}
-</style>
-</head>
-<body>
-
-<!-- TOPBAR -->
-<header class="topbar">
-  <div class="logo">
-    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-      <circle cx="13" cy="13" r="12" stroke="currentColor" stroke-width="1.5" opacity="0.2"/>
-      <circle cx="13" cy="13" r="8" stroke="var(--pri)" stroke-width="1.5"/>
-      <circle cx="13" cy="13" r="3.5" fill="var(--pri)" opacity="0.85"/>
-    </svg>
-    <span class="logo-text">AI Bubble<span>Watch</span></span>
-  </div>
-  <div class="topbar-r">
-    <span class="now" id="nowTxt"></span>
-    <button class="theme-btn" id="themeBtn" aria-label="テーマ切替">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    </button>
-  </div>
-</header>
-
-<main class="main">
-
-  <!-- TABS -->
-  <div class="tabs" role="tablist">
-    <button class="tab-btn active" data-tab="market">マーケット</button>
-    <button class="tab-btn" data-tab="signals">崩壊シグナル</button>
-    <button class="tab-btn" data-tab="portfolio">ポートフォリオ</button>
-    <button class="tab-btn" data-tab="timeline">IPOタイムライン</button>
-  </div>
-
-  <!-- ===== MARKET TAB ===== -->
-  <div class="tab-panel active" id="tab-market">
-
-    <!-- Ticker Bar (TradingView) -->
-    <div class="tv-ticker-wrap">
-      <div class="tradingview-widget-container">
-        <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-        {
-          "symbols": [
-            {"proName":"NASDAQ:NVDA","title":"NVDA"},
-            {"proName":"NASDAQ:MSFT","title":"MSFT"},
-            {"proName":"NASDAQ:GOOGL","title":"GOOGL"},
-            {"proName":"NASDAQ:AVGO","title":"AVGO"},
-            {"proName":"NASDAQ:PLTR","title":"PLTR"},
-            {"proName":"TVC:US10Y","title":"10年債"},
-            {"proName":"TVC:GOLD","title":"金"},
-            {"proName":"CRYPTOCAP:BTC","title":"BTC（参考）"}
-          ],
-          "showSymbolLogo": true,
-          "isTransparent": true,
-          "displayMode": "adaptive",
-          "colorTheme": "dark",
-          "locale": "ja"
-        }
-        </script>
-      </div>
-    </div>
-
-    <!-- 2-col: NVDA chart + MSFT chart -->
-    <div class="g2">
-      <div class="card">
-        <div class="card-title">NVDA — リアルタイムチャート</div>
-        <div class="card-meta">AIインフラ先行指標 | ガイダンス下方修正まで保有</div>
-        <div class="tv-wrap">
-          <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-            {"symbol":"NASDAQ:NVDA","width":"100%","height":220,"locale":"ja","dateRange":"3M","colorTheme":"dark","isTransparent":true,"autosize":false,"largeChartUrl":""}
-            </script>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">AVGO — リアルタイムチャート</div>
-        <div class="card-meta">AIカスタムチップ | -40%で段階買い準備</div>
-        <div class="tv-wrap">
-          <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-            {"symbol":"NASDAQ:AVGO","width":"100%","height":220,"locale":"ja","dateRange":"3M","colorTheme":"dark","isTransparent":true,"autosize":false,"largeChartUrl":""}
-            </script>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">MSFT — リアルタイムチャート</div>
-        <div class="card-meta">OpenAI上場熱狂期に5〜10%利確検討</div>
-        <div class="tv-wrap">
-          <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-            {"symbol":"NASDAQ:MSFT","width":"100%","height":220,"locale":"ja","dateRange":"3M","colorTheme":"dark","isTransparent":true,"autosize":false,"largeChartUrl":""}
-            </script>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">GOOGL — リアルタイムチャート</div>
-        <div class="card-meta">Anthropic持分価値あり | 低リスク枠で保有継続</div>
-        <div class="tv-wrap">
-          <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-            {"symbol":"NASDAQ:GOOGL","width":"100%","height":220,"locale":"ja","dateRange":"3M","colorTheme":"dark","isTransparent":true,"autosize":false,"largeChartUrl":""}
-            </script>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- US10Y + GOLD -->
-    <div class="g2">
-      <div class="card">
-        <div class="card-title">米10年債利回り（US10Y）</div>
-        <div class="card-meta">4.5%超 → 高バリュエーション銘柄に圧力。5%超 → 利上げリスク点灯</div>
-        <div class="tv-wrap">
-          <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-            {"symbol":"TVC:US10Y","width":"100%","height":200,"locale":"ja","dateRange":"3M","colorTheme":"dark","isTransparent":true,"autosize":false,"largeChartUrl":""}
-            </script>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">金現物（GOLD）</div>
-        <div class="card-meta">AIバブル崩壊→リスクオフ→金高騰のシナリオを監視</div>
-        <div class="tv-wrap">
-          <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-            {"symbol":"TVC:GOLD","width":"100%","height":200,"locale":"ja","dateRange":"3M","colorTheme":"dark","isTransparent":true,"autosize":false,"largeChartUrl":""}
-            </script>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Technical Analysis Widget -->
-    <div class="card">
-      <div class="card-title">テクニカル分析サマリー（NVDA）</div>
-      <div class="card-meta">買い/売り/中立のシグナル総合判定 — ミネルヴィニ式RSの補助指標として使用</div>
-      <div class="tv-wrap">
-        <div class="tradingview-widget-container">
-          <div class="tradingview-widget-container__widget"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-          {"interval":"1W","width":"100%","isTransparent":true,"height":350,"symbol":"NASDAQ:NVDA","showIntervalTabs":true,"displayMode":"single","locale":"ja","colorTheme":"dark"}
-          </script>
-        </div>
-      </div>
-    </div>
-
-    <!-- Scenario table -->
-    <div class="card">
-      <div class="card-title">M7崩壊シナリオ確率分布</div>
-      <div class="card-meta">中央シナリオ：M7平均 -50%超（期待値ベース）</div>
-      <table class="dt">
-        <thead><tr><th>シナリオ</th><th>M7平均下落</th><th>NVDA想定</th><th>確率</th></tr></thead>
-        <tbody>
-          <tr><td>ソフトランディング</td><td style="color:var(--ok)">-15〜25%</td><td style="color:var(--ok)">-20〜30%</td>
-            <td><div class="prob-row"><span style="font-family:var(--mono);width:28px">20%</span><div class="pbar"><div class="pfill" style="width:20%;background:var(--ok)"></div></div></div></td></tr>
-          <tr><td>中規模バブル崩壊</td><td style="color:var(--gold)">-40〜50%</td><td style="color:var(--gold)">-55〜65%</td>
-            <td><div class="prob-row"><span style="font-family:var(--mono);width:28px">45%</span><div class="pbar"><div class="pfill" style="width:45%;background:var(--gold)"></div></div></div></td></tr>
-          <tr><td>ドットコム型崩壊</td><td style="color:var(--warn)">-55〜70%</td><td style="color:var(--warn)">-70〜80%</td>
-            <td><div class="prob-row"><span style="font-family:var(--mono);width:28px">25%</span><div class="pbar"><div class="pfill" style="width:25%;background:var(--warn)"></div></div></div></td></tr>
-          <tr><td>大恐慌型連鎖崩壊</td><td style="color:var(--err)">-75〜85%</td><td style="color:var(--err)">-85〜90%</td>
-            <td><div class="prob-row"><span style="font-family:var(--mono);width:28px">10%</span><div class="pbar"><div class="pfill" style="width:10%;background:var(--err)"></div></div></div></td></tr>
-        </tbody>
-      </table>
-    </div>
-
-  </div><!-- /market -->
-
-  <!-- ===== SIGNALS TAB ===== -->
-  <div class="tab-panel" id="tab-signals">
-    <div class="card">
-      <div class="card-title">7大崩壊シグナル — 定点観測</div>
-      <div class="card-meta">🔴 が3つ以上点灯したら守りに入れ。毎週ステータスを手動更新。</div>
-      <div class="sig-list">
-        <div class="sig-item"><div class="dot y"></div><div><div class="sig-name">① IPO初値割れ</div><div class="sig-desc">SpaceX・OpenAI・Anthropicのどれかが公募価格割れ → 潮目の変化</div></div><div class="sig-val" style="color:var(--gold)">監視中（未上場）</div></div>
-        <div class="sig-item"><div class="dot g"></div><div><div class="sig-name">② 長短金利差（逆イールド）</div><div class="sig-desc">10年債-2年債スプレッド。逆転=崩壊前兆シグナル。上のUS10Yチャートで確認。</div></div><div class="sig-val" style="color:var(--ok)">正常圏</div></div>
-        <div class="sig-item"><div class="dot y"></div><div><div class="sig-name">③ ロックアップ解除スケジュール</div><div class="sig-desc">SpaceX→2026年12月 / OpenAI→2027年Q2。この2ヶ月前から先回り売りが出る。</div></div><div class="sig-val" style="color:var(--gold)">2026.12〜</div></div>
-        <div class="sig-item"><div class="dot r"></div><div><div class="sig-name">④ NYSE Margin Debt（信用残高）</div><div class="sig-desc">過去最高圏かつ前月比急増 → 個人信用買いの限界サイン。</div></div><div class="sig-val" style="color:var(--err)">🔴 過去最高圏</div></div>
-        <div class="sig-item"><div class="dot y"></div><div><div class="sig-name">⑤ NVDAガイダンス（先行指標）</div><div class="sig-desc">NVDA次四半期ガイダンス下方修正 → AIハイパースケーラー全体のCAPEX削減を示唆。上のNVDAチャートで日々確認。</div></div><div class="sig-val" style="color:var(--gold)">強気継続中</div></div>
-        <div class="sig-item"><div class="dot y"></div><div><div class="sig-name">⑥ LLMコモディティ化（価格破壊）</div><div class="sig-desc">OSSモデル（Meta Llama）が商用APIに迫るとOpenAI・AnthropicのARRが減速。</div></div><div class="sig-val" style="color:var(--gold)">進行中</div></div>
-        <div class="sig-item"><div class="dot g"></div><div><div class="sig-name">⑦ FRB政策転換（利上げ再開）</div><div class="sig-desc">利上げ再開 → PER100倍超銘柄のDCF理論株価が-20〜30%下落。上のUS10Yチャートで監視。</div></div><div class="sig-val" style="color:var(--ok)">利下げ継続中</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">今日の確認チェックリスト</div>
-      <div class="card-meta">毎朝2分。クリックで完了マーク。</div>
-      <div class="checklist">
-        <div class="ci" onclick="chk(this)"><div class="cb"></div><div class="ct">NVDAの株価と出来高確認（前日比 -5%超なら要注意）← 上の「マーケット」タブで確認</div></div>
-        <div class="ci" onclick="chk(this)"><div class="cb"></div><div class="ct">Fear & Greed Index を確認（CNN Money → 75超=Extreme Greed → 現金比率引き上げ検討）</div></div>
-        <div class="ci" onclick="chk(this)"><div class="cb"></div><div class="ct">SpaceX IPO関連ニュース・ロードショー情報チェック</div></div>
-        <div class="ci" onclick="chk(this)"><div class="cb"></div><div class="ct">10年債利回り確認（4.5%超なら高バリュエーション銘柄に圧力）← US10Yチャートで確認</div></div>
-        <div class="ci" onclick="chk(this)"><div class="cb"></div><div class="ct">MSFT・GOOGL・AMZN・METAのCAPEX関連発言・ニュースを確認</div></div>
-        <div class="ci" onclick="chk(this)"><div class="cb"></div><div class="ct">SEC Form 4（insider.finviz.com）で大型AI企業C-suiteの売りを確認</div></div>
-        <div class="ci" onclick="chk(this)"><div class="cb"></div><div class="ct">AVGO・PLTR・APPのRS（相対強度）をS&P500と比較</div></div>
-      </div>
-    </div>
-
-    <!-- Market Overview Widget -->
-    <div class="card">
-      <div class="card-title">マーケット概況（TradingView）</div>
-      <div class="card-meta">S&P500・NASDAQ・主要指数のリアルタイム概況</div>
-      <div class="tv-wrap">
-        <div class="tradingview-widget-container">
-          <div class="tradingview-widget-container__widget"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
-          {
-            "colorTheme":"dark","dateRange":"1M","showChart":true,"locale":"ja",
-            "width":"100%","height":400,"isTransparent":true,"showSymbolLogo":true,
-            "showFloatingTooltip":false,"plotLineColorGrowing":"rgba(79,152,163,1)",
-            "plotLineColorFalling":"rgba(209,99,167,1)","gridLineColor":"rgba(42,32,17,0)",
-            "scaleFontColor":"rgba(121,120,118,1)","belowLineFillColorGrowing":"rgba(79,152,163,0.12)",
-            "belowLineFillColorFalling":"rgba(209,99,167,0.12)",
-            "tabs":[
-              {"title":"指数","symbols":[
-                {"s":"FOREXCOM:SPXUSD","d":"S&P 500"},
-                {"s":"FOREXCOM:NSXUSD","d":"NASDAQ 100"},
-                {"s":"TVC:VIX","d":"VIX 恐怖指数"},
-                {"s":"TVC:US10Y","d":"10年債利回り"}
-              ]},
-              {"title":"AI銘柄","symbols":[
-                {"s":"NASDAQ:NVDA","d":"NVIDIA"},
-                {"s":"NASDAQ:MSFT","d":"Microsoft"},
-                {"s":"NASDAQ:GOOGL","d":"Alphabet"},
-                {"s":"NASDAQ:AVGO","d":"Broadcom"},
-                {"s":"NASDAQ:PLTR","d":"Palantir"},
-                {"s":"NASDAQ:META","d":"Meta"}
-              ]},
-              {"title":"ヘッジ","symbols":[
-                {"s":"TVC:GOLD","d":"金現物"},
-                {"s":"FX:USDJPY","d":"ドル円"},
-                {"s":"TVC:JGB10Y","d":"日本10年債"}
-              ]}
-            ]
-          }
-          </script>
-        </div>
-      </div>
-    </div>
-  </div><!-- /signals -->
-
-  <!-- ===== PORTFOLIO TAB ===== -->
-  <div class="tab-panel" id="tab-portfolio">
-    <div class="card">
-      <div class="card-title">保有銘柄 リスクマップ</div>
-      <div class="card-meta">崩壊時想定ドローダウンと対応アクション（現在：フェーズA — IPO祭り期）</div>
-      <table class="dt">
-        <thead><tr><th>銘柄</th><th>リスク</th><th>崩壊時想定</th><th>現フェーズの行動</th></tr></thead>
-        <tbody>
-          <tr><td><strong style="font-family:var(--mono);color:var(--pri)">NVDA</strong> NVIDIA</td><td><span class="badge br">高リスク</span></td><td style="color:var(--err);font-family:var(--mono)">-60〜70%</td><td>ガイダンス下方修正まで保有 / -50%でナンピン準備</td></tr>
-          <tr><td><strong style="font-family:var(--mono);color:var(--pri)">AVGO</strong> Broadcom</td><td><span class="badge br">高リスク</span></td><td style="color:var(--err);font-family:var(--mono)">-50〜60%</td><td>-40%で段階買い開始</td></tr>
-          <tr><td><strong style="font-family:var(--mono);color:var(--pri)">MSFT</strong> Microsoft</td><td><span class="badge by">中リスク</span></td><td style="color:var(--gold);font-family:var(--mono)">-40〜50%</td><td>OpenAI上場熱狂期に5〜10%利確</td></tr>
-          <tr><td><strong style="font-family:var(--mono);color:var(--pri)">GOOGL</strong> Alphabet</td><td><span class="badge bg">低リスク</span></td><td style="color:var(--ok);font-family:var(--mono)">-30〜40%</td><td>Anthropic上場時に保有継続</td></tr>
-          <tr><td><strong style="font-family:var(--mono);color:var(--pri)">金現物</strong> Gold</td><td><span class="badge bg">低リスク</span></td><td style="color:var(--ok);font-family:var(--mono)">+（ヘッジ）</td><td>現状維持・追加も検討</td></tr>
-          <tr><td><strong style="font-family:var(--mono);color:var(--pri)">第一生命</strong></td><td><span class="badge bg">低リスク</span></td><td style="color:var(--ok);font-family:var(--mono)">-20〜30%</td><td>逆相関ヘッジとして保有継続</td></tr>
-          <tr><td><strong style="font-family:var(--mono);color:var(--pri)">テンセント</strong></td><td><span class="badge by">中リスク</span></td><td style="color:var(--gold);font-family:var(--mono)">-40〜55%</td><td>中国規制リスク継続監視</td></tr>
-          <tr><td><strong style="font-family:var(--mono);color:var(--pri)">ヘイアン保険</strong></td><td><span class="badge bg">低リスク</span></td><td style="color:var(--ok);font-family:var(--mono)">-20〜30%</td><td>逆相関ヘッジとして保有継続</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="g2">
-      <div class="card">
-        <div class="card-title">フェーズ別行動計画</div>
-        <div class="card-meta">現在地を毎週確認して次のアクションを決める</div>
-        <div class="sig-list">
-          <div class="sig-item"><div class="dot y"></div><div><div class="sig-name">📍 フェーズA（今〜2026年末）</div><div class="sig-desc">SpaceX上場熱狂期。NVDA・AVGO継続。MSFTを5〜10%利確。現金比率10→20%へ積み上げ。</div></div></div>
-          <div class="sig-item"><div class="dot y"></div><div><div class="sig-name">フェーズB（2027年Q1〜Q2）</div><div class="sig-desc">ロックアップ解除開始。現金比率30〜40%へ。NVDA・AVGO追加購入は停止。</div></div></div>
-          <div class="sig-item"><div class="dot r"></div><div><div class="sig-name">フェーズC（崩壊局面）</div><div class="sig-desc">NVDA -50%超・VIX 40超・信用決済連鎖。現金で3〜5回に分割して段階的に拾い始める。</div></div></div>
-          <div class="sig-item"><div class="dot g"></div><div><div class="sig-name">フェーズD（第二フェーズ）</div><div class="sig-desc">「本物のAmazon候補」のVCPパターン形成を確認してエントリー。NVDA・PLTR・APP等。</div></div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">崩壊後の「生存者」候補</div>
-        <div class="card-meta">ドットコム後のAmazon・Googleに相当する企業</div>
-        <div class="sig-list">
-          <div class="sig-item"><div class="dot g"></div><div><div class="sig-name">NVDA — AIインフラの基幹</div><div class="sig-desc">CAPEXサイクルが再開すれば最初に恩恵を受ける。picks & shovels最有力。</div></div></div>
-          <div class="sig-item"><div class="dot g"></div><div><div class="sig-name">PLTR — 政府・企業AI実装</div><div class="sig-desc">実際の利益・政府契約で安定収益。ARR成長率が崩壊後も維持できるか注視。</div></div></div>
-          <div class="sig-item"><div class="dot g"></div><div><div class="sig-name">APP — ソフトウェアROIC高</div><div class="sig-desc">広告技術×AI。ROIC高く実利確定型。バブル崩壊でもビジネスモデルが崩れにくい。</div></div></div>
-          <div class="sig-item"><div class="dot y"></div><div><div class="sig-name">OpenAI / SpaceX — 要観察</div><div class="sig-desc">上場後の初の赤字決算・ガイダンスを3〜4四半期見てから判断。急いで買わない。</div></div></div>
-        </div>
-      </div>
-    </div>
-  </div><!-- /portfolio -->
-
-  <!-- ===== TIMELINE TAB ===== -->
-  <div class="tab-panel" id="tab-timeline">
-    <div class="card">
-      <div class="card-title">IPOタイムライン & 爆心地カウントダウン</div>
-      <div class="card-meta">各イベントの日程と市場への衝撃波 — 2027年Q2が「構造的売り圧力の極大点」</div>
-      <div id="tlBody">
-        <div class="tl-item"><div class="tl-date">2026.06</div><span class="badge bp">IPO</span><div><div style="font-size:var(--text-xs);font-weight:600">SpaceX 上場（Nasdaq）</div><div style="font-size:var(--text-xs);color:var(--muted)">想定時価総額$1.75兆 | 個人投資家枠30% | 史上最大級のIPO</div></div></div>
-        <div class="tl-item"><div class="tl-date">2026.10</div><span class="badge by">注目</span><div><div style="font-size:var(--text-xs);font-weight:600">Anthropic IPO（最速シナリオ）</div><div style="font-size:var(--text-xs);color:var(--muted)">想定$3,000〜3,500億 | Google持分価値顕在化 | GOOGL株に波及</div></div></div>
-        <div class="tl-item"><div class="tl-date">2026.Q4</div><span class="badge bp">IPO</span><div><div style="font-size:var(--text-xs);font-weight:600">OpenAI 上場</div><div style="font-size:var(--text-xs);color:var(--muted)">想定$1兆 | ARR $250B+も赤字継続 | MSFT関係の再評価</div></div></div>
-        <div class="tl-item"><div class="tl-date">2026.12</div><span class="badge br">危険</span><div><div style="font-size:var(--text-xs);font-weight:600">SpaceX ロックアップ解除</div><div style="font-size:var(--text-xs);color:var(--muted)">VC・創業者の大量放出開始 → 先回り売りが6〜8週前から発生</div></div></div>
-        <div class="tl-item"><div class="tl-date">2027.Q1</div><span class="badge br">危険</span><div><div style="font-size:var(--text-xs);font-weight:600">3社すべて初の通期決算</div><div style="font-size:var(--text-xs);color:var(--muted)">Guidance下方修正リスク最大。Non-GAAPからGAAPへの移行圧力。現金比率35%以上を維持。</div></div></div>
-        <div class="tl-item"><div class="tl-date">2027.Q2</div><span class="badge br">爆心地</span><div><div style="font-size:var(--text-xs);font-weight:600">OpenAI・Anthropic ロックアップ解除</div><div style="font-size:var(--text-xs);color:var(--muted)">3社の解除が重なる「構造的売り圧力の極大点」。現金比率30〜40%が必要。</div></div></div>
-        <div class="tl-item"><div class="tl-date">2027.Q3〜</div><span class="badge bg">底値探し</span><div><div style="font-size:var(--text-xs);font-weight:600">第二フェーズ開始</div><div style="font-size:var(--text-xs);color:var(--muted)">AIバブル崩壊後の生存者が選別される。VCPパターン確認後にエントリー。</div></div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">衝撃波伝播モデル — 爆心地から外側へ</div>
-      <div class="card-meta">中央シナリオ（確率45%）の想定最大下落率。国家予算規模の爆心地が30%で終わらない理由。</div>
-      <table class="dt">
-        <thead><tr><th>ゾーン</th><th>対象</th><th>想定下落率</th><th>主な理由</th></tr></thead>
-        <tbody>
-          <tr><td><span class="badge br">爆心地</span></td><td>SpaceX / OpenAI / Anthropic</td><td style="color:var(--err);font-family:var(--mono)">-80〜95%</td><td>赤字上場・バリュエーション根拠なし・VC大量放出</td></tr>
-          <tr><td><span class="badge br">直撃圏</span></td><td>NVDA / AVGO / MSFT</td><td style="color:var(--err);font-family:var(--mono)">-50〜70%</td><td>CAPEXサイクル停止・顧客収益源が3社と直結</td></tr>
-          <tr><td><span class="badge by">第2波</span></td><td>M7全体 / NASDAQ</td><td style="color:var(--gold);font-family:var(--mono)">-40〜55%</td><td>リスクオフ機械的売り・信用買い強制決済連鎖</td></tr>
-          <tr><td><span class="badge bg">第3波</span></td><td>S&P500全体</td><td style="color:var(--ok);font-family:var(--mono)">-30〜40%</td><td>インデックスファンド解約売り・年金比率調整</td></tr>
-          <tr><td><span class="badge bg">第4波</span></td><td>日本株 / 日経平均</td><td style="color:var(--ok);font-family:var(--mono)">-30〜45%</td><td>円高加速＋リスクオフ資金の日本国債回帰</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Economic Calendar -->
-    <div class="card">
-      <div class="card-title">経済カレンダー（今後の重要イベント）</div>
-      <div class="card-meta">FRB発言・決算・雇用統計 — バブル崩壊トリガーのタイミングを確認</div>
-      <div class="tv-wrap">
-        <div class="tradingview-widget-container">
-          <div class="tradingview-widget-container__widget"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
-          {"colorTheme":"dark","isTransparent":true,"width":"100%","height":400,"locale":"ja","importanceFilter":"0,1","countryFilter":"us,jp"}
-          </script>
-        </div>
-      </div>
-    </div>
-  </div><!-- /timeline -->
-
-</main>
-
-<script>
-// TIME
-function tick(){document.getElementById('nowTxt').textContent=new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});}
-tick(); setInterval(tick,60000);
-
-// THEME
-const html=document.documentElement;
-const btn=document.getElementById('themeBtn');
-let theme='dark';
-btn.addEventListener('click',()=>{
-  theme=theme==='dark'?'light':'dark';
-  html.setAttribute('data-theme',theme);
-  btn.innerHTML=theme==='dark'
-    ?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
-    :'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
-});
-
-// TABS
-document.querySelectorAll('.tab-btn').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    document.getElementById('tab-'+b.dataset.tab).classList.add('active');
-  });
-});
-
-// CHECKLIST
-function chk(item){
-  const b=item.querySelector('.cb');
-  const t=item.querySelector('.ct');
-  b.classList.toggle('on');
-  t.classList.toggle('done');
-  b.innerHTML=b.classList.contains('on')
-    ?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
-    :'';
-}
-</script>
-</body>
-</html>
+diff --git a/docs/index.html b/docs/index.html
+index 64bec55..a2f4733 100644
+--- a/docs/index.html
++++ b/docs/index.html
+@@ -116,6 +116,13 @@ tr:last-child td{border-bottom:none;}
+ .mini-trend{margin-top:9px;min-height:54px;max-width:260px}
+ .mini-trend-caption{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:10px;margin-top:3px;font-variant-numeric:tabular-nums}
+ .stat{min-width:0}
++.step-toc{margin:0 0 var(--s4)}
++.step-links{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s2)}
++.step-links a{font-size:.85rem;padding:2px 10px;border:1px solid var(--faint);border-radius:999px;text-decoration:none;color:inherit}
++.step-head{display:flex;gap:var(--s3);align-items:flex-start;margin:var(--s8) 0 var(--s3);padding-top:var(--s3);border-top:2px solid var(--faint);scroll-margin-top:var(--s4)}
++.step-no{font-size:1.6rem;line-height:1;color:var(--pri)}
++.step-title{font-weight:700;font-size:1.1rem}
++.step-q{font-size:.95rem;margin-top:2px}
+ </style>
+ <link rel="stylesheet" href="opportunity.css?v=20261031b">
+ <link rel="stylesheet" href="jiai.css?v=20261107a">
+@@ -785,9 +792,44 @@ async function main() {
+   const overallInfo = TREND_LABELS[latest.overall_trend_state] || TREND_LABELS["不明"];
+ 
+   content.innerHTML = `
++    <nav class="step-toc" aria-label="見る順番">
++      <div class="sub">見る順番：外側 → 指数 → 内部 → セクター → テーマ → 銘柄。忙しい日はすぐ下のラダーだけ見て、最初の「未達」の段に対応するカードだけ開く。</div>
++      <div class="step-links"><a href="#step-1">① 外側</a><a href="#step-2">② 指数</a><a href="#step-3">③ 内部</a><a href="#step-4">④ セクター</a><a href="#step-5">⑤ テーマ</a><a href="#step-6">⑥ 銘柄</a></div>
++    </nav>
++    <div class="card">
++      <div class="card-title">まずここ：地合い回復ラダー(どうなれば地合いが良くなるか・毎日のショート版)</div>
++      <div id="ladder-panel">${window.JiaiLadder ? JiaiLadder.ladderPanel(latest, null) : '<div class="sub">読み込み中...</div>'}</div>
++    </div>
++
++
++    <div class="step-head" id="step-1">
++      <div class="step-no">①</div>
++      <div><div class="step-title">外側の環境</div><div class="step-q">逆風は強まっているか(金利・原油・インフレ・信用・ストレス・今週のイベント)</div></div>
++    </div>
+     <div id="weekly-lamps"></div>
+     ${window.MacroPanel ? MacroPanel.render(latest) : ""}
+ 
++    <div class="card">
++      <div class="card-title">市場ストレス指標(株価内部だけでは見えない、相場の外側の変化)</div>
++      ${stressGaugesSection(latest.stress_gauges)}
++      ${stressGuide(latest.stress_gauges)}
++    </div>
++
++    <div class="card">
++      <div class="card-title">経済カレンダー(TradingView提供)</div>
++      <div id="tv-economic-calendar" class="tradingview-widget-container">
++        <div class="tradingview-widget-container__widget"></div>
++      </div>
++      <div class="sub" style="margin-top:var(--s3)">
++        TradingView社の公式埋め込みウィジェットです。このリポジトリの日次パイプライン(GitHub Actions)が
++        収集・保存しているデータではないため、履歴保存や前日比較の対象にはなりません。
++      </div>
++    </div>
++
++    <div class="step-head" id="step-2">
++      <div class="step-no">②</div>
++      <div><div class="step-title">指数</div><div class="step-q">今は攻める局面か、守る局面か</div><div class="sub">ここが「調整局面」やStage 4なら、③以下は回復の兆しを確認するためだけに見る(銘柄探しはしない)。</div></div>
++    </div>
+     <div class="card">
+       <div class="card-title">本日の地合い(O'Neil/IBD式フォロースルー・デイ判定)</div>
+       <div class="hero-state">${esc(overallInfo.label)}</div>
+@@ -796,33 +838,27 @@ async function main() {
+       ${marketStateGuide(latest)}
+     </div>
+ 
+-    <div class="card">
+-      <div class="card-title">地合い回復ラダー(どうなれば地合いが良くなるか)</div>
+-      <div id="ladder-panel">${window.JiaiLadder ? JiaiLadder.ladderPanel(latest, null) : '<div class="sub">読み込み中...</div>'}</div>
+-    </div>
+-
+     <div class="card-title" style="margin:var(--s2) 0 var(--s3)">指数の階層(ステージ分析：いまどの段階にいるか)</div>
+     ${window.JiaiLadder ? JiaiLadder.stagePanel(latest) : ""}
+ 
+-    <div class="card">
+-      <div class="card-title">警戒チェックリスト(崩れの前兆として知られる乖離パターン)</div>
+-      ${warningFlagsSection(latest.warning_flags)}
+-    </div>
+-
+-    <div id="comparison-section"><div class="card"><div class="sub">前営業日との比較を読み込み中...</div></div></div>
+-
+     <div class="grid2">
+       ${trendCard("NASDAQ総合", latest.nasdaq || {})}
+       ${trendCard("S&P500", latest.sp500 || {})}
+     </div>
+ 
++    <div id="history-strip"></div>
++
++    <div class="step-head" id="step-3">
++      <div class="step-no">③</div>
++      <div><div class="step-title">内部の健康</div><div class="step-q">指数の上昇に中身はついてきているか(先に痩せていないか)</div></div>
++    </div>
+     <div class="card">
+-      <div class="card-title">市場ストレス指標(株価内部だけでは見えない、相場の外側の変化)</div>
+-      ${stressGaugesSection(latest.stress_gauges)}
+-      ${stressGuide(latest.stress_gauges)}
++      <div class="card-title">市場の幅(ブレッドス) — 母集団: ${esc(latest.breadth_universe_source || "-")}</div>
++      ${breadthSection(latest)}
++      ${breadthGuide(latest)}
+     </div>
+ 
+-    <div id="history-strip"></div>
++    <div id="comparison-section"><div class="card"><div class="sub">前営業日との比較を読み込み中...</div></div></div>
+ 
+     <div class="card">
+       <div class="card-title">推移(指数が高値圏でも先に痩せていないか)</div>
+@@ -830,8 +866,16 @@ async function main() {
+       ${trendChartGuide()}
+     </div>
+ 
+-    <div class="grid2">
+-      <div class="card">
++    <div class="card">
++      <div class="card-title">警戒チェックリスト(崩れの前兆として知られる乖離パターン)</div>
++      ${warningFlagsSection(latest.warning_flags)}
++    </div>
++
++    <div class="step-head" id="step-4">
++      <div class="step-no">④</div>
++      <div><div class="step-title">セクター</div><div class="step-q">お金はどこへ向かっているか</div></div>
++    </div>
++    <div class="card">
+         <div class="card-title">セクター体温(11 GICSセクター) — 1D順</div>
+         ${sectorGrid(latest.sectors || {})}
+         <div class="legend">
+@@ -844,36 +888,27 @@ async function main() {
+         <div style="margin-top:var(--s4)">${sectorTable(latest.sectors || {})}</div>
+         ${sectorGuide()}
+       </div>
+-      <div class="card">
++
++    <div class="step-head" id="step-5">
++      <div class="step-no">⑤</div>
++      <div><div class="step-title">テーマ</div><div class="step-q">その中でどの物語が主役か</div></div>
++    </div>
++    <div class="card">
+         <div class="card-title">テーマ・ローテーション(代理ETF、近似)</div>
+         ${sectorTable(latest.themes || {})}
+         <div class="card-title" style="margin-top:var(--s4)">象限の変化</div>
+         <div id="theme-rotation-changes"><div class="sub">読み込み中...</div></div>
+       </div>
+-    </div>
+ 
+     <div class="card">
+       <div class="card-title">テーマ代表銘柄(何で稼いでいる会社か)</div>
+       ${window.ThemeLeaders ? ThemeLeaders.render(latest) : ""}
+     </div>
+ 
+-    <div class="card">
+-      <div class="card-title">経済カレンダー(TradingView提供)</div>
+-      <div id="tv-economic-calendar" class="tradingview-widget-container">
+-        <div class="tradingview-widget-container__widget"></div>
+-      </div>
+-      <div class="sub" style="margin-top:var(--s3)">
+-        TradingView社の公式埋め込みウィジェットです。このリポジトリの日次パイプライン(GitHub Actions)が
+-        収集・保存しているデータではないため、履歴保存や前日比較の対象にはなりません。
+-      </div>
++    <div class="step-head" id="step-6">
++      <div class="step-no">⑥</div>
++      <div><div class="step-title">銘柄</div><div class="step-q">主役のテーマで、実際に先頭を走っているのは誰か</div><div class="sub">この先の候補の調査は機会ウォッチ、保有銘柄の位置はポートフォリオウォッチ、利益予想と信用は週末に週間ウォッチで。</div></div>
+     </div>
+-
+-    <div class="card">
+-      <div class="card-title">市場の幅(ブレッドス) — 母集団: ${esc(latest.breadth_universe_source || "-")}</div>
+-      ${breadthSection(latest)}
+-      ${breadthGuide(latest)}
+-    </div>
+-
+     <div class="card">
+       <div class="card-title">Market Leaders(母集団内RS百分位ランキング上位)</div>
+       <div class="sub" style="margin-bottom:var(--s3)">地合い確認用の簡潔なランキングです。個別候補の調査・登録は機会ウォッチで行います。</div>
+-- 
+2.43.0
