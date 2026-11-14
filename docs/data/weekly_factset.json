@@ -1280,5 +1280,29 @@
    "CY2026": 33.3,
    "CY2027": 16.1
   }
+ },
+ "2026-11-13": {
+  "beat_pct": 84.0,
+  "guidance_negative": 33,
+  "guidance_positive": 45,
+  "guidance_quarter": "Q4 2026",
+  "issue_date": "2026-11-13",
+  "missing": [],
+  "parser": 2,
+  "pe": 18.3,
+  "pe_avg10": 19.1,
+  "pe_avg5": 19.8,
+  "quarters": {
+   "Q1 2027": 19.6,
+   "Q2 2027": 3.0,
+   "Q3 2026": 31.9,
+   "Q4 2026": 28.3
+  },
+  "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111326.pdf",
+  "week": "2026-11-13",
+  "years": {
+   "CY2026": 33.3,
+   "CY2027": 16.2
+  }
  }
 }

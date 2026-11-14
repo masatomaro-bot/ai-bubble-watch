@@ -1,6 +1,6 @@
 {
- "updated_at": "2026-11-08T17:10Z",
- "week": "2026-11-06",
+ "updated_at": "2026-11-14T06:50Z",
+ "week": "2026-11-13",
  "summary": {
   "text": "分母は崩れず倍率だけ縮小、信用と心理は同時悪化。疑い型の縮小が継続",
   "week": "2026-11-06"
@@ -8,11 +8,11 @@
  "lamps": {
   "eps_revision": {
    "state": "watch",
-   "detail": "次四半期(Q4 2026) 0.0 ／ 来年(CY2027) -0.2(前週比、%pt)"
+   "detail": "次四半期(Q4 2026) -0.1 ／ 来年(CY2027) +0.1(前週比、%pt)"
   },
   "guidance": {
    "state": "off",
-   "detail": "Q4 2026 下方 32社 ／ 上方 43社(2026-11-06号)"
+   "detail": "Q4 2026 下方 33社 ／ 上方 45社(2026-11-13号)"
   },
   "cuts_breadth": {
    "state": "off",
@@ -21,7 +21,7 @@
   },
   "credit": {
    "state": "on",
-   "detail": "3.48%(2026-11-05) ／ 5年平均 3.07% ／ 4週前比 +0.37pt"
+   "detail": "3.2%(2026-11-12) ／ 5年平均 3.06% ／ 4週前比 -0.11pt"
   }
  },
  "factset": {
@@ -1261,28 +1261,28 @@
     }
    },
    {
-    "pe": 18.7,
-    "pe_avg5": 19.8,
-    "pe_avg10": 19.1,
-    "guidance_quarter": "Q4 2026",
+    "beat_pct": 82.0,
     "guidance_negative": 19,
     "guidance_positive": 28,
-    "beat_pct": 82.0,
+    "guidance_quarter": "Q4 2026",
+    "issue_date": "2026-10-30",
+    "missing": [],
+    "parser": 2,
+    "pe": 18.7,
+    "pe_avg10": 19.1,
+    "pe_avg5": 19.8,
     "quarters": {
-     "Q3 2026": 30.2,
-     "Q4 2026": 28.4,
      "Q1 2027": 19.2,
-     "Q2 2027": 2.8
+     "Q2 2027": 2.8,
+     "Q3 2026": 30.2,
+     "Q4 2026": 28.4
     },
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_103026.pdf",
+    "week": "2026-10-30",
     "years": {
      "CY2026": 32.9,
      "CY2027": 16.3
-    },
-    "week": "2026-10-30",
-    "issue_date": "2026-10-30",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_103026.pdf",
-    "parser": 2,
-    "missing": []
+    }
    },
    {
     "pe": 17.7,
@@ -1305,6 +1305,30 @@
     "week": "2026-11-06",
     "issue_date": "2026-11-06",
     "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_110626.pdf",
+    "parser": 2,
+    "missing": []
+   },
+   {
+    "pe": 18.3,
+    "pe_avg5": 19.8,
+    "pe_avg10": 19.1,
+    "guidance_quarter": "Q4 2026",
+    "guidance_negative": 33,
+    "guidance_positive": 45,
+    "beat_pct": 84.0,
+    "quarters": {
+     "Q3 2026": 31.9,
+     "Q4 2026": 28.3,
+     "Q1 2027": 19.6,
+     "Q2 2027": 3.0
+    },
+    "years": {
+     "CY2026": 33.3,
+     "CY2027": 16.2
+    },
+    "week": "2026-11-13",
+    "issue_date": "2026-11-13",
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111326.pdf",
     "parser": 2,
     "missing": []
    }
@@ -1364,7 +1388,8 @@
     "2026-10-16",
     "2026-10-23",
     "2026-10-30",
-    "2026-11-06"
+    "2026-11-06",
+    "2026-11-13"
    ],
    "values": [
     7.7,
@@ -1420,7 +1445,8 @@
     28.6,
     29.2,
     28.4,
-    28.4
+    28.4,
+    28.3
    ],
    "labels": [
     "Q3 2025",
@@ -1473,6 +1499,7 @@
     "Q3 2026",
     "Q3 2026",
     "Q3 2026",
+    "Q4 2026",
     "Q4 2026",
     "Q4 2026",
     "Q4 2026",
@@ -1534,7 +1561,8 @@
     "2026-10-16",
     "2026-10-23",
     "2026-10-30",
-    "2026-11-06"
+    "2026-11-06",
+    "2026-11-13"
    ],
    "values": [
     13.7,
@@ -1590,7 +1618,8 @@
     16.0,
     16.0,
     16.3,
-    16.1
+    16.1,
+    16.2
    ],
    "labels": [
     "CY2026",
@@ -1646,13 +1675,13 @@
     "CY2027",
     "CY2027",
     "CY2027",
+    "CY2027",
     "CY2027"
    ]
   }
  },
  "hy_oas": {
   "dates": [
-   "2023-11-10",
    "2023-11-17",
    "2023-11-24",
    "2023-12-01",
@@ -1808,10 +1837,10 @@
    "2026-10-16",
    "2026-10-23",
    "2026-10-30",
-   "2026-11-06"
+   "2026-11-06",
+   "2026-11-13"
   ],
   "values": [
-   4.03,
    3.99,
    3.85,
    3.87,
@@ -1967,14 +1996,15 @@
    3.31,
    3.38,
    3.44,
-   3.48
+   3.42,
+   3.2
   ],
-  "latest": 3.48,
-  "as_of": "2026-11-05",
-  "avg_5y": 3.07,
+  "latest": 3.2,
+  "as_of": "2026-11-12",
+  "avg_5y": 3.06,
   "min_52w": 2.6,
-  "chg_1w": 0.04,
-  "chg_4w": 0.37,
+  "chg_1w": -0.22,
+  "chg_4w": -0.11,
   "source": "FRED BAMLH0A0HYM2(ICE BofA US High Yield Index Option-Adjusted Spread)"
  },
  "aaii": [
@@ -1988,7 +2018,6 @@
  ],
  "vix": {
   "dates": [
-   "2024-11-08",
    "2024-11-15",
    "2024-11-22",
    "2024-11-29",
@@ -2092,10 +2121,10 @@
    "2026-10-16",
    "2026-10-23",
    "2026-10-30",
-   "2026-11-06"
+   "2026-11-06",
+   "2026-11-13"
   ],
   "values": [
-   14.94,
    16.14,
    15.24,
    13.51,
@@ -2199,10 +2228,11 @@
    19.99,
    19.45,
    19.42,
-   25.64
+   25.64,
+   19.3
   ],
-  "latest": 25.64,
-  "as_of": "2026-11-06",
+  "latest": 19.3,
+  "as_of": "2026-11-13",
   "source": "Yahoo Finance(^VIX)"
  },
  "gdpnow": {
@@ -2250,9 +2280,9 @@
    1.2,
    1.5,
    3.3,
-   3.4
+   3.5
   ],
-  "latest": 3.4,
+  "latest": 3.5,
   "quarter_start": "2026-10-01",
   "source": "FRED GDPNOW(アトランタ連銀GDPNow、四半期ごとの推計。実質GDP成長率・年率)"
  },
