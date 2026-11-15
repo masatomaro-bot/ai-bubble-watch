@@ -16,6 +16,10 @@
   `docs/data/history/*.json` (毎日のGitHub Actions実行でコミットされる)を
   読んで表示する。閲覧には[GitHub Pagesの有効化](technical-practice/README.md#github-pagesダッシュボードを有効にする)が必要(手動の一回設定)。
 
+- `docs/data/per_watch.json` — 「ポートフォリオウォッチ」のデータ。株価に連動する部分は
+  `technical-practice/per_watch.py` が毎営業日更新する。EPSはコア基準で揃える。
+  仕様とルールは [docs/PORTFOLIO.md](docs/PORTFOLIO.md) を参照。
+
 ### 地合いの企業一覧から調査・監視へ
 
 Market Leaders と O’Neil/Minervini 一覧は、正式社名・日本語の事業説明、企業ごとの ChatGPT 調査リンク、既存の機会ウォッチへの監視追加を表示します。価格条件や数値は折りたたみ内に置き、業績・堀が確認済みであるとは表示しません。
