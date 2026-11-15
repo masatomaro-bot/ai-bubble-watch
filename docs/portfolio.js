@@ -1,6 +1,8 @@
-// ポートフォリオウォッチ (2026-10-31)
+// ポートフォリオウォッチ (2026-10-31、2026-11-15 自動更新とコアEPSルールを追加)
 // 保有銘柄のPERが、過去5年の自分自身の範囲のどこにいるかを表示する。
 // データ: docs/data/per_watch.json (各週の終値 ÷ その週が属する会計年度の確定EPS)。
+//   株価に連動する部分は technical-practice/per_watch.py が毎営業日更新する。
+//   EPSの前提(コア基準)は Claude が決算のたびに確認する。ルールは docs/PORTFOLIO.md。
 // 使い道: コア株の「織り込み上限 → 部分利確」の上限値の候補(上位10%)、下値の目処(下位10%)、
 //         「EPSは伸びているのにPERが縮む」警報。短期の売買タイミングには使わない。
 (function () {
@@ -58,11 +60,15 @@
     </svg>`;
   }
 
+  // コア基準(評価益・一時益を除く)に揃え済みかどうかの表示
+  const coreBadge = (h) => (h.core_checked === true ? '<span class="badge ok">コア基準</span>'
+    : h.core_checked === false ? '<span class="badge warn">コア基準：未確認</span>' : '');
+
   function card(h) {
     const z = zone(h);
     return `<div class="card pf-card" id="pf-${esc(h.ticker)}">
       <div class="pf-head">
-        <div><div class="story-ticker">${esc(h.ticker)}</div><div class="sub">${esc(h.name)}・${esc(h.role)}</div></div>
+        <div><div class="story-ticker">${esc(h.ticker)}</div><div class="sub">${esc(h.name)}・${esc(h.role)} ${coreBadge(h)}</div></div>
         <div class="pf-now"><span class="pf-big mono">${esc(h.per_now)}</span><span class="sub">倍</span> <span class="badge ${z.cls}">${z.label}</span></div>
       </div>
       <div class="story-metrics pf-metrics">
@@ -148,9 +154,9 @@
 
   function table(hs) {
     return `<div class="op-table"><table class="pf-table"><thead><tr>
-      <th>銘柄</th><th>区分</th><th class="r">今のPER</th><th class="r">位置</th><th class="r">下位10%</th><th class="r">中央</th><th class="r">上位10%</th><th class="r">最高</th>
+      <th>銘柄</th><th>区分</th><th>EPSの基準</th><th class="r">今のPER</th><th class="r">位置</th><th class="r">下位10%</th><th class="r">中央</th><th class="r">上位10%</th><th class="r">最高</th>
       <th class="r">株価</th><th class="r">下値の目処</th><th class="r">上限候補の株価</th></tr></thead><tbody>
-      ${hs.map((h) => `<tr><td><a href="#pf-${esc(h.ticker)}" class="mono">${esc(h.ticker)}</a> <span class="sub">${esc(h.name)}</span></td><td>${esc(h.role)}</td>
+      ${hs.map((h) => `<tr><td><a href="#pf-${esc(h.ticker)}" class="mono">${esc(h.ticker)}</a> <span class="sub">${esc(h.name)}</span></td><td>${esc(h.role)}</td><td>${h.core_checked === true ? 'コア' : h.core_checked === false ? '<span class="pf-cap">未確認</span>' : '-'}</td>
         <td class="r mono">${esc(h.per_now)}</td><td class="r mono">${esc(h.percentile_now)}%</td>
         <td class="r mono pf-floor">${f1(h.p10)}</td><td class="r mono">${f1(h.p50)}</td><td class="r mono pf-cap">${f1(h.p90)}</td><td class="r mono">${f1(h.per_max)}</td>
         <td class="r mono">${esc(h.price)}</td><td class="r mono pf-floor">${esc(h.price_floor)}</td><td class="r mono pf-cap">${esc(h.price_cap)}</td></tr>`).join('')}
@@ -164,7 +170,7 @@
         <div class="op-eyebrow">PORTFOLIO WATCH</div>
         <h2>保有銘柄のPERは、過去5年の自分の範囲のどこにいるか</h2>
         <p class="op-note">上位10%の倍率はコア株の「織り込み上限 → 部分利確」の上限値の候補、下位10%は下値の目処。短期のタイミングではなく、長期の値付けの位置を見る画面です。</p>
-        <div class="sub">データ時点 ${esc(d.asof)}・${esc(d.source)}</div>
+        <div class="sub">株価 ${esc(d.asof)} 終値（毎営業日に自動更新）${d.eps_asof ? `・EPSの前提 ${esc(d.eps_asof)} 確認` : ''}・${esc(d.source)}</div>
       </div>
       <div class="card"><div class="card-title">一覧：今のPERと過去の範囲</div>${table(hs)}
         <div class="sub" style="margin-top:var(--s3)">${esc(d.method)} 株価換算は直近期のEPSに過去の倍率を掛けたもの。</div></div>
@@ -177,7 +183,8 @@
         <li><b>警報</b>：EPSは伸びているのにPERが2〜3四半期続けて縮むときは、市場がストーリーを疑い始めているサイン。</li>
         <li><b>一時益</b>：純利益がEBITDAを上回る四半期は、保有株の評価益など本業以外の利益が入っている。その年はPERが低く出すぎる。</li>
         <li><b>PERが合わない銘柄</b>：保険会社（中国平安）はPBRが本筋。資源株（紫金鉱業）は利益が最高のときにPERが低く出る。NVDAの上位10%は2022年の利益の落ち込みで跳ね上がった値で、上限値には使えない。</li>
-        <li><b>更新</b>：固定データ。更新はClaudeに「ポートフォリオウォッチを更新して」と頼む（TradingViewから再計算して docs/data/per_watch.json を差し替える）。</li>
+        ${d.eps_rule ? `<li><b>コアEPSのルール</b>：${esc(d.eps_rule)}</li>` : ''}
+        <li><b>更新</b>：株価・今のPER・位置・週足は毎営業日に自動で更新される。EPSの前提（今期の幅・来年度の予想・確定年度のPER）は自動では変わらないので、決算のあとにClaudeに「ポートフォリオウォッチのEPSを見直して」と頼む。</li>
       </ul></div>`;
   }
 

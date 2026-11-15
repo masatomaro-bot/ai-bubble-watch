@@ -65,6 +65,14 @@ jobs:
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
         run: python ffty_screener.py
 
+      # ポートフォリオウォッチ(docs/data/per_watch.json)の株価・今のPER・位置・週足を更新する。
+      # EPSの前提には触らない(technical-practice/per_watch.py の冒頭を参照)。
+      # 取得に失敗しても地合いの更新を止めないよう continue-on-error にしている。
+      - name: Update portfolio watch prices
+        if: always()
+        continue-on-error: true
+        run: python per_watch.py
+
       # 「gitをDBにする」方式: market_climate.pyがdocs/data/history/に書き出した
       # 日次JSONをコミット・プッシュする。GitHub Pagesダッシュボード(docs/index.html)
       # はこのJSONを読む。前のステップが途中で失敗していても、market_climate.py
@@ -76,6 +84,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/data/history docs/data/ffty_latest.json 2>/dev/null || git add docs/data/history
+          git add docs/data/per_watch.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "[info] 履歴JSONに変更なし、コミットをスキップ"
           else
