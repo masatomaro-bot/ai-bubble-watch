@@ -241,7 +241,7 @@ function page(d) {
   return `${lampStrip(d)}
     <div class="card"><div class="card-title">週間ウォッチの読み方</div>
       <div class="sub">毎日の地合いウォッチとは別に、週1回しか更新されない「分母(利益予想)・信用・心理・景気・建玉」を重要度の高い順に並べています。各カードの「この指標の見方」に、何の数字か・なぜ見るか・どう読むかを書いています。上の4つの警戒ランプは「株安が景気悪化に変わり始めたか」を見るためのもので、①②④はデータから自動判定、③は日曜夕方の予定タスクがFactSetの本文から判定します。</div>
-      <div class="sub" style="margin-top:6px">データ更新：${esc(d.updated_at)}(土曜朝と日曜夜に自動更新)</div></div>
+      <div class="sub" style="margin-top:6px">データ週：${esc(d.week || '-')}までの週 ／ 更新：${esc(window.WatchTime ? window.WatchTime.jstText(d.updated_at) : d.updated_at)}(土曜朝と日曜夜に自動更新)</div></div>
     ${epsCard(d)}${guidanceCard(d)}${creditCard(d)}${peCard(d)}${sentimentCard(d)}${gdpCard(d)}${cftcCard(d)}
     ${Object.keys(errs).length ? `<details class="guide"><summary>取得できなかったデータ(${Object.keys(errs).length}件)</summary><div class="guide-body">${Object.entries(errs).map(([k, v]) => `<div class="mono" style="font-size:11px">${esc(k)}：${esc(v)}</div>`).join('')}</div></details>` : ''}`;
 }
@@ -252,6 +252,7 @@ async function load() {
   try {
     const res = await fetch('data/weekly.json', { cache: 'no-store' });
     cache = res.ok ? await res.json() : null;
+    if (cache && window.WatchTime) window.WatchTime.setWatchMeta('weekly', `週間 データ週: ${cache.week || '-'} ／ 更新: ${window.WatchTime.jstText(cache.updated_at)}`);
   } catch { cache = null; }
   return cache;
 }

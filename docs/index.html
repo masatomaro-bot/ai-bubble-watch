@@ -130,9 +130,9 @@ tr:last-child td{border-bottom:none;}
 <script src="opportunity-stories-data.js?v=20261031b" defer></script>
 <script src="opportunity-stories.js?v=20261031b" defer></script>
 <script src="opportunity.js?v=20261107a" defer></script>
-<script src="opportunity-lanes.js?v=20261031b" defer></script>
-<script src="portfolio.js?v=20261115a" defer></script>
-<script src="weekly-watch.js?v=20261107a" defer></script>
+<script src="opportunity-lanes.js?v=20261126a" defer></script>
+<script src="portfolio.js?v=20261126a" defer></script>
+<script src="weekly-watch.js?v=20261126a" defer></script>
 </head>
 <body>
 
@@ -819,6 +819,30 @@ function freshnessLine(latest) {
   return `<div class="sub" style="margin-bottom:var(--s3)">データ日: <span class="mono">${esc(latest.date)}</span>(米国市場の終値)／ 更新: <span class="mono">${esc(f.updatedText)}</span>${warn}</div>`;
 }
 
+// タブごとの「データ日／更新」を右上に出す。各タブが setWatchMeta(タブ名, 文) で登録する。
+const watchMeta = {};
+function currentView() {
+  const h = (location.hash || "").replace("#", "");
+  if (h === "portfolio" || h === "weekly") return h;
+  if (h === "opportunity" || h.startsWith("review-")) return "opportunity";
+  return "climate";
+}
+function refreshTopbarMeta() {
+  const el = document.getElementById("topbar-meta");
+  if (el) el.textContent = watchMeta[currentView()] || "読み込み中...";
+}
+function setWatchMeta(view, text) { watchMeta[view] = text; refreshTopbarMeta(); }
+window.addEventListener("hashchange", refreshTopbarMeta);
+document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => setTimeout(refreshTopbarMeta, 0)));
+
+// 「YYYY-MM-DDTHH:MMZ」などのUTC時刻 → 日本時間の文字列。読めなければ元の文字列を返す。
+function jstText(iso) {
+  if (!iso) return "不明";
+  const d = new Date(iso);
+  return isNaN(d) ? String(iso) : `${fmtJst(d)}(日本時間)`;
+}
+window.WatchTime = { fmtJst, jstText, weekdaysBehind, setWatchMeta, freshnessInfo: (l) => freshnessInfo(l) };
+
 async function main() {
   const latest = await fetchLatestWithMeta("data/history/latest.json");
   const content = document.getElementById("content");
@@ -836,7 +860,8 @@ async function main() {
 
   window.watchLatest = latest;
   window.dispatchEvent(new Event("watch-data"));
-  meta.textContent = `データ日: ${latest.date} ／ 更新: ${freshnessInfo(latest).updatedText}`;
+  setWatchMeta("climate", `地合い データ日: ${latest.date} ／ 更新: ${freshnessInfo(latest).updatedText}`);
+  setWatchMeta("opportunity", `機会 データ日: ${latest.date} ／ 更新: ${freshnessInfo(latest).updatedText}`);
 
   const regimeInfo = REGIME_LABELS[(latest.market_regime || {}).judgement] || REGIME_LABELS["不明"];
   const overallInfo = TREND_LABELS[latest.overall_trend_state] || TREND_LABELS["不明"];
