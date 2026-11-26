@@ -195,7 +195,7 @@ function render(target, latest, ctx) {
       <div class="card-title">いまの使い方(地合いに連動)</div>
       <div class="hero-state">「${esc(mode.name)}」モード</div>
       <div style="margin-bottom:6px">${esc(mode.text)}</div>
-      <div class="sub">データ日 ${esc(latest.date)} ／ ${ladder}</div>
+      <div class="sub">データ日 ${esc(latest.date)}（米国市場の終値）／ 更新 ${esc(window.WatchTime ? window.WatchTime.freshnessInfo(latest).updatedText : '不明')}${ctx.ffty && ctx.ffty.date ? ` ／ FFTY構成 ${esc(ctx.ffty.date)}` : ''} ／ ${ladder}</div>
     </div>
     <div class="card"><div class="card-title">B. リーダー候補(O'Neil/ミネルヴィニ式・テクニカル)</div><div data-ol-lane="b">${laneB(latest, ctx)}</div></div>
     <div class="card"><div class="card-title">A. 次のNVDA(ストーリー監視：境シグナル S1〜S6)</div>${laneA(latest, root.NextNvdaData)}</div>

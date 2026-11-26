@@ -159,8 +159,29 @@
       ${hs.map((h) => `<tr><td><a href="#pf-${esc(h.ticker)}" class="mono">${esc(h.ticker)}</a> <span class="sub">${esc(h.name)}</span></td><td>${esc(h.role)}</td><td>${h.core_checked === true ? 'コア' : h.core_checked === false ? '<span class="pf-cap">未確認</span>' : '-'}</td>
         <td class="r mono">${esc(h.per_now)}</td><td class="r mono">${esc(h.percentile_now)}%</td>
         <td class="r mono pf-floor">${f1(h.p10)}</td><td class="r mono">${f1(h.p50)}</td><td class="r mono pf-cap">${f1(h.p90)}</td><td class="r mono">${f1(h.per_max)}</td>
-        <td class="r mono">${esc(h.price)}</td><td class="r mono pf-floor">${esc(h.price_floor)}</td><td class="r mono pf-cap">${esc(h.price_cap)}</td></tr>`).join('')}
+        <td class="r mono">${esc(h.price)}<div class="sub">${esc(h.price_date || '')}</div></td><td class="r mono pf-floor">${esc(h.price_floor)}</td><td class="r mono pf-cap">${esc(h.price_cap)}</td></tr>`).join('')}
     </tbody></table></div>`;
+  }
+
+  // 株価の日付は市場ごとに違う（米国は前日、香港・中国は当日の終値になりやすい）。
+  // 最新日だけを出すと米国株まで新しく見えるので、日付ごとに銘柄をまとめて出す。
+  function priceDateGroups(hs) {
+    const g = {};
+    hs.forEach((h) => { const k = h.price_date || '不明'; (g[k] = g[k] || []).push(h.ticker); });
+    return Object.keys(g).sort().map((k) => ({ date: k, tickers: g[k] }));
+  }
+
+  function freshness(d) {
+    const WT = window.WatchTime;
+    const groups = priceDateGroups(d.holdings || []);
+    const dates = groups.map((x) => `<span class="mono">${esc(x.date)}</span>（${x.tickers.map(esc).join('・')}）`).join(' ／ ');
+    const upd = WT ? WT.jstText(d.updated_at) : esc(d.updated_at || '不明');
+    const oldest = groups.length ? groups[0].date : null;
+    const behind = WT && oldest && oldest !== '不明' ? WT.weekdaysBehind(oldest) : 0;
+    const warn = behind >= 2 ? ` <span class="badge warn">株価が${behind}営業日前のまま（祝日なら正常）</span>` : '';
+    if (WT) WT.setWatchMeta('portfolio', `ポートフォリオ 株価: ${groups.map((x) => x.date).join('・')} 終値 ／ 更新: ${upd}`);
+    return `<div class="sub" style="margin-top:6px"><b>株価の日付（終値）</b>：${dates}${warn}</div>
+        <div class="sub"><b>更新</b>：${esc(upd)}（毎営業日に自動更新。株価が前回から変わらなかった日は時刻も前回のまま）</div>`;
   }
 
   function render(d) {
@@ -170,7 +191,8 @@
         <div class="op-eyebrow">PORTFOLIO WATCH</div>
         <h2>保有銘柄のPERは、過去5年の自分の範囲のどこにいるか</h2>
         <p class="op-note">上位10%の倍率はコア株の「織り込み上限 → 部分利確」の上限値の候補、下位10%は下値の目処。短期のタイミングではなく、長期の値付けの位置を見る画面です。</p>
-        <div class="sub">株価 ${esc(d.asof)} 終値（毎営業日に自動更新）${d.eps_asof ? `・EPSの前提 ${esc(d.eps_asof)} 確認` : ''}・${esc(d.source)}</div>
+        ${freshness(d)}
+        <div class="sub">${d.eps_asof ? `EPSの前提 ${esc(d.eps_asof)} 確認・` : ''}${esc(d.source)}</div>
       </div>
       <div class="card"><div class="card-title">一覧：今のPERと過去の範囲</div>${table(hs)}
         <div class="sub" style="margin-top:var(--s3)">${esc(d.method)} 株価換算は直近期のEPSに過去の倍率を掛けたもの。</div></div>
