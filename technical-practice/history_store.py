@@ -23,6 +23,7 @@ from __future__ import annotations
 import json
 import math
 import os
+from datetime import datetime, timezone
 
 _TECHNICAL_PRACTICE_DIR = os.path.dirname(os.path.abspath(__file__))
 _REPO_ROOT = os.path.dirname(_TECHNICAL_PRACTICE_DIR)
@@ -51,6 +52,10 @@ def save_snapshot(result: dict, history_dir: str = HISTORY_DIR) -> str:
     os.makedirs(history_dir, exist_ok=True)
     date_str = result["date"]
     path = os.path.join(history_dir, f"{date_str}.json")
+    # 画面に「いつ更新されたか」を出すための書き出し時刻(UTC)。データ日(取引日)とは別。
+    # 呼び出し側で既に入れていればそれを優先する。
+    if not result.get("generated_at"):
+        result = {**result, "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
     payload = json.dumps(_sanitize_for_json(result), ensure_ascii=False, indent=2, default=str)
 
     with open(path, "w", encoding="utf-8") as f:

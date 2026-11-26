@@ -762,8 +762,65 @@ function historyStrip(history) {
     </div>`;
 }
 
+// 更新日時: generated_at(書き出し時刻)を優先し、無い古いデータは配信ファイルの
+// Last-Modifiedで代用する。データ日(取引日)とは別に「いつ更新されたか」を出す。
+let latestLastModified = null;
+async function fetchLatestWithMeta(path) {
+  try {
+    const res = await fetch(path, { cache: "no-store" });
+    if (!res.ok) return null;
+    latestLastModified = res.headers.get("Last-Modified");
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+function fmtJst(d) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(d).map((x) => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
+}
+
+// 米国の平日ベースで、データ日が「今日の時点で手に入るはずの最新取引日」から何営業日遅れているか。
+// 祝日は考えないので、祝日明けは1日多めに出ることがある。
+function weekdaysBehind(dataDate) {
+  const nyToday = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
+  let d = new Date(dataDate + "T00:00:00Z");
+  const end = new Date(nyToday + "T00:00:00Z");
+  let n = 0;
+  while (d < end) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    const wd = d.getUTCDay();
+    if (wd !== 0 && wd !== 6) n++;
+  }
+  return n;
+}
+
+function freshnessInfo(latest) {
+  let updated = null, approx = false;
+  if (latest.generated_at) updated = new Date(latest.generated_at);
+  else if (latestLastModified) { updated = new Date(latestLastModified); approx = true; }
+  if (updated && isNaN(updated)) updated = null;
+  const behind = weekdaysBehind(latest.date);
+  // 日次ジョブは米国引け後に走るので、当日分が未反映(1営業日遅れ)は通常。2営業日以上で注意。
+  const stale = behind >= 2;
+  const updatedText = updated ? `${fmtJst(updated)}(日本時間)${approx ? "・配信時刻" : ""}` : "不明";
+  return { updatedText, stale, behind };
+}
+
+function freshnessLine(latest) {
+  const f = freshnessInfo(latest);
+  const warn = f.stale
+    ? ` <span class="badge warn" style="margin-left:6px">更新が${f.behind}営業日止まっている可能性(祝日なら正常)</span>`
+    : "";
+  return `<div class="sub" style="margin-bottom:var(--s3)">データ日: <span class="mono">${esc(latest.date)}</span>(米国市場の終値)／ 更新: <span class="mono">${esc(f.updatedText)}</span>${warn}</div>`;
+}
+
 async function main() {
-  const latest = await tryFetchJson("data/history/latest.json");
+  const latest = await fetchLatestWithMeta("data/history/latest.json");
   const content = document.getElementById("content");
   const meta = document.getElementById("topbar-meta");
 
@@ -779,12 +836,13 @@ async function main() {
 
   window.watchLatest = latest;
   window.dispatchEvent(new Event("watch-data"));
-  meta.textContent = `データ日: ${latest.date}`;
+  meta.textContent = `データ日: ${latest.date} ／ 更新: ${freshnessInfo(latest).updatedText}`;
 
   const regimeInfo = REGIME_LABELS[(latest.market_regime || {}).judgement] || REGIME_LABELS["不明"];
   const overallInfo = TREND_LABELS[latest.overall_trend_state] || TREND_LABELS["不明"];
 
   content.innerHTML = `
+    ${freshnessLine(latest)}
     <div id="weekly-lamps"></div>
     ${window.MacroPanel ? MacroPanel.render(latest) : ""}
 

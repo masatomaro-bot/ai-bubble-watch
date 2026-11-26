@@ -21,6 +21,7 @@ def test_save_snapshot_writes_dated_file_and_latest(tmp_path):
     assert os.path.exists(os.path.join(str(tmp_path), "latest.json"))
 
     loaded = load_snapshot("2026-09-14", history_dir=str(tmp_path))
+    loaded.pop("generated_at")
     assert loaded == result
 
 
@@ -76,3 +77,17 @@ def test_save_snapshot_sanitizes_nan_and_infinity_to_null(tmp_path):
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
+
+
+def test_save_snapshot_adds_generated_at_utc(tmp_path):
+    import re
+    saved_path = save_snapshot({"date": "2026-11-24"}, history_dir=str(tmp_path))
+    with open(saved_path, encoding="utf-8") as f:
+        data = json.load(f)
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", data["generated_at"])
+
+
+def test_save_snapshot_keeps_existing_generated_at(tmp_path):
+    saved_path = save_snapshot({"date": "2026-11-24", "generated_at": "2026-11-25T04:54:00Z"}, history_dir=str(tmp_path))
+    with open(saved_path, encoding="utf-8") as f:
+        assert json.load(f)["generated_at"] == "2026-11-25T04:54:00Z"
