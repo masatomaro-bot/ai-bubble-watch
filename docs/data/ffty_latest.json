@@ -1,14 +1,14 @@
 {
- "date": "2026-11-26",
+ "date": "2026-11-27",
  "source": "https://www.capforceetf.com/ffty/details",
  "rows": [
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "CDNA",
    "name": "CareDx Inc",
    "sector": "Healthcare",
    "price_usd": 75.86,
-   "price_jpy": 12074,
+   "price_jpy": 12078,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 100.0,
@@ -25,12 +25,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "SN",
    "name": "SharkNinja Inc",
    "sector": "Consumer Cyclical",
    "price_usd": 232.5,
-   "price_jpy": 37004,
+   "price_jpy": 37018,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 94.0,
@@ -47,12 +47,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "KNSA",
    "name": "Kiniksa Pharmaceuticals International Plc",
    "sector": "Healthcare",
    "price_usd": 100.99,
-   "price_jpy": 16073,
+   "price_jpy": 16079,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 90.0,
@@ -69,12 +69,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "FIGS",
    "name": "Figs Inc",
    "sector": "Consumer Cyclical",
    "price_usd": 20.88,
-   "price_jpy": 3323,
+   "price_jpy": 3324,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 86.0,
@@ -91,7 +91,7 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "LFST",
    "name": "LifeStance Health Group Inc",
    "sector": "Healthcare",
@@ -113,12 +113,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "GMAB",
    "name": "Genmab A/S",
    "sector": "Healthcare",
    "price_usd": 56.8,
-   "price_jpy": 9040,
+   "price_jpy": 9044,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 78.0,
@@ -135,12 +135,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "RPRX",
    "name": "Royalty Pharma PLC",
    "sector": "Healthcare",
    "price_usd": 70.57,
-   "price_jpy": 11232,
+   "price_jpy": 11236,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 76.0,
@@ -157,12 +157,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "ETON",
    "name": "Eton Pharmaceuticals Inc",
    "sector": "Healthcare",
    "price_usd": 65.23,
-   "price_jpy": 10382,
+   "price_jpy": 10386,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 98.0,
@@ -179,12 +179,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "CON",
    "name": "Concentra Group Holdings Parent Inc",
    "sector": "Healthcare",
    "price_usd": 43.06,
-   "price_jpy": 6853,
+   "price_jpy": 6856,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 84.0,
@@ -201,12 +201,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "IPAR",
    "name": "Interparfums Inc",
    "sector": "",
    "price_usd": 142.65,
-   "price_jpy": 22704,
+   "price_jpy": 22712,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 72.0,
@@ -223,12 +223,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "FTDR",
    "name": "Frontdoor Inc",
    "sector": "Consumer Cyclical",
    "price_usd": 93.87,
-   "price_jpy": 14940,
+   "price_jpy": 14946,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 70.0,
@@ -245,12 +245,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "MGNI",
    "name": "Magnite Inc",
    "sector": "Communication Services",
    "price_usd": 26.44,
-   "price_jpy": 4208,
+   "price_jpy": 4210,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 74.0,
@@ -267,12 +267,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "VCTR",
    "name": "Victory Capital Holdings Inc",
    "sector": "Financial Services",
    "price_usd": 114.97,
-   "price_jpy": 18298,
+   "price_jpy": 18305,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 80.0,
@@ -289,12 +289,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "STGW",
    "name": "Stagwell Inc",
    "sector": "Communication Services",
    "price_usd": 11.01,
-   "price_jpy": 1752,
+   "price_jpy": 1753,
    "pass_count_of_8": 8,
    "pass_all_8": true,
    "rs_proxy_percentile": 82.0,
@@ -311,12 +311,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "APPN",
    "name": "Appian Corp",
    "sector": "Technology",
    "price_usd": 55.08,
-   "price_jpy": 8766,
+   "price_jpy": 8770,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 16.0,
@@ -333,12 +333,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "TENB",
    "name": "Tenable Holdings Inc",
    "sector": "Technology",
    "price_usd": 45.7,
-   "price_jpy": 7274,
+   "price_jpy": 7276,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 64.0,
@@ -355,12 +355,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "MANH",
    "name": "Manhattan Associates Inc",
    "sector": "Technology",
    "price_usd": 251.97,
-   "price_jpy": 40103,
+   "price_jpy": 40118,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 32.0,
@@ -377,12 +377,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "HAE",
    "name": "Haemonetics Corp",
    "sector": "Healthcare",
    "price_usd": 120.44,
-   "price_jpy": 19169,
+   "price_jpy": 19176,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 40.0,
@@ -399,12 +399,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "VCEL",
    "name": "Vericel Corp",
    "sector": "Healthcare",
    "price_usd": 61.01,
-   "price_jpy": 9710,
+   "price_jpy": 9714,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 34.0,
@@ -421,12 +421,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "PAYC",
    "name": "Paycom Software Inc",
    "sector": "Technology",
    "price_usd": 247.49,
-   "price_jpy": 39390,
+   "price_jpy": 39405,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 44.0,
@@ -443,12 +443,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "EXEL",
    "name": "Exelixis Inc",
    "sector": "Healthcare",
    "price_usd": 67.25,
-   "price_jpy": 10703,
+   "price_jpy": 10707,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 50.0,
@@ -465,12 +465,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "FLYW",
    "name": "Flywire Corp",
    "sector": "Technology",
    "price_usd": 23.26,
-   "price_jpy": 3702,
+   "price_jpy": 3703,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 62.0,
@@ -487,12 +487,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "GDYN",
    "name": "Grid Dynamics Holdings Inc",
    "sector": "Technology",
    "price_usd": 14.12,
-   "price_jpy": 2247,
+   "price_jpy": 2248,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 54.0,
@@ -509,12 +509,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "BDX",
    "name": "Becton Dickinson & Co",
    "sector": "Healthcare",
    "price_usd": 221.24,
-   "price_jpy": 35212,
+   "price_jpy": 35225,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 36.0,
@@ -531,12 +531,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "LIVN",
    "name": "LivaNova PLC",
    "sector": "Healthcare",
    "price_usd": 94.06,
-   "price_jpy": 14970,
+   "price_jpy": 14976,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 38.0,
@@ -553,12 +553,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "FROG",
    "name": "JFrog Ltd",
    "sector": "Technology",
    "price_usd": 104.85,
-   "price_jpy": 16688,
+   "price_jpy": 16694,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 56.0,
@@ -575,12 +575,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "PGNY",
    "name": "Progyny Inc",
    "sector": "Healthcare",
    "price_usd": 36.27,
-   "price_jpy": 5773,
+   "price_jpy": 5775,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 26.0,
@@ -597,12 +597,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "AMPL",
    "name": "Amplitude Inc",
    "sector": "Technology",
    "price_usd": 17.1,
-   "price_jpy": 2722,
+   "price_jpy": 2723,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 58.0,
@@ -619,12 +619,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "LTH",
    "name": "Life Time Group Holdings Inc",
    "sector": "Consumer Cyclical",
    "price_usd": 47.81,
-   "price_jpy": 7609,
+   "price_jpy": 7612,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 68.0,
@@ -641,12 +641,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "SAIC",
    "name": "Science Applications International Corp",
    "sector": "Technology",
    "price_usd": 148.4,
-   "price_jpy": 23619,
+   "price_jpy": 23628,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 66.0,
@@ -663,12 +663,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "LH",
    "name": "Labcorp Holdings Inc",
    "sector": "Healthcare",
    "price_usd": 368.95,
-   "price_jpy": 58721,
+   "price_jpy": 58743,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 30.0,
@@ -685,12 +685,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "CPAY",
    "name": "Corpay Inc",
    "sector": "Technology",
    "price_usd": 454.33,
-   "price_jpy": 72310,
+   "price_jpy": 72337,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 48.0,
@@ -707,12 +707,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "OSW",
    "name": "OneSpaWorld Holdings Ltd",
    "sector": "Consumer Cyclical",
    "price_usd": 31.09,
-   "price_jpy": 4948,
+   "price_jpy": 4950,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 42.0,
@@ -729,12 +729,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "CRAI",
    "name": "CRA International Inc",
    "sector": "Industrials",
    "price_usd": 229.1,
-   "price_jpy": 36463,
+   "price_jpy": 36477,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 14.0,
@@ -751,12 +751,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "PLMR",
    "name": "Palomar Holdings Inc",
    "sector": "Financial Services",
    "price_usd": 167.74,
-   "price_jpy": 26697,
+   "price_jpy": 26707,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 24.0,
@@ -773,12 +773,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "DFIN",
    "name": "Donnelley Financial Solutions Inc",
    "sector": "Technology",
    "price_usd": 65.69,
-   "price_jpy": 10455,
+   "price_jpy": 10459,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 22.0,
@@ -795,12 +795,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "ALRM",
    "name": "Alarm.com Holdings Inc",
    "sector": "Technology",
    "price_usd": 66.07,
-   "price_jpy": 10516,
+   "price_jpy": 10519,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 10.0,
@@ -817,12 +817,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "MD",
    "name": "Pediatrix Medical Group Inc",
    "sector": "Healthcare",
    "price_usd": 30.48,
-   "price_jpy": 4851,
+   "price_jpy": 4853,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 6.0,
@@ -839,12 +839,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "SWK",
    "name": "Stanley Black & Decker Inc",
    "sector": "Industrials",
    "price_usd": 109.22,
-   "price_jpy": 17383,
+   "price_jpy": 17390,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 46.0,
@@ -861,12 +861,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "VSXY",
    "name": "Victoria's Secret & Co",
    "sector": "Consumer Cyclical",
    "price_usd": 91.54,
-   "price_jpy": 14569,
+   "price_jpy": 14575,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 92.0,
@@ -883,12 +883,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "SEZL",
    "name": "Sezzle Inc",
    "sector": "Financial Services",
    "price_usd": 145.71,
-   "price_jpy": 23191,
+   "price_jpy": 23200,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 96.0,
@@ -905,12 +905,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "LLY",
    "name": "Eli Lilly & Co",
    "sector": "Healthcare",
    "price_usd": 1392.22,
-   "price_jpy": 221583,
+   "price_jpy": 221665,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 8.0,
@@ -927,12 +927,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "SKWD",
    "name": "Skyward Specialty Insurance Group Inc",
    "sector": "Financial Services",
    "price_usd": 64.73,
-   "price_jpy": 10302,
+   "price_jpy": 10306,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 18.0,
@@ -949,12 +949,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "DOCU",
    "name": "Docusign Inc",
    "sector": "Technology",
    "price_usd": 80.75,
-   "price_jpy": 12852,
+   "price_jpy": 12857,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 2.0,
@@ -971,12 +971,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "GCT",
    "name": "GigaCloud Technology Inc",
    "sector": "Technology",
    "price_usd": 61.71,
-   "price_jpy": 9822,
+   "price_jpy": 9825,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 60.0,
@@ -993,12 +993,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "PCTY",
    "name": "Paylocity Holding Corp",
    "sector": "Technology",
    "price_usd": 179.33,
-   "price_jpy": 28542,
+   "price_jpy": 28552,
    "pass_count_of_8": 7,
    "pass_all_8": false,
    "rs_proxy_percentile": 4.0,
@@ -1015,19 +1015,19 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "TAK",
    "name": "Takeda Pharmaceutical Co Ltd",
    "sector": "Healthcare",
    "price_usd": 23.01,
-   "price_jpy": 3662,
+   "price_jpy": 3664,
    "pass_count_of_8": 6,
    "pass_all_8": false,
    "rs_proxy_percentile": 52.0,
    "pct_off_52w_high": 0.0,
    "within_budget_max": true,
    "shares_at_budget_min": 81,
-   "shares_at_budget_max": 273,
+   "shares_at_budget_max": 272,
    "c1": true,
    "c2": false,
    "c3": true,
@@ -1037,12 +1037,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "RRC",
    "name": "Range Resources Corp",
    "sector": "Energy",
    "price_usd": 50.63,
-   "price_jpy": 8058,
+   "price_jpy": 8061,
    "pass_count_of_8": 6,
    "pass_all_8": false,
    "rs_proxy_percentile": 20.0,
@@ -1059,12 +1059,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "EXPO",
    "name": "Exponent Inc",
    "sector": "Industrials",
    "price_usd": 91.76,
-   "price_jpy": 14604,
+   "price_jpy": 14610,
    "pass_count_of_8": 6,
    "pass_all_8": false,
    "rs_proxy_percentile": 12.0,
@@ -1081,12 +1081,12 @@
    "c7": true
   },
   {
-   "date": "2026-11-26",
+   "date": "2026-11-27",
    "ticker": "HAS",
    "name": "Hasbro Inc",
    "sector": "Consumer Cyclical",
    "price_usd": 110.58,
-   "price_jpy": 17600,
+   "price_jpy": 17606,
    "pass_count_of_8": 6,
    "pass_all_8": false,
    "rs_proxy_percentile": 28.0,
