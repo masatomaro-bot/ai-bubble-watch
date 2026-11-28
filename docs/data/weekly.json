@@ -1,6 +1,6 @@
 {
- "updated_at": "2026-11-22T18:36Z",
- "week": "2026-11-20",
+ "updated_at": "2026-11-28T08:13Z",
+ "week": "2026-11-27",
  "summary": {
   "text": "分母は増益継続でもPER17.1倍へ急縮。AI設備投資の連鎖売りが信用へ波及するか",
   "week": "2026-11-20"
@@ -21,7 +21,7 @@
   },
   "credit": {
    "state": "on",
-   "detail": "3.52%(2026-11-19) ／ 5年平均 3.06% ／ 4週前比 +0.14pt"
+   "detail": "3.77%(2026-11-26) ／ 5年平均 3.06% ／ 4週前比 +0.33pt"
   }
  },
  "factset": {
@@ -1309,28 +1309,28 @@
     }
    },
    {
-    "pe": 18.3,
-    "pe_avg5": 19.8,
-    "pe_avg10": 19.1,
-    "guidance_quarter": "Q4 2026",
+    "beat_pct": 84.0,
     "guidance_negative": 33,
     "guidance_positive": 45,
-    "beat_pct": 84.0,
+    "guidance_quarter": "Q4 2026",
+    "issue_date": "2026-11-13",
+    "missing": [],
+    "parser": 2,
+    "pe": 18.3,
+    "pe_avg10": 19.1,
+    "pe_avg5": 19.8,
     "quarters": {
-     "Q3 2026": 31.9,
-     "Q4 2026": 28.3,
      "Q1 2027": 19.6,
-     "Q2 2027": 3.0
+     "Q2 2027": 3.0,
+     "Q3 2026": 31.9,
+     "Q4 2026": 28.3
     },
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111326.pdf",
+    "week": "2026-11-13",
     "years": {
      "CY2026": 33.3,
      "CY2027": 16.2
-    },
-    "week": "2026-11-13",
-    "issue_date": "2026-11-13",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111326.pdf",
-    "parser": 2,
-    "missing": []
+    }
    },
    {
     "pe": 17.1,
@@ -1712,7 +1712,6 @@
  },
  "hy_oas": {
   "dates": [
-   "2023-11-24",
    "2023-12-01",
    "2023-12-08",
    "2023-12-15",
@@ -1868,10 +1867,10 @@
    "2026-10-30",
    "2026-11-06",
    "2026-11-13",
-   "2026-11-20"
+   "2026-11-20",
+   "2026-11-27"
   ],
   "values": [
-   3.85,
    3.87,
    3.75,
    3.51,
@@ -2027,14 +2026,15 @@
    3.44,
    3.42,
    3.23,
-   3.52
+   3.76,
+   3.77
   ],
-  "latest": 3.52,
-  "as_of": "2026-11-19",
+  "latest": 3.77,
+  "as_of": "2026-11-26",
   "avg_5y": 3.06,
   "min_52w": 2.6,
-  "chg_1w": 0.29,
-  "chg_4w": 0.14,
+  "chg_1w": 0.01,
+  "chg_4w": 0.33,
   "source": "FRED BAMLH0A0HYM2(ICE BofA US High Yield Index Option-Adjusted Spread)"
  },
  "aaii": [
@@ -2062,7 +2062,6 @@
  ],
  "vix": {
   "dates": [
-   "2024-11-22",
    "2024-11-29",
    "2024-12-06",
    "2024-12-13",
@@ -2166,10 +2165,10 @@
    "2026-10-30",
    "2026-11-06",
    "2026-11-13",
-   "2026-11-20"
+   "2026-11-20",
+   "2026-11-27"
   ],
   "values": [
-   15.24,
    13.51,
    12.77,
    13.81,
@@ -2273,10 +2272,11 @@
    19.42,
    25.64,
    19.3,
-   35.89
+   35.89,
+   23.81
   ],
-  "latest": 35.89,
-  "as_of": "2026-11-20",
+  "latest": 23.81,
+  "as_of": "2026-11-27",
   "source": "Yahoo Finance(^VIX)"
  },
  "gdpnow": {
@@ -2324,9 +2324,9 @@
    1.2,
    1.5,
    3.3,
-   3.2
+   2.9
   ],
-  "latest": 3.2,
+  "latest": 2.9,
   "quarter_start": "2026-10-01",
   "source": "FRED GDPNOW(アトランタ連銀GDPNow、四半期ごとの推計。実質GDP成長率・年率)"
  },
@@ -3927,6 +3927,7 @@
   }
  },
  "fetch_errors": {
+  "FactSet:最新号": "2026-11-27の週の号が見つからない(未公開か、URLの形が変わった可能性)",
   "AAII": "HTTPError: HTTP Error 403: Forbidden"
  }
 }
